@@ -1,0 +1,220 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  color: #0A0A0A;
+  background-color: #f6f8fa;
+  overflow-x: hidden;
+}
+
+/* --- NAVBAR TRASPARENTE --- */
+.navbar {
+  position: absolute; /* Galleggia sopra l'immagine hero */
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 5%;
+  background: transparent;
+  z-index: 100;
+}
+
+.navbar .logo {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+}
+
+.navbar nav a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  transition: 0.3s;
+}
+
+.navbar nav a:hover {
+  color: #90caf9; /* Azzurrino chiaro al passaggio del mouse */
+}
+
+/* --- HERO SECTION CON EFFETTO AZZURRO --- */
+.hero {
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  /* Assicurati che il percorso sia corretto per Angular */
+  /* Sostituisci la riga con questa */
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
+}
+
+.hero .overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  /* Gradiente azzurro professionale */
+  background: linear-gradient(
+    135deg,
+    rgba(15, 52, 117, 0.75) 0%,
+    rgba(42, 115, 179, 0.45) 100%
+  );
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: 90%;
+}
+
+.hero h1 {
+  font-size: clamp(4rem, 12vw, 9rem);
+  font-weight: 900;
+  letter-spacing: 15px;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin: 1.5rem 0;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+/* --- BARRA DI RICERCA MODERNA (Glassmorphism) --- */
+.search-bar {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  padding: 8px;
+  border-radius: 50px;
+  gap: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.search-bar input, .search-bar select {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  outline: none;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Colore testo select per visibilità */
+.search-bar select option {
+  color: #333;
+}
+
+.btn {
+  background: #fff;
+  color: #0d47a1; /* Blu scuro per contrasto */
+  border: none;
+  border-radius: 40px;
+  padding: 12px 35px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #e3f2fd;
+  transform: scale(1.05);
+}
+
+/* --- DESTINATIONS --- */
+.destinations {
+  padding: 5rem 8%;
+  background-color: #fff;
+  text-align: center;
+}
+
+.destinations h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  color: #1a237e;
+}
+
+.cards-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  transition: 0.4s;
+}
+
+.card:hover {
+  transform: translateY(-15px);
+}
+
+.card img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.card-info {
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.card-info h3 {
+  font-size: 1.3rem;
+  color: #1a237e;
+  margin-bottom: 0.5rem;
+}
+
+.card-info p {
+  color: #546e7a;
+  font-weight: 500;
+}
+
+/* --- FOOTER --- */
+footer {
+  text-align: center;
+  padding: 4rem 0;
+  background-color: #0d1b3e;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 4rem;
+    letter-spacing: 5px;
+  }
+  .navbar {
+    padding: 1.5rem 5%;
+  }
+  .search-bar {
+    border-radius: 20px;
+    width: 90%;
+  }
+}
