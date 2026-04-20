@@ -1,11 +1,13 @@
 package com.example.progettoenterprise.security;
 
+import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -18,11 +20,14 @@ import java.util.Map;
 
 // Classe che gestisce i JWT
 @Component
+@RequiredArgsConstructor
 public class TokenStore {
 
     // Recupera la chiave dal file .env tramite application.properties
     @Value( "${jwt.secret}")
     private String secretKey;
+
+    private final MessageLang messageLang;
 
     // Metodo che crea il token
     public String createToken(Map<String, Object> claims) throws JOSEException {
@@ -74,7 +79,7 @@ public class TokenStore {
         }
 
         // Token non valido o scaduto
-        throw new RuntimeException("Token scaduto o non valido");
+        throw new RuntimeException(messageLang.getMessage("auth.token.invalid"));
     }
 
     // Recupera il token dall'intestazione della richiesta HTTP

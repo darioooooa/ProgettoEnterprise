@@ -3,7 +3,7 @@ package com.example.progettoenterprise.controllers;
 import com.example.progettoenterprise.dto.LoginDTO;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.security.TokenStore;
-import com.example.progettoenterprise.data.services.AuthService;
+import com.example.progettoenterprise.data.services.AuthServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -18,11 +18,11 @@ import java.util.Map;
 // Controller che gestisce le operazioni di autenticazione e registrazione
 @RestController
 @RequestMapping(path="/api/v1/auth", produces = "application/json")
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthServiceImpl authServiceImpl;
     private final AuthenticationManager authenticationManager;
     private final TokenStore tokenStore;
 
@@ -30,7 +30,7 @@ public class AuthController {
     // @Valid valida i dati del corpo della richiesta
     @PostMapping(path = "/register", consumes = "application/json")
     public ResponseEntity<?> registrazione(@Valid @RequestBody Utente utente){
-        return ResponseEntity.ok(authService.registraUtente(utente));
+        return ResponseEntity.ok(authServiceImpl.registraUtente(utente));
     }
 
     // Endpoint per il login dell'utente
@@ -40,17 +40,22 @@ public class AuthController {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
 
         // Cerca l'utente
-        Utente utente = authService.getUtenteByUsername(loginDTO.getUsername());
+        Utente utente = authServiceImpl.getUtenteByUsernameOrEmail(loginDTO.getUsername());
 
         // Crea il token, includendo le informazioni dell'utente nel payload
         String token = tokenStore.createToken(Map.of(
                 "username", utente.getUsername(),
-                "role", utente.getRuolo().name()
+                "role", "ROLE_" +utente.getRuolo().name()
         ));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .body(Map.of("token", token));
+                .body(Map.of(
+                        "token", token,
+                        "email", utente.getEmail(),
+                        "username", utente.getUsername(),
+                        "ruolo", utente.getRuolo().name()
+                ));
     }
 
     // Endpoint per il logout dell'utente

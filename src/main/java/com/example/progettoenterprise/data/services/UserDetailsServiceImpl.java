@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.data.services;
 
+import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +18,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
     private final UtenteRepository utenteRepository;
+    private final MessageLang messageLang;
 
     // Metodo chiamato automaticamente dal framework per ottenere i dati dell'utente
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Utente utente = utenteRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con username: " + username));
+    public UserDetails loadUserByUsername(String identificativo) throws UsernameNotFoundException {
+        Utente utente = utenteRepository.findByUsernameOrEmail(identificativo,identificativo)
+                .orElseThrow(() -> new UsernameNotFoundException(messageLang.getMessage("auth.user.notfound", identificativo)));
 
         return new User(
                 utente.getUsername(),
