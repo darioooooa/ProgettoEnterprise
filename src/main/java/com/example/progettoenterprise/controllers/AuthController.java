@@ -1,9 +1,9 @@
 package com.example.progettoenterprise.controllers;
 
 import com.example.progettoenterprise.dto.LoginDTO;
-import com.example.progettoenterprise.entities.Utente;
+import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.security.TokenStore;
-import com.example.progettoenterprise.services.AuthService;
+import com.example.progettoenterprise.data.services.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.entities;
+package com.example.progettoenterprise.data.entities;
 
 
 import jakarta.persistence.*;
@@ -15,7 +15,7 @@ import java.util.Set;
 public class ListaItinerari {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_itinerario;
+    private Long id;
 
     @Column(nullable = false)
     private String nome;

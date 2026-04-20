@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.entities;
+package com.example.progettoenterprise.data.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class Prenotazione {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_prenotazione;
+    private Long id;
     private LocalDateTime dataPrenotazione;
     private Integer numeroPersone;
 

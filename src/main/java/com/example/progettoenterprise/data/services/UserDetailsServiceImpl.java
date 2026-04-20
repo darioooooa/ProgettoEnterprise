@@ -1,7 +1,7 @@
-package com.example.progettoenterprise.services;
+package com.example.progettoenterprise.data.services;
 
-import com.example.progettoenterprise.entities.Utente;
-import com.example.progettoenterprise.repositories.UtenteRepository;
+import com.example.progettoenterprise.data.entities.Utente;
+import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;

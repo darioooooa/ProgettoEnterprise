@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.entities;
+package com.example.progettoenterprise.data.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +15,7 @@ public class Viaggio {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_viaggio;
+    private Long id;
 
     @Column(nullable = false)
     private String titolo;
@@ -38,4 +38,7 @@ public class Viaggio {
 
     @OneToMany(mappedBy = "viaggio", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ListaViaggio> presenteInListe;
+
+    @OneToMany(mappedBy = "viaggio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AttivitaViaggio> tappe;
 }
