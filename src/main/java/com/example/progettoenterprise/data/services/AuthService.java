@@ -1,12 +1,15 @@
 package com.example.progettoenterprise.data.services;
 
-import com.example.progettoenterprise.data.entities.Utente;
+import com.example.progettoenterprise.dto.LoginDTO;
+import com.example.progettoenterprise.dto.RegistrazioneDTO;
 import com.example.progettoenterprise.dto.UtenteDTO;
+
+import java.util.Map;
 
 public interface AuthService {
 
-    UtenteDTO registraUtente(Utente utente);
+    UtenteDTO registraUtente(RegistrazioneDTO regDTO);
 
-    Utente getUtenteByUsernameOrEmail(String username);
+    Map<String, String> eseguiLogin(LoginDTO loginDTO) throws Exception;
 
 }
