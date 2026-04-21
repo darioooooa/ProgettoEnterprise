@@ -49,6 +49,10 @@ public class SecurityConfiguration {
                     // Endpoint accessibili a chiunque
                     auth.requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll();
                     // Endpoint accessibili solo agli utenti autenticati
+                    auth.requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 // Disabilitazione della protezione CSRF, sicuro perchè usiamo JWT
