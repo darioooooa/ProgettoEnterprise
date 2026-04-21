@@ -13,6 +13,8 @@ public class ViaggioDTO {
 
     private String descrizione;
 
+    private String destinazione;
+
     @NotNull
     @Min(value=0)
     private Double prezzo;
