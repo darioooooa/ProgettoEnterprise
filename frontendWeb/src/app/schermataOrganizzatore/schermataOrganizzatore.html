@@ -1,0 +1,101 @@
+<header class="navbar-admin">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <div class="logo">🌍 ENTERPRISE</div>
+  <nav>
+    <a routerLink="/" class="active">Dashboard</a>
+    <a href="#">Catalogo Viaggi</a>
+    <a href="#">Utenti</a>
+    <a href="#" style="color: #ef476f; margin-left: 30px;">Esci</a>
+  </nav>
+  <button class="btn-admin" (click)="apriModalCreazione()">+ Nuovo Viaggio</button>
+</header>
+
+<main class="admin-container">
+
+  <div class="admin-header">
+    <div>
+      <h1>Pannello Organizzatore</h1>
+      <p style="color: #546e7a;">Benvenuto nella gestione operativa dei tuoi pacchetti.</p>
+    </div>
+    <button class="btn-admin btn-outline">Scarica Report PDF</button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>12</h3>
+      <p>Viaggi Attivi</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #ffd166;">
+      <h3>45</h3>
+      <p>Prenotazioni Totali</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #06d6a0;">
+      <h3>€ 12.400</h3>
+      <p>Guadagno Stimato</p>
+    </div>
+  </div>
+
+  <div class="management-section">
+    <div class="admin-header">
+      <h2>I tuoi Viaggi</h2>
+    </div>
+
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+        <tr>
+          <th>Destinazione</th>
+          <th>Prezzo</th>
+          <th>Stato</th>
+          <th style="text-align: center;">Azioni</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let v of listaDeiViaggi">
+          <td><strong>{{ v.destinazione }}</strong></td>
+          <td>{{ v.prezzo }}€</td>
+          <td><span class="status status-active">Attivo</span></td>
+          <td style="text-align: center;">
+            <span class="action-icon edit-icon" (click)="modifica(v)">✏️</span>
+            <span class="action-icon delete-icon" (click)="elimina(v)">🗑️</span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="management-section" style="margin-top: 3rem;">
+    <h2>Ultime Prenotazioni Ricevute</h2>
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Viaggio</th>
+          <th>Data</th>
+          <th>Persone</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>Mario Rossi</td>
+          <td>Bali, Indonesia</td>
+          <td>20/04/2026</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>Giulia Bianchi</td>
+          <td>Deserto del Sahara</td>
+          <td>18/04/2026</td>
+          <td>1</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>🌐 Dashboard Organizzatore - Progetto Enterprise 2025/2026</p>
+</footer>
