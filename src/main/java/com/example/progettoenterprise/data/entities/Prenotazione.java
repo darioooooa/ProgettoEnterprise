@@ -29,6 +29,7 @@ public class Prenotazione {
     private Viaggio viaggio;
 
 
+
     public enum StatoPrenotazione {
         IN_ATTESA, CONFERMATA, ANNULLATA
     }
