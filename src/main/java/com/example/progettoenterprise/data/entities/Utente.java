@@ -64,6 +64,12 @@ public class Utente {
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ListaUtente> listeAccessibili;
 
+    @OneToMany(mappedBy = "richiedente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Amicizia> richiesteInviate;
+
+    @OneToMany(mappedBy = "ricevente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Amicizia> richiesteRicevute;
+
 
 
 }

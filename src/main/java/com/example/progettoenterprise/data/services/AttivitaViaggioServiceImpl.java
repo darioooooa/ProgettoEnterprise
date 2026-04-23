@@ -5,7 +5,7 @@ import com.example.progettoenterprise.data.entities.AttivitaViaggio;
 import com.example.progettoenterprise.data.repositories.AttivitaViaggioRepository;
 import com.example.progettoenterprise.dto.AttivitaViaggioDTO;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
