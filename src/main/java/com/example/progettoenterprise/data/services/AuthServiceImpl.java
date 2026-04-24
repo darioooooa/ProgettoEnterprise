@@ -50,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
         utente.setPassword(passwordEncoder.encode(regDTO.getPassword()));
 
         // Impostazione del ruolo predefinito
-        utente.setRuolo(Utente.Ruolo.VIAGGIATORE);
+        utente.setRuolo(Utente.Ruolo.ROLE_VIAGGIATORE);
 
         Utente salvato = utenteRepository.save(utente);
 
@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         // Crea il token, includendo le informazioni dell'utente nel payload
         String token = tokenStore.createToken(Map.of(
                 "username", utente.getUsername(),
-                "role", "ROLE_" +utente.getRuolo().name()
+                "role",utente.getRuolo().name()
         ));
 
         // Restituisce i dati impacchettati al controller

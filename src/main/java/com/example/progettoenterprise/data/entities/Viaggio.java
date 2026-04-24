@@ -41,4 +41,9 @@ public class Viaggio {
 
     @OneToMany(mappedBy = "viaggio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AttivitaViaggio> tappe;
+
+    @Column(name="media_recensioni", nullable = false)
+    private Double mediaRecensioni;
+    @Column(name = "numero_recensioni", nullable = false)
+    private int numeroRecensioni;
 }

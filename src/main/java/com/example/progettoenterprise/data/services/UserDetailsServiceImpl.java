@@ -30,6 +30,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 utente.getUsername(),
                 utente.getPassword(),
                 // ROLE_ è lo standard spring per i ruoli
-                List.of(new SimpleGrantedAuthority("ROLE_" + utente.getRuolo().name())));
+                List.of(new SimpleGrantedAuthority(utente.getRuolo().name())));
     }
 }

@@ -51,8 +51,8 @@ public class Utente {
     private Ruolo ruolo;
 
     public enum Ruolo {
-        VIAGGIATORE,
-        ORGANIZZATORE
+        ROLE_VIAGGIATORE,
+        ROLE_ORGANIZZATORE
     }
     //"organizzatore" nel mappedBy ha lo stesso nome della variabile che si trova nella classe Viaggio
     @OneToMany(mappedBy = "organizzatore",cascade = CascadeType.ALL, orphanRemoval = true)

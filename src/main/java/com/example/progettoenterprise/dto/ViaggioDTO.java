@@ -1,4 +1,5 @@
 package com.example.progettoenterprise.dto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
@@ -6,27 +7,39 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ViaggioDTO {
-    private Long idViaggio;
+    // I campi marcati con READ_ONLY servono per evitare che vengano modificati dall'utente
 
-    @NotBlank
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long id;
+
+    @NotBlank(message = "Il titolo è obbligatorio")
     private String titolo;
 
     private String descrizione;
 
+    @NotBlank(message = "La destinazione è obbligatoria")
     private String destinazione;
 
-    @NotNull
-    @Min(value=0)
+    @NotNull(message = "Il prezzo è obbligatorio")
+    @Min(value = 0, message = "Il prezzo non può essere negativo")
     private Double prezzo;
 
-    @NotNull
-    @Future  //serve per far si che la data inizio non venga scelta prima della data corrente
+    @NotNull(message = "La data di inizio è obbligatoria")
+    @Future(message = "La data di inizio deve essere nel futuro")  //serve per far si che la data inizio non venga scelta prima della data corrente
     private LocalDate dataInizio;
 
-    @NotNull
+    @NotNull(message = "La data di fine è obbligatoria")
+    @Future(message = "La data di fine deve essere nel futuro")
     private LocalDate dataFine;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Double mediaRecensioni;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer numeroRecensioni;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long organizzatoreId;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String organizzatoreUsername;
 }
 
