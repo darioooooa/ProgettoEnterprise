@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, messaggio);
     }
 
-    // Gestisce le eccezzioni lanciate nel service
+    // Gestisce le eccezioni lanciate nel service
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErroreDTO> handleRuntimeException(RuntimeException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());

@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.data.services;
+package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.CacheConfig;
 import com.example.progettoenterprise.config.i18n.MessageLang;
@@ -6,6 +6,7 @@ import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
+import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.Cacheable;

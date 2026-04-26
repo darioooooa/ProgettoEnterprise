@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.data.services;
+package com.example.progettoenterprise.data.service;
 
 
 import com.example.progettoenterprise.dto.ViaggioDTO;

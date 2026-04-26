@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface AmiciziaRepository extends JpaRepository<Amicizia, Long> {
     Optional<Amicizia> findByRichiedenteAndRicevente(Utente richiedente, Utente ricevente);
     List<Amicizia> findByRiceventeAndStato(Utente ricevente, StatoAmicizia stato);
+    List<Amicizia> findByRichiedenteAndStato(Utente richiedente, StatoAmicizia stato);
 
     // Serve per evitare che entrambi si mandino la richiesta contemporaneamente
     @Query("SELECT a FROM Amicizia a WHERE " +

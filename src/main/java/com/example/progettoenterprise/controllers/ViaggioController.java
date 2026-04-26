@@ -1,6 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
-import com.example.progettoenterprise.data.services.ViaggioService;
+import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

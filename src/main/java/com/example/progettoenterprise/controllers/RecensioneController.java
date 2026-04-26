@@ -1,6 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
-import com.example.progettoenterprise.data.services.RecensioneService;
+import com.example.progettoenterprise.data.service.RecensioneService;
 import com.example.progettoenterprise.dto.RecensioneDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

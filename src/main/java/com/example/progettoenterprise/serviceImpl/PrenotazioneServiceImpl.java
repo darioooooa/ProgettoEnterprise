@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.data.services;
+package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.Prenotazione;
@@ -7,6 +7,7 @@ import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.PrenotazioneRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
+import com.example.progettoenterprise.data.service.PrenotazioneService;
 import com.example.progettoenterprise.dto.PrenotazioneDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PrenotazioneServiceImpl implements PrenotazioneService{
+public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final ViaggioRepository viaggioRepository;
     private final PrenotazioneRepository prenotazioneRepository;
     private final UtenteRepository utenteRepository;

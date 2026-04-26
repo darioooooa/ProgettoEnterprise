@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.data.services;
+package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.CacheConfig;
 import com.example.progettoenterprise.config.i18n.MessageLang;
@@ -10,6 +10,7 @@ import com.example.progettoenterprise.data.repositories.PrenotazioneRepository;
 import com.example.progettoenterprise.data.repositories.RecensioneRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
+import com.example.progettoenterprise.data.service.RecensioneService;
 import com.example.progettoenterprise.dto.RecensioneDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +19,12 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RecensioneServiceImpl implements RecensioneService{
+public class RecensioneServiceImpl implements RecensioneService {
     private final RecensioneRepository recensioneRepository;
     private final ViaggioRepository viaggioRepository;
     private final UtenteRepository utenteRepository;

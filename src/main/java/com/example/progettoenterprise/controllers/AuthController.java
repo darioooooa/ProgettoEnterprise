@@ -1,7 +1,7 @@
 package com.example.progettoenterprise.controllers;
 
 import com.example.progettoenterprise.dto.LoginDTO;
-import com.example.progettoenterprise.data.services.AuthService;
+import com.example.progettoenterprise.data.service.AuthService;
 import com.example.progettoenterprise.dto.RegistrazioneDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

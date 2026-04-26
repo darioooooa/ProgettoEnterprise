@@ -1,8 +1,9 @@
-package com.example.progettoenterprise.data.services;
+package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.AttivitaViaggio;
 import com.example.progettoenterprise.data.repositories.AttivitaViaggioRepository;
+import com.example.progettoenterprise.data.service.AttivitaViaggioService;
 import com.example.progettoenterprise.dto.AttivitaViaggioDTO;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AttivitaViaggioServiceImpl implements AttivitaViaggioService{
+public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
     private final AttivitaViaggioRepository attivitaViaggioRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;

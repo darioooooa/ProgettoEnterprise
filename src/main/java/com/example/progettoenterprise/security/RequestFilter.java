@@ -1,6 +1,6 @@
 package com.example.progettoenterprise.security;
 
-import com.example.progettoenterprise.data.services.UserDetailsServiceImpl;
+import com.example.progettoenterprise.serviceImpl.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
