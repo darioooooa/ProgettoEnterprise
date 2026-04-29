@@ -12,7 +12,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ListaItinerari {
+public class Itinerario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
