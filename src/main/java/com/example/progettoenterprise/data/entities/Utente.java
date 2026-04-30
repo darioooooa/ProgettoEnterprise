@@ -71,5 +71,12 @@ public class Utente {
     private List<Amicizia> richiesteRicevute;
 
 
+    @OneToMany(mappedBy = "proprietario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItinerarioPreferito> mieiItinerari;
+
+    @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notifica> notifiche;
+
+
 
 }

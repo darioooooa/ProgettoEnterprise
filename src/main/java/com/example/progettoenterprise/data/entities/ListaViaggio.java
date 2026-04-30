@@ -12,7 +12,7 @@ public class ListaViaggio {
     @ManyToOne
     @MapsId("listaId")
     @JoinColumn(name = "lista_id")
-    private ListaItinerari lista;
+    private ItinerarioPreferito lista;
 
     @ManyToOne
     @MapsId("viaggioId") // Collega questo oggetto al campo 'viaggioId' della chiave

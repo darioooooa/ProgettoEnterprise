@@ -19,7 +19,7 @@ public class ListaUtente {
     @ManyToOne
     @MapsId("listaId") // Collega la lista alla sua parte della chiave
     @JoinColumn(name = "lista_id")
-    private ListaItinerari lista;
+    private ItinerarioPreferito lista;
 
     //Altri campi
 }

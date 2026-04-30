@@ -12,7 +12,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Itinerario {
+public class ItinerarioPreferito {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,6 +30,11 @@ public class Itinerario {
         PUBBLICA,
         CONDIVISA
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proprietario_id", nullable = false)
+    private Utente proprietario;
+
 
     @OneToMany(mappedBy = "lista", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ListaViaggio> contenuti;
