@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -26,8 +27,8 @@ public class Viaggio {
     private String destinazione;
 
     private Double prezzo;
-    private LocalDate dataInizio;
-    private LocalDate dataFine;
+    private LocalDateTime dataInizio;
+    private LocalDateTime dataFine;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizzatore_id") //il nome del campo che è stato aggiunto nel nostro db

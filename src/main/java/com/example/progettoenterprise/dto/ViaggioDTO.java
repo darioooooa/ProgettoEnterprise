@@ -2,7 +2,9 @@ package com.example.progettoenterprise.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import jakarta.validation.constraints.*;
-import java.time.LocalDate;
+
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,11 +28,11 @@ public class ViaggioDTO {
 
     @NotNull(message = "La data di inizio è obbligatoria")
     @Future(message = "La data di inizio deve essere nel futuro")  //serve per far si che la data inizio non venga scelta prima della data corrente
-    private LocalDate dataInizio;
+    private LocalDateTime dataInizio;
 
     @NotNull(message = "La data di fine è obbligatoria")
     @Future(message = "La data di fine deve essere nel futuro")
-    private LocalDate dataFine;
+    private LocalDateTime dataFine;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Double mediaRecensioni;

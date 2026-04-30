@@ -7,4 +7,5 @@ public interface PrenotazioneService {
     void cancellaPrenotazione(Long id,Long idUtente);
     PrenotazioneDTO getPrenotazioneById(Long id);
     List<PrenotazioneDTO> getPrenotazioneperUtente(Long idUtente);
+    byte[] esportaPrenotazioni(Long viaggioId);
 }

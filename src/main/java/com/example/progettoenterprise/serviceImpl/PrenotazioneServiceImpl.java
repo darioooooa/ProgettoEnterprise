@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +27,14 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final UtenteRepository utenteRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
+
+    private String formattaDataIcs(LocalDateTime data) {
+        if (data == null) return "";
+
+
+        return data.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
+    }
+
 
     @Override
     public PrenotazioneDTO creaPrenotazione(Long idViaggio, Long idUtente, Integer numeroPersone) {
@@ -77,6 +86,31 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
 
 
+    }
+    @Override
+    public byte[] esportaPrenotazioni(Long idPrenotazione) {
+        Prenotazione prenotazione = prenotazioneRepository.findById(idPrenotazione)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("prenotazione.notexist", idPrenotazione)));
+
+        Viaggio viaggio = prenotazione.getViaggio();
+
+        StringBuilder ics = new StringBuilder();
+        ics.append("BEGIN:VCALENDAR\n")
+                .append("VERSION:2.0\n")
+                .append("PRODID:-//ProgettoEnterprise//GestioneViaggi//IT\n")
+                .append("BEGIN:VEVENT\n")
+                .append("UID:").append(prenotazione.getId()).append("@gestione-viaggi.it\n")
+                .append("SUMMARY:").append(viaggio.getTitolo()).append("\n")
+                .append("DESCRIPTION:Prenotazione per ").append(prenotazione.getNumeroPersone()).append(" persone\n")
+
+                // Ora passiamo LocalDateTime, e il metodo lo gestirà correttamente
+                .append("DTSTART:").append(formattaDataIcs(viaggio.getDataInizio())).append("\n")
+                .append("DTEND:").append(formattaDataIcs(viaggio.getDataFine())).append("\n")
+
+                .append("END:VEVENT\n")
+                .append("END:VCALENDAR");
+
+        return ics.toString().getBytes(StandardCharsets.UTF_8);
     }
 
 

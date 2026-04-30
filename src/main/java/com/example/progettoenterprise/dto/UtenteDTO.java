@@ -20,7 +20,7 @@ public class UtenteDTO {
     @NotBlank
     private String cognome;
 
-    private Ruolo ruolo;
+
 
     private String nomeCompleto;
 
