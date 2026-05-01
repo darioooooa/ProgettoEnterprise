@@ -2,6 +2,7 @@ package com.example.progettoenterprise.exception;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.dto.ErroreDTO;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,13 +30,19 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, messaggio);
     }
 
-    // Gestisce le eccezioni lanciate nel service
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErroreDTO> handleRuntimeException(RuntimeException e) {
+    // Gestisce quando una risorsa non esiste
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErroreDTO> handleNotFound(EntityNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    // Gestisce dati non validi o duplicati
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErroreDTO> handleIllegalArgument(IllegalArgumentException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
-    // Getsisce errori di autenticazione
+    // Gestisce errori di autenticazione
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErroreDTO> handleAuthException(AuthenticationException e) {
         return buildResponse(HttpStatus.UNAUTHORIZED, messageLang.getMessage("auth.login.invalid"));
@@ -47,20 +54,19 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, messageLang.getMessage("auth.access.denied"));
     }
 
-    // Gestisce tutti gli altri errori
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErroreDTO> handleGenericException(Exception e) {
-        // Logga l'errore sulla console per il debug
-        e.printStackTrace();
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageLang.getMessage("server.internal.error"));
-    }
-
     // Gestisce il caso in cui il body della richiesta sia assente o malformato
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErroreDTO> handleReadableException(HttpMessageNotReadableException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, messageLang.getMessage("request.body.malformed"));
     }
 
+    // Gestisce tutti gli altri errori
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErroreDTO> handleGenericException(Exception e) {
+        // Logga l'errore sulla console per il debug (solo in fase di sviluppo)
+        e.printStackTrace();
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageLang.getMessage("server.internal.error"));
+    }
     // Metodo che costruisce la risposta HTTP con l'errore
     private ResponseEntity<ErroreDTO> buildResponse(HttpStatus status, String messaggio) {
         ErroreDTO errore = new ErroreDTO(status.value(), messaggio, System.currentTimeMillis());

@@ -15,7 +15,7 @@ import java.util.Map;
 // Controller che gestisce le operazioni di autenticazione e registrazione
 @RestController
 @RequestMapping(path="/api/v1/auth", produces = "application/json")
-    @CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -43,7 +43,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(){
 
-        // Cancella il contesto di autenticazione
+        // Cancella il contesto di autenticazione (pulisce la sessione corrente nel server)
         SecurityContextHolder.clearContext();
 
         return ResponseEntity.ok(Map.of("messaggio", "Logout effettuato con successo"));
