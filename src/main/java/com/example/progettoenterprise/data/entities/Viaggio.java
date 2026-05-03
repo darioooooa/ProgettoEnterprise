@@ -47,4 +47,10 @@ public class Viaggio {
     private Double mediaRecensioni;
     @Column(name = "numero_recensioni", nullable = false)
     private int numeroRecensioni;
+
+    @OneToMany(mappedBy = "viaggio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Recensione> recensioni;
+
+    @OneToMany(mappedBy = "viaggio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImmagineViaggio> galleria;
 }

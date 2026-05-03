@@ -30,7 +30,7 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
     @Override
     public AttivitaViaggioDTO getAttivitaById(Long id) {
             AttivitaViaggio attivita=attivitaViaggioRepository.findById(id).orElseThrow(()->
-                    new RuntimeException(messageLang.getMessage("attivita.notexist",id)));
+                    new EntityNotFoundException(messageLang.getMessage("attivita.notexist",id)));
             return modelMapper.map(attivita,AttivitaViaggioDTO.class);
     }
 

@@ -31,8 +31,8 @@ public class RecensioneController {
 
         // Recupera lo username dell'utente autenticato
         String username = userDetails.getUsername();
-        recensioneService.aggiungiRecensione(username, viaggioId, recDTO.getVoto(), recDTO.getCommento());
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Recensione aggiunta con successo!"));
+        RecensioneDTO nuovaRecensione = recensioneService.aggiungiRecensione(username, viaggioId, recDTO.getVoto(), recDTO.getCommento());
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuovaRecensione);
     }
 
     // Endpoint per ottenere tutte le recensioni di un viaggio
@@ -53,8 +53,8 @@ public class RecensioneController {
             @AuthenticationPrincipal UserDetails userDetails){
 
         String username = userDetails.getUsername();
-        recensioneService.aggiornaRecensione(viaggioId, recensioneId, username, recDTO.getVoto(), recDTO.getCommento());
-        return ResponseEntity.ok(Map.of("message", "Recensione aggiornata con successo!"));
+        RecensioneDTO aggiornata = recensioneService.aggiornaRecensione(viaggioId, recensioneId, username, recDTO.getVoto(), recDTO.getCommento());
+        return ResponseEntity.ok(aggiornata);
     }
 
     // Endpoint per eliminare una recensione

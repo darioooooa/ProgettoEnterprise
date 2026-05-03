@@ -37,14 +37,14 @@ public class RecensioneServiceImpl implements RecensioneService {
     @Transactional
     // Invalida la cache del viaggio
     @CacheEvict(value = CacheConfig.CACHE_VIAGGI_MEDIA, key = "#viaggioId")
-    public void aggiungiRecensione(String username, Long viaggioId, int voto, String commento) {
+    public RecensioneDTO aggiungiRecensione(String username, Long viaggioId, int voto, String commento) {
         // Controllo voto valido
         if (voto < 1 || voto > 5) {
             throw new IllegalArgumentException(messageLang.getMessage("recensione.invalid_rating"));
         }
 
         Utente autore = utenteRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(messageLang.getMessage("utente.notfound", username)));
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notfound", username)));
 
         // Controllo utente prenotato nel viaggio che recensisce
         boolean haDiritto = prenotazioneRepository.existsByViaggiatoreIdAndViaggioIdAndStato(autore.getId(), viaggioId, Prenotazione.StatoPrenotazione.CONFERMATA);
@@ -58,17 +58,19 @@ public class RecensioneServiceImpl implements RecensioneService {
         }
 
         Viaggio viaggio = viaggioRepository.findById(viaggioId)
-                .orElseThrow(() -> new RuntimeException(messageLang.getMessage("viaggio.notexist", viaggioId)));
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId)));
 
         Recensione recensione = new Recensione();
         recensione.setUtente(autore);
         recensione.setViaggio(viaggio);
         recensione.setVoto(voto);
         recensione.setCommento(commento);
-        recensioneRepository.save(recensione);
+        Recensione salvata = recensioneRepository.save(recensione);
 
         // Aggiorna la media del viaggio
         viaggioRepository.aggiornaStatisticheRecensione(viaggioId,voto);
+
+        return modelMapper.map(salvata, RecensioneDTO.class);
     }
 
     @Override
@@ -76,7 +78,7 @@ public class RecensioneServiceImpl implements RecensioneService {
     @CacheEvict(value = CacheConfig.CACHE_VIAGGI_MEDIA, key = "#viaggioId")
     public void eliminaRecensione(Long viaggioId, Long recensioneId, String username) {
         Recensione recensione = recensioneRepository.findById(recensioneId)
-                .orElseThrow(() -> new RuntimeException(messageLang.getMessage("recensione.notexist", recensioneId)));
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("recensione.notexist", recensioneId)));
 
         // Controllo che la recensione appartenga al viaggio specificato
         if (!recensione.getViaggio().getId().equals(viaggioId)) {
@@ -87,7 +89,7 @@ public class RecensioneServiceImpl implements RecensioneService {
         boolean isAutore = recensione.getUtente().getUsername().equals(username);
         boolean isOrganizzatore = recensione.getViaggio().getOrganizzatore().getUsername().equals(username);
         if (!isAutore && !isOrganizzatore) {
-            throw new IllegalArgumentException(messageLang.getMessage("recensione.unathorized_utente"));
+            throw new IllegalArgumentException(messageLang.getMessage("recensione.unauthorized_utente"));
         }
 
         int votoSottratto = recensione.getVoto();
@@ -99,16 +101,16 @@ public class RecensioneServiceImpl implements RecensioneService {
     @Override
     @Transactional
     @CacheEvict(value = CacheConfig.CACHE_VIAGGI_MEDIA, key = "#viaggioId")
-    public void aggiornaRecensione(Long viaggioId, Long recensioneId, String username, int nuovoVoto, String nuovoCommento) {
+    public RecensioneDTO aggiornaRecensione(Long viaggioId, Long recensioneId, String username, int nuovoVoto, String nuovoCommento) {
         // Controllo voto valido
         if (nuovoVoto < 1 || nuovoVoto > 5) {
             throw new IllegalArgumentException(messageLang.getMessage("recensione.invalid_rating"));
         }
         // Controllo che l'utente sia l'autore della recensione
         Recensione recensione = recensioneRepository.findById(recensioneId)
-                .orElseThrow(() -> new RuntimeException(messageLang.getMessage("recensione.notexist", recensioneId)));
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("recensione.notexist", recensioneId)));
         if (!recensione.getUtente().getUsername().equals(username)) {
-            throw new IllegalArgumentException(messageLang.getMessage("recensione.unathorized_utente"));
+            throw new IllegalArgumentException(messageLang.getMessage("recensione.unauthorized_utente"));
         }
 
         // Controllo che la recensione appartenga al viaggio specificato
@@ -119,12 +121,15 @@ public class RecensioneServiceImpl implements RecensioneService {
         int votoVecchio = recensione.getVoto();
         recensione.setVoto(nuovoVoto);
         recensione.setCommento(nuovoCommento);
-        recensioneRepository.save(recensione);
+
+        Recensione aggiornata = recensioneRepository.save(recensione);
 
         // Aggiorna la media del viaggio se il voto è stato modificato
         if(nuovoVoto != votoVecchio){
             viaggioRepository.ricalcolaMediaPerModifica(viaggioId, votoVecchio, nuovoVoto);
         }
+
+        return modelMapper.map(aggiornata, RecensioneDTO.class);
     }
 
     @Override
