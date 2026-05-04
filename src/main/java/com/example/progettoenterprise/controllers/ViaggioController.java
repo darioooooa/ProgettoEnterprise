@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -41,5 +42,16 @@ public class ViaggioController {
         Map<String, Object> statistiche = viaggioService.getStatisticheRecensioni(viaggioId);
 
         return ResponseEntity.ok(statistiche);
+    }
+    @DeleteMapping(value = "/{viaggioId}/viaggio")
+    public ResponseEntity<?> cancellaViaggio(@PathVariable Long viaggioId,@RequestParam Long organizzatoreId){
+        viaggioService.eliminaViaggio(viaggioId,organizzatoreId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/organizzatore/{organizzatoreId}")
+    public ResponseEntity<List<ViaggioDTO>> getViaggiPerOrganizzatore(@PathVariable Long organizzatoreId){
+        List<ViaggioDTO> viaggi = viaggioService.getViaggiPerOrganizzatore(organizzatoreId);
+        return ResponseEntity.ok(viaggi);
     }
 }

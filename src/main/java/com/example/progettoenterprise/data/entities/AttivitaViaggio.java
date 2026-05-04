@@ -24,7 +24,7 @@ public class AttivitaViaggio {
     private LocalDateTime orarioInizio;
     private LocalDateTime orarioFine;
 
-
+    private String posizione;
     private Double costo;
 
     @ManyToOne(fetch = FetchType.LAZY)

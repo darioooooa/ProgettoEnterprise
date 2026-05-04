@@ -1,28 +1,46 @@
 import { Component } from '@angular/core';
-import {CommonModule} from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {RouterLink} from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
+import { Viaggio } from '../models/viaggio.model';
+import {ViaggioService} from '../service/crea-viaggio.service';       // L'interfaccia
 
 @Component({
   selector: 'app-crea-viaggio',
   standalone: true,
-  imports: [CommonModule,
-  FormsModule,
-  RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './crea-viaggio.html',
   styleUrl: './crea-viaggio.css',
 })
 export class CreaViaggio {
-  titolo: string = "Avventura nella Savana";
-  descrizione: string = "Un viaggio indimenticabile nel cuore della Savana africana";
-  destinazione: string=  "Kenya" ;
-  prezzo: number= 1250.00;
-  dataInizio: string = "2026-08-10";
-  dataFine: string = "2026-08-20";
-  tappe: any[]= [
-        {
-        titolo: "Arrivo al parco Masai Mara",
-        descrizione: "Relax nelle acque termali dopo il volo."
-        }
-      ];
+
+
+  nuovoViaggio: Viaggio = {
+    titolo: '',
+    descrizione: '',
+    destinazione: '',
+    prezzo: 0,
+    dataInizio: '',
+    dataFine: '',
+    tappe: []
+  };
+
+  constructor(
+    private viaggioService: ViaggioService,
+    private router: Router
+  ) {}
+
+  // Metodo per inviare i dati al controller Spring Boot
+  onSubmit() {
+    this.viaggioService.creaViaggio(this.nuovoViaggio).subscribe({
+      next: (res) => {
+        console.log('Successo!', res);
+        this.router.navigate(['/dashboard']); // Torna alla lista viaggi
+      },
+      error: (err) => {
+        console.error('Errore durante il salvataggio:', err);
+        alert('Controlla i dati inseriti o i permessi (Role ORGANIZZATORE)');
+      }
+    });
+  }
 }
