@@ -11,6 +11,7 @@ import com.example.progettoenterprise.dto.UtenteDTO;
 import com.example.progettoenterprise.security.TokenStore;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
@@ -38,11 +40,13 @@ public class AuthServiceImpl implements AuthService {
 
         // Controlla se l'email esiste già
         if (utenteRepository.findByEmail(regDTO.getEmail()).isPresent()) {
+            log.warn("Tentativo di registrazione con email già esistente: {}", regDTO.getEmail());
             throw new IllegalArgumentException(messageLang.getMessage("auth.email.duplicate"));
         }
 
         // Controlla se lo username esiste già
         if (utenteRepository.findByUsername(regDTO.getUsername()).isPresent()) {
+            log.warn("Tentativo di registrazione con username già esistente: {}", regDTO.getUsername());
             throw new IllegalArgumentException(messageLang.getMessage("auth.username.duplicate"));
         }
 
@@ -54,6 +58,7 @@ public class AuthServiceImpl implements AuthService {
 
         Viaggiatore salvato = utenteRepository.save(nuovoViaggiatore);
 
+        log.info("Nuovo utente registrato con successo: {} (ID: {})", salvato.getUsername(), salvato.getId());
         return modelMapper.map(salvato, UtenteDTO.class);
     }
 
@@ -73,6 +78,8 @@ public class AuthServiceImpl implements AuthService {
                 "username", utente.getUsername(),
                 "role",utente.getRuolo().name()
         ));
+
+        log.info("Utente autenticato: {} (ID: {})", utente.getUsername(), utente.getId());
 
         // Restituisce i dati impacchettati al controller
         return Map.of(

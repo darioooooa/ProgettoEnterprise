@@ -9,6 +9,7 @@ import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ViaggioServiceImpl implements ViaggioService {
 
     private final ViaggioRepository viaggioRepository;
@@ -30,17 +32,22 @@ public class ViaggioServiceImpl implements ViaggioService {
 
     @Override
     @Transactional
-    public ViaggioDTO creaViaggio(ViaggioDTO viaggioDTO, String organizzatoreUsername) {
-        Utente organizzatore = utenteRepository.findByUsername(organizzatoreUsername)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        messageLang.getMessage("utente.notfound", organizzatoreUsername)));
+    public ViaggioDTO creaViaggio(ViaggioDTO viaggioDTO, Long organizzatoreId) {
+        Utente organizzatore = utenteRepository.findById(organizzatoreId)
+                .orElseThrow(() -> {
+                    log.error("Impossibile creare viaggio: utente ID {} non trovato", organizzatoreId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", organizzatoreId));
+                });
         Viaggio viaggio = modelMapper.map(viaggioDTO, Viaggio.class);
 
         // Controllo sui dati del viaggio
         if (viaggio.getPrezzo() <= 0) {
+            log.warn("Tentativo di creazione viaggio con prezzo non valido: {}", viaggio.getPrezzo());
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.invalid_price"));
         }
         if (viaggio.getDataFine().isBefore(viaggio.getDataInizio()) || viaggio.getDataInizio() == null){
+            log.warn("Tentativo di creazione viaggio con date non valide. Inizio: {}, Fine: {}",
+                    viaggio.getDataInizio(), viaggio.getDataFine());
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.invalid_date"));
         }
 
@@ -63,9 +70,13 @@ public class ViaggioServiceImpl implements ViaggioService {
     @Transactional
     public void eliminaViaggio(Long viaggioId, Long organizzatoreId) {
         Viaggio viaggio = viaggioRepository.findById(viaggioId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        messageLang.getMessage("viaggio.notexist", viaggioId)));
+                .orElseThrow(() -> {
+                    log.warn("Tentativo di eliminazione fallito: viaggio ID {} inesistente", viaggioId);
+                    return new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId));
+                });
         if (!viaggio.getOrganizzatore().getId().equals(organizzatoreId)) {
+            log.error("Accesso negato! L'utente ID {} ha tentato di eliminare il viaggio ID {} che appartiene all'utente ID {}",
+                    organizzatoreId, viaggioId, viaggio.getOrganizzatore().getId());
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
         }
 

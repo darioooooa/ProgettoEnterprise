@@ -2,13 +2,14 @@ package com.example.progettoenterprise.controllers;
 
 import com.example.progettoenterprise.data.service.RecensioneService;
 import com.example.progettoenterprise.dto.RecensioneDTO;
+import com.example.progettoenterprise.security.UtenteLoggato;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,27 +19,35 @@ import java.util.Map;
 @RequestMapping(path="/api/v1/viaggi/{viaggioId}/recensioni", produces = "application/json")
 @CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
+@Slf4j
 public class RecensioneController {
     private final RecensioneService recensioneService;
 
     // Endpoint per creare una nuova recensione
     @PostMapping(consumes = "application/json")
     @PreAuthorize("hasRole('VIAGGIATORE')")
-    public ResponseEntity<?> creaRecensione(
+    public ResponseEntity<RecensioneDTO> creaRecensione(
             @PathVariable Long viaggioId,
             @Valid @RequestBody RecensioneDTO recDTO,
-            @AuthenticationPrincipal UserDetails userDetails){
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato){
 
+        log.info("L'utente {} (ID: {}) sta inserendo una recensione per il viaggio ID: {}",
+                utenteLoggato.getUsername(), utenteLoggato.getId(), viaggioId);
         // Recupera lo username dell'utente autenticato
-        String username = userDetails.getUsername();
-        RecensioneDTO nuovaRecensione = recensioneService.aggiungiRecensione(username, viaggioId, recDTO.getVoto(), recDTO.getCommento());
+        RecensioneDTO nuovaRecensione = recensioneService.aggiungiRecensione(utenteLoggato.getId(), viaggioId, recDTO.getVoto(), recDTO.getCommento());
         return ResponseEntity.status(HttpStatus.CREATED).body(nuovaRecensione);
     }
 
     // Endpoint per ottenere tutte le recensioni di un viaggio
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getRecensioniViaggio(@PathVariable Long viaggioId){
+    public ResponseEntity<List<RecensioneDTO>> getRecensioniViaggio(
+            @PathVariable Long viaggioId,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato){
+
+        log.info("L'utente {} sta visualizzando le recensioni per il viaggio ID: {}",
+                utenteLoggato.getUsername(), viaggioId);
+
         List<RecensioneDTO> recensioni = recensioneService.getRecensioniViaggio(viaggioId);
         return ResponseEntity.ok(recensioni);
     }
@@ -46,27 +55,31 @@ public class RecensioneController {
     // Endpoint per aggiornare una recensione
     @PutMapping(value = "/{recensioneId}", consumes = "application/json")
     @PreAuthorize("hasRole('VIAGGIATORE')")
-    public ResponseEntity<?> aggiornaRecensione(
+    public ResponseEntity<RecensioneDTO> aggiornaRecensione(
             @PathVariable Long viaggioId,
             @PathVariable Long recensioneId,
             @Valid @RequestBody RecensioneDTO recDTO,
-            @AuthenticationPrincipal UserDetails userDetails){
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato){
 
-        String username = userDetails.getUsername();
-        RecensioneDTO aggiornata = recensioneService.aggiornaRecensione(viaggioId, recensioneId, username, recDTO.getVoto(), recDTO.getCommento());
+        log.info("L'utente {} sta tentando di modificare la recensione ID: {} del viaggio ID: {}",
+                utenteLoggato.getUsername(), recensioneId, viaggioId);
+
+        RecensioneDTO aggiornata = recensioneService.aggiornaRecensione(viaggioId, recensioneId, utenteLoggato.getId(), recDTO.getVoto(), recDTO.getCommento());
         return ResponseEntity.ok(aggiornata);
     }
 
     // Endpoint per eliminare una recensione
     @DeleteMapping(value = "/{recensioneId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> eliminaRecensione(
+    public ResponseEntity<Map<String,String>> eliminaRecensione(
             @PathVariable Long viaggioId,
             @PathVariable Long recensioneId,
-            @AuthenticationPrincipal UserDetails userDetails){
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato){
 
-        String username = userDetails.getUsername();
-        recensioneService.eliminaRecensione(viaggioId, recensioneId, username);
+        log.warn("ELIMINAZIONE: L'utente {} sta eliminando la recensione ID: {}",
+                utenteLoggato.getUsername(), recensioneId);
+
+        recensioneService.eliminaRecensione(viaggioId, recensioneId, utenteLoggato.getId());
         return ResponseEntity.ok(Map.of("message", "Recensione eliminata con successo!"));
     }
 }

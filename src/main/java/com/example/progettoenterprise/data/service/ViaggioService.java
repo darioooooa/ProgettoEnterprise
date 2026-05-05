@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ViaggioService {
-    ViaggioDTO creaViaggio(ViaggioDTO viaggiodto, String organizzatoreUsername);
+    ViaggioDTO creaViaggio(ViaggioDTO viaggiodto, Long organizzatoreId);
     List<ViaggioDTO> getViaggiPerOrganizzatore(Long organizzatoreId);
     void eliminaViaggio(Long id, Long organizzatoreId);
 

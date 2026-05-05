@@ -5,8 +5,8 @@ import com.example.progettoenterprise.dto.ImmagineViaggioDTO;
 import java.util.List;
 
 public interface ImmagineViaggioService {
-    ImmagineViaggioDTO aggiungiImmagine(Long viaggioId, String url, boolean pubblica, String organizzatoreUsername);
-    void eliminaImmagine(Long viaggioId, Long immagineId, String organizzatoreUsername);
-    ImmagineViaggioDTO modificaVisibilita(Long viaggioId, Long immagineId, boolean nuovaVisibilita, String organizzatoreUsername);
-    List<ImmagineViaggioDTO> getGalleriaViaggio(Long viaggioId, String utenteUsername);
+    ImmagineViaggioDTO aggiungiImmagine(Long viaggioId, String url, boolean pubblica, Long organizzatoreId);
+    void eliminaImmagine(Long viaggioId, Long immagineId, Long organizzatoreId);
+    ImmagineViaggioDTO modificaVisibilita(Long viaggioId, Long immagineId, boolean nuovaVisibilita, Long organizzatoreId);
+    List<ImmagineViaggioDTO> getGalleriaViaggio(Long viaggioId, Long utenteId);
 }
