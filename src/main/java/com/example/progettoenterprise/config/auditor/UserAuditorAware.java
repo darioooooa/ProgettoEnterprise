@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.auditor;
+package com.example.progettoenterprise.config.auditor;
 
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.security.UtenteLoggato;
