@@ -16,6 +16,8 @@ public class AttivitaViaggioDTO {
     private LocalDateTime orarioInizio;
     @NotNull
     private LocalDateTime orarioFine;
+    @NotBlank
+    private String posizione;
 
     @Min(value=0)
     private Double costo;

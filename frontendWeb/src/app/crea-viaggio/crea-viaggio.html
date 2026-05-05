@@ -20,49 +20,42 @@
         <p>Inserisci i dettagli per la gestione e prenotazione </p>
       </header>
 
-      <form class="booking-form">
+
+      <form class="booking-form" (ngSubmit)="onSubmit()">
+
         <div class="input-group">
           <label for="titolo">Titolo Esperienza</label>
-          <input type="text" id="titolo" [(ngModel)]="titolo" name="titolo" placeholder="Esempio: Trekking in Islanda">
+          <input type="text" id="titolo" [(ngModel)]="nuovoViaggio.titolo" name="titolo" placeholder="Esempio: Trekking in Islanda" required>
         </div>
 
         <div class="input-group">
           <label for="descrizione">Descrizione</label>
-          <textarea id="descrizione" [(ngModel)]="descrizione" name="descrizione" placeholder="Descrivi il viaggio..."></textarea>
+          <textarea id="descrizione" [(ngModel)]="nuovoViaggio.descrizione" name="descrizione" placeholder="Descrivi il viaggio..."></textarea>
         </div>
 
         <div class="form-row">
           <div class="input-group">
             <label for="destinazione">Destinazione</label>
-            <input type="text" id="destinazione" [(ngModel)]="destinazione" name="destinazione">
+            <input type="text" id="destinazione" [(ngModel)]="nuovoViaggio.destinazione" name="destinazione" required>
           </div>
           <div class="input-group">
             <label for="prezzo">Prezzo (€)</label>
-            <input type="number" id="prezzo" [(ngModel)]="prezzo" name="prezzo">
+            <input type="number" id="prezzo" [(ngModel)]="nuovoViaggio.prezzo" name="prezzo" required>
           </div>
         </div>
 
         <div class="form-row">
           <div class="input-group">
             <label for="dataInizio">Data Inizio</label>
-            <input type="date" id="dataInizio" [(ngModel)]="dataInizio" name="dataInizio">
+            <input type="date" id="dataInizio" [(ngModel)]="nuovoViaggio.dataInizio" name="dataInizio">
           </div>
           <div class="input-group">
             <label for="dataFine">Data Fine</label>
-            <input type="date" id="dataFine" [(ngModel)]="dataFine" name="dataFine">
+            <input type="date" id="dataFine" [(ngModel)]="nuovoViaggio.dataFine" name="dataFine">
           </div>
         </div>
 
-        <fieldset class="itinerary-section">
-          <legend>Tappe del Viaggio</legend>
-          <ul class="tappe-list">
-            <li *ngFor="let tappa of tappe; let i = index">
-              <span class="tappa-index">{{ i + 1 }}</span>
-              <span class="tappa-name">{{ tappa.titolo }}</span>
-            </li>
-          </ul>
-          <button type="button" class="btn-add-tappa">Aggiungi Tappa</button>
-        </fieldset>
+
 
         <button type="submit" class="btn-submit">Pubblica Attività</button>
       </form>

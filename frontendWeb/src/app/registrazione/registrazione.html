@@ -1,0 +1,50 @@
+<div class="login-hero">
+  <div class="background-overlay"></div>
+
+  <div class="glass-form-container">
+    <div class="form-header">
+      <h1>Crea il tuo profilo</h1>
+      <p>Entra a far parte della community dei viaggiatori</p>
+    </div>
+
+    <form (ngSubmit)="confermaIscrizione()" class="booking-form">
+
+      <div *ngIf="messaggioDiAvviso" class="errore-login">
+        {{ messaggioDiAvviso }}
+      </div>
+      <div class="input-group">
+        <label>Username</label>
+        <input type="text" name="username" [(ngModel)]="nuovoUtente.username" required placeholder="Es. mariorossi69">
+      </div>
+
+      <div class="input-group">
+        <label>Nome</label>
+        <input type="text" name="nome" [(ngModel)]="nuovoUtente.nome" required placeholder="Es. Mario ">
+      </div>
+      <div class="input-group">
+        <label>Cognome</label>
+        <input type="text" name="cognome" [(ngModel)]="nuovoUtente.cognome" required placeholder="Es. Rossi">
+      </div>
+
+
+      <div class="input-group">
+        <label>Indirizzo Email</label>
+        <input type="email" name="email" [(ngModel)]="nuovoUtente.email" required placeholder="viaggiatore@esempio.it">
+      </div>
+
+      <div class="input-group">
+        <label>Scegli una Password</label>
+        <input type="password" name="password" [(ngModel)]="nuovoUtente.password" required placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="btn-submit">Registrati e Parti</button>
+
+      <div class="registrazione-footer">
+        <span>Hai già un account?</span>
+        <button type="button" routerLink="/login" class="btn-link-trasparente">
+          Torna al Login
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

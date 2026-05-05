@@ -1,0 +1,41 @@
+<div class="login-hero">
+
+  <div class="background-overlay"></div>
+
+  <div class="glass-form-container">
+    <div class="form-header">
+      <h1>Bentornato</h1>
+      <p>Accedi e prenota il tuo prossimo viaggio!</p>
+    </div>
+
+
+    <form (ngSubmit)="eseguiAccesso()" class="booking-form">
+
+      <div *ngIf="messaggioErrore" class="errore-login">
+        {{ messaggioErrore }}
+      </div>
+
+      <div class="input-group">
+        <label for="username">Identificativo Utente</label>
+        <input type="text" id="username" name="username"
+               [(ngModel)]="datiAccesso.username" required
+               placeholder="Inserisci la tua email">
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"
+               [(ngModel)]="datiAccesso.password" required
+               placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="btn-submit">Inizia l'Avventura</button>
+      <div class="login-footer">
+        <span>Non hai un account?</span>
+        <button type="button" routerLink="/registrazione" class="btn-link-trasparente">
+          Registrati
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

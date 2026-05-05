@@ -3,6 +3,7 @@ package com.example.progettoenterprise.serviceImpl;
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
+import com.example.progettoenterprise.security.UtenteLoggato;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -23,13 +24,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     // Metodo chiamato automaticamente dal framework per ottenere i dati dell'utente
     @Override
     public UserDetails loadUserByUsername(String identificativo) throws UsernameNotFoundException {
-        Utente utente = utenteRepository.findByUsernameOrEmail(identificativo,identificativo)
+        Utente utente = utenteRepository.findByUsernameOrEmail(identificativo, identificativo)
                 .orElseThrow(() -> new UsernameNotFoundException(messageLang.getMessage("auth.user.notfound", identificativo)));
 
-        return new User(
+        // Cambiamo solo il "return new User" con il nostro "UtenteLoggato"
+        return new UtenteLoggato(
+                utente.getId(), // <--- Passiamo l'ID!
                 utente.getUsername(),
                 utente.getPassword(),
-                // ROLE_ è lo standard spring per i ruoli
-                List.of(new SimpleGrantedAuthority(utente.getRuolo().name())));
+                List.of(new SimpleGrantedAuthority(utente.getRuolo().name()))
+        );
     }
 }

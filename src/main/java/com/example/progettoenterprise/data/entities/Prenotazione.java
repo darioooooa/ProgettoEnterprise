@@ -2,6 +2,7 @@ package com.example.progettoenterprise.data.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Prenotazione {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
