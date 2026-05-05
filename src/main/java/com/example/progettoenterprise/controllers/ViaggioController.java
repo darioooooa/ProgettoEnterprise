@@ -44,12 +44,14 @@ public class ViaggioController {
         return ResponseEntity.ok(statistiche);
     }
     @DeleteMapping(value = "/{viaggioId}/viaggio")
+    @PreAuthorize("hasRole('ORGANIZZATORE')")
     public ResponseEntity<?> cancellaViaggio(@PathVariable Long viaggioId,@RequestParam Long organizzatoreId){
         viaggioService.eliminaViaggio(viaggioId,organizzatoreId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/organizzatore/{organizzatoreId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ViaggioDTO>> getViaggiPerOrganizzatore(@PathVariable Long organizzatoreId){
         List<ViaggioDTO> viaggi = viaggioService.getViaggiPerOrganizzatore(organizzatoreId);
         return ResponseEntity.ok(viaggi);

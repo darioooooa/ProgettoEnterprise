@@ -1,22 +1,22 @@
 package com.example.progettoenterprise.controllers;
 
 import com.example.progettoenterprise.data.service.PrenotazioneService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/prenotazioni")
+@CrossOrigin(origins = "http://localhost:4200")
+@RequiredArgsConstructor
 public class PrenotazioneController {
-    @Autowired
-    private PrenotazioneService prenotazioneService;
+    private final PrenotazioneService prenotazioneService;
 
     @GetMapping("/{prenotazioneId}/esporta-calendario")
+
     public ResponseEntity<byte[]> scaricaFileCalendario(@PathVariable Long prenotazioneId) {
 
         byte[] datiCalendario = prenotazioneService.esportaPrenotazioni(prenotazioneId);

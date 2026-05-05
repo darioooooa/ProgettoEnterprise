@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,20 +18,24 @@ public class AttivitaViaggioController {
     private final AttivitaViaggioService attivitaViaggioService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ORGANIZZATORE')")
     public ResponseEntity<AttivitaViaggioDTO> creaAttivitaViaggio(@PathVariable Long viaggioId,@Valid @RequestBody AttivitaViaggioDTO attivitaViaggioDTO){
         AttivitaViaggioDTO nuovaAttivita = attivitaViaggioService.creaAttivita(attivitaViaggioDTO);
         return new ResponseEntity<>(nuovaAttivita, HttpStatus.CREATED);
     }
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AttivitaViaggioDTO> GetAttivitaById(@PathVariable Long viaggioId,@PathVariable Long id) {
         return ResponseEntity.ok(attivitaViaggioService.getAttivitaById(id));
     }
 
     @GetMapping("/timeline")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AttivitaViaggioDTO>> getTimelineSpostamenti(@PathVariable Long viaggioId){
         return ResponseEntity.ok(attivitaViaggioService.getTimelineSpostamenti(viaggioId));
     }
     @GetMapping("/cerca")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AttivitaViaggioDTO>> cercaInViaggio(
             @PathVariable Long viaggioId,
             @RequestParam String keyword) {
@@ -38,6 +43,7 @@ public class AttivitaViaggioController {
     }
 
     @PutMapping("/{id}/modifica")
+    @PreAuthorize("hasRole('ORGANIZZATORE')")
     public ResponseEntity<AttivitaViaggioDTO> modificaAttivita(
             @PathVariable Long id,
             @Valid @RequestBody AttivitaViaggioDTO dto) {
@@ -45,6 +51,7 @@ public class AttivitaViaggioController {
     }
 
     @GetMapping("/filtra-per-budget")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AttivitaViaggioDTO>> filtraPerBudget(
             @PathVariable Long viaggioId,
             @RequestParam Double budgetMax) {
@@ -52,6 +59,7 @@ public class AttivitaViaggioController {
     }
 
     @DeleteMapping("/{attivitaId}")
+    @PreAuthorize("hasRole('ORGANIZZATORE')")
     public ResponseEntity<?> cancellaAttivitaViaggio(@PathVariable Long attivitaId,@PathVariable Long viaggioId){
         attivitaViaggioService.eliminaAttivitaViaggio(attivitaId,viaggioId);
         return ResponseEntity.ok().build();
