@@ -15,4 +15,8 @@ export class ViaggioService {
 
     return this.http.post<Viaggio>(this.API_URL, viaggio);
   }
+  getViaggi(): Observable<Viaggio[]> {
+
+    return this.http.get<Viaggio[]>(`${this.API_URL}/miei-viaggi`);
+  }
 }

@@ -55,11 +55,12 @@ public class ViaggioController {
         viaggioService.eliminaViaggio(viaggioId,organizzatore.getId());
         return ResponseEntity.ok().build();
     }
-
-    @GetMapping("/organizzatore/{organizzatoreId}")
+    //scelto un mapping senza id per evitare possibili metodi per poter entrare nella lista viaggi di un organizzatore
+    @GetMapping("/miei-viaggi")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ViaggioDTO>> getViaggiPerOrganizzatore(@PathVariable Long organizzatoreId){
-        List<ViaggioDTO> viaggi = viaggioService.getViaggiPerOrganizzatore(organizzatoreId);
+    public ResponseEntity<List<ViaggioDTO>> getMieiViaggi(@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+        List<ViaggioDTO> viaggi = viaggioService.getViaggiPerOrganizzatore(utenteLoggato.getId());
+
         return ResponseEntity.ok(viaggi);
     }
 }

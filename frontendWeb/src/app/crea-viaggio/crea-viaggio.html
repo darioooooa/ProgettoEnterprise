@@ -4,7 +4,7 @@
     <nav class="navigation">
       <a routerLink="/">Home</a>
       <a href="#">I Miei Viaggi</a>
-      <a href="#" class="active-link">Area Organizzatore</a>
+      <a routerLink="/organizzatore" class="active-link">Area Organizzatore</a>
     </nav>
     <button class="btn-action">Logout</button>
   </div>
@@ -54,6 +54,16 @@
             <input type="date" id="dataFine" [(ngModel)]="nuovoViaggio.dataFine" name="dataFine">
           </div>
         </div>
+        <fieldset class="itinerary-section">
+          <legend>Tappe del Viaggio</legend>
+          <ul class="tappe-list">
+            <li *ngFor="let tappa of nuovoViaggio.tappe; let i = index">
+              <span class="tappa-index">{{ i + 1 }}</span>
+              <span class="tappa-name">{{ tappa.titolo }}</span>
+            </li>
+          </ul>
+          <button type="button" class="btn-add-tappa">Aggiungi Tappa</button>
+        </fieldset>
 
 
 

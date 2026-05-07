@@ -1,8 +1,9 @@
 
-import { Injectable } from '@angular/core';
+import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
 
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import {isPlatformBrowser} from '@angular/common';
 
 
 @Injectable({
@@ -13,7 +14,7 @@ export class AutenticazioneService {
 
   private readonly indirizzoBase = 'http://localhost:8080/api/v1/auth';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient,@Inject(PLATFORM_ID)private platformId: Object) { }
 
   effettuaAccesso(datiLogin: any): Observable<any> {
     return this.http.post<any>(`${this.indirizzoBase}/login`, datiLogin).pipe(
@@ -41,7 +42,10 @@ export class AutenticazioneService {
 
 
   ottieniToken(): string | null {
-    return localStorage.getItem('token_accesso');
+    if(isPlatformBrowser(this.platformId)){
+      return localStorage.getItem('token_accesso');
+    }
+    return null;
   }
 
 

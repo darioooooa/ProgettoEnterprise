@@ -2,6 +2,7 @@ package com.example.progettoenterprise.data.service;
 
 
 import com.example.progettoenterprise.dto.ViaggioDTO;
+import com.example.progettoenterprise.security.UtenteLoggato;
 
 import java.util.List;
 import java.util.Map;

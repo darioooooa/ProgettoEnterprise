@@ -85,8 +85,10 @@ public class TokenStore {
     // Recupera il token dall'intestazione della richiesta HTTP
     public String getToken(HttpServletRequest request) {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        //controllo per evitare che ilserver vada in crash. Serve a passare dall'header
+        //http al jwt
         if (header != null && header.startsWith("Bearer ")) {
-            return header.replace("Bearer ", "");
+            return header.substring(7);
         }
         return null;
     }

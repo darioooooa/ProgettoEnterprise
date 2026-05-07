@@ -1,6 +1,8 @@
-import {Component} from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
+import {ViaggioService} from '../service/viaggio-service';
+
 
 @Component({
   selector: 'app-schermata-home',
@@ -9,18 +11,24 @@ import {RouterLink} from '@angular/router';
   templateUrl: './schermataOrganizzatore.html',
   styleUrl: './schermataOrganizzatore.css'
 })
-export class SchermataOrganizzatoreComponent {
+export class SchermataOrganizzatoreComponent implements OnInit{
+  constructor(private viaggioService: ViaggioService,
+              private cdr: ChangeDetectorRef) {}
   listaDeiViaggi: any[] = [];
   ngOnInit(): void {
     this.caricaViaggi();
   }
 
   caricaViaggi() {
-    // Esempio manuale per testare se il rosso sparisce:
-    this.listaDeiViaggi = [
-      { destinazione: 'Bali', prezzo: 1200 },
-      { destinazione: 'Sahara', prezzo: 850 }
-    ];
+    this.viaggioService.getViaggi().subscribe({
+      next: (data) => {
+        this.listaDeiViaggi = data;
+        //serve per svegliare angular e ricaricare la pagina ogni volta che cambia la lista dei viaggi
+        this.cdr.detectChanges();
+        console.log('Viaggi caricati:', data);
+      },
+      error: (e) => console.error('Errore durante il caricamento:', e)
+    });
   }
   modifica(viaggio: any) {
     console.log("Voglio modificare il viaggio:", viaggio);

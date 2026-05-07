@@ -133,6 +133,11 @@ body {
   letter-spacing: 1.2px;
   color: rgba(255, 255, 255, 0.9);
 }
+.booking-form input::placeholder,
+.booking-form textarea::placeholder {
+  color: rgba(255, 255, 255, 0.8) !important; /* Bianco quasi totale */
+  opacity: 1; /* Forza la visibilità su alcuni browser come Firefox */
+}
 
 .booking-form input,
 .booking-form textarea {
