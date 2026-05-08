@@ -26,8 +26,6 @@ public class Viaggio {
 
     @Column(length = 1000)
     private String descrizione;
-
-    //serve per l'auditAware
     @CreatedBy
     @Column(name = "creato_da", updatable = false)
     private Long creatoDa;
