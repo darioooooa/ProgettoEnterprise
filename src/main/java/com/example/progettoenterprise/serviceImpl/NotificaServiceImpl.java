@@ -38,7 +38,6 @@ public class NotificaServiceImpl implements NotificaService {
         nuovaNotifica.setMessaggio(messaggio);
         nuovaNotifica.setIdRiferimento(idRiferimento);
         nuovaNotifica.setLetta(false);
-        nuovaNotifica.setDataCreazione(LocalDateTime.now());
 
         Notifica salvata = notificaRepository.save(nuovaNotifica);
         return modelMapper.map(salvata, NotificaDTO.class);

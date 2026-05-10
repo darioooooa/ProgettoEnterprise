@@ -8,14 +8,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 @Repository
-public interface ItinerarioPreferitoRepository extends JpaRepository<ItinerarioPreferito,Long> {
-    List<ItinerarioPreferito> findByVisibilita(Visibilita visibilita);
-    List<ItinerarioPreferito> findByNomeContainingIgnoreCase(String nome);
+public interface ItinerarioPreferitoRepository extends JpaRepository<ItinerarioPreferito, Long> {
 
-    //Le liste di itinerari in cui, tra gli utenti autorizzati, compare un utente che ha uno specifico ID.
+    // Trova tutte le liste di un utente specifico
+    List<ItinerarioPreferito> findByProprietarioId(Long proprietarioId);
+
+    // Cerca per nome solo tra quelle pubbliche (molto più sicuro ed efficiente)
+    List<ItinerarioPreferito> findByNomeContainingIgnoreCaseAndVisibilita(String nome, Visibilita visibilita);
+
     List<ItinerarioPreferito> findByUtentiAutorizzati_Utente_Id(Long utenteId);
 
-    //Trova le liste create in base alla loro visibilità (es. tutte le CONDIVISE)
     List<ItinerarioPreferito> findByVisibilitaOrderByDataCreazioneDesc(Visibilita visibilita);
-
 }

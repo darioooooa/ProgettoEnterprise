@@ -5,7 +5,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -15,6 +19,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
+@EntityListeners(AuditingEntityListener.class)
 public abstract class Utente {
 
     @Id
@@ -56,6 +61,14 @@ public abstract class Utente {
         ROLE_ORGANIZZATORE,
         ROLE_ADMIN
     }
+
+    @CreatedDate
+    @Column(name = "data_creazione", updatable = false)
+    private LocalDateTime dataCreazione;
+
+    @LastModifiedDate
+    @Column(name = "data_ultima_modifica")
+    private LocalDateTime dataUltimaModifica;
 
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ListaUtente> listeAccessibili;

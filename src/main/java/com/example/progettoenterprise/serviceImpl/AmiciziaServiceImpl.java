@@ -56,7 +56,6 @@ public class AmiciziaServiceImpl implements AmiciziaService {
         nuovaAmicizia.setRichiedente(richiedente);
         nuovaAmicizia.setRicevente(ricevente);
         nuovaAmicizia.setStato(StatoAmicizia.IN_ATTESA);
-        nuovaAmicizia.setDataRichiesta(LocalDateTime.now());
 
         Amicizia salvata = amiciziaRepository.save(nuovaAmicizia);
         log.info("Richiesta di amicizia creata con successo (ID: {}) tra {} e {}",
@@ -86,7 +85,6 @@ public class AmiciziaServiceImpl implements AmiciziaService {
         }
 
         amicizia.setStato(StatoAmicizia.ACCETTATA);
-        amicizia.setDataRisposta(LocalDateTime.now());
         Amicizia aggiornata = amiciziaRepository.save(amicizia);
 
         log.info("Amicizia ID {} accettata. Ora {} e {} sono amici",

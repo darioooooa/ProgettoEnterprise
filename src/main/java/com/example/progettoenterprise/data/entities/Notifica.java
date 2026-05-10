@@ -2,6 +2,9 @@ package com.example.progettoenterprise.data.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Notifica {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +21,14 @@ public class Notifica {
 
     @Column(nullable = false)
     private String messaggio;
+
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime dataCreazione;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private Long creatoDa;
 
     private boolean isLetta=false;
 

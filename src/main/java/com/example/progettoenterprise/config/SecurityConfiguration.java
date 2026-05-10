@@ -1,6 +1,6 @@
 package com.example.progettoenterprise.config;
 
-import com.example.progettoenterprise.security.RequestFilter;
+import com.example.progettoenterprise.config.filter.RequestFilter;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

@@ -2,6 +2,10 @@ package com.example.progettoenterprise.data.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,6 +16,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Amicizia {
 
     @Id
@@ -31,9 +36,12 @@ public class Amicizia {
     @Column(nullable = false)
     private StatoAmicizia stato;
 
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime dataRichiesta;
-    private LocalDateTime dataRisposta;
 
+    @LastModifiedDate
+    private LocalDateTime dataRisposta;
     public enum StatoAmicizia {
         IN_ATTESA,
         ACCETTATA,
