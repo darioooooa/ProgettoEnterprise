@@ -66,7 +66,6 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         nuovaPrenotazione.setViaggio(viaggio);
         nuovaPrenotazione.setViaggiatore(utenteRichiedente);
         nuovaPrenotazione.setNumeroPersone(numeroPersone);
-        nuovaPrenotazione.setDataPrenotazione(LocalDateTime.now());
         nuovaPrenotazione.setStato(Prenotazione.StatoPrenotazione.IN_ATTESA); // Stato iniziale standard
 
         Prenotazione prenotazioneSalvata = prenotazioneRepository.save(nuovaPrenotazione);
