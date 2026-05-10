@@ -1,23 +1,14 @@
 package com.example.progettoenterprise.data.repositories;
 import com.example.progettoenterprise.data.entities.Viaggio;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
-import java.util.List;
-import java.util.Optional;
-
 @Repository
-public interface ViaggioRepository extends JpaRepository<Viaggio,Long> {
-    List<Viaggio> findViaggioByDestinazione(Long destinazione);
-    List<Viaggio> findViaggioByPrezzo(Long prezzo);
-    List<Viaggio> findViaggioByDataInizio(Date dataInizio);
-    List<Viaggio> findViaggioByDataFine(Date dataFine);
-    List<Viaggio> findViaggioByTitolo(String titolo);
-    List<Viaggio> findViaggioByOrganizzatoreId(Long organizzatore_id);
+public interface ViaggioRepository extends JpaRepository<Viaggio,Long>, JpaSpecificationExecutor<Viaggio> {
 
     // Metodi per le recensioni
 

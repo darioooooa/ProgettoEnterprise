@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
@@ -7,6 +8,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AttivitaViaggioDTO {
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
     @NotBlank
     private String titolo;
@@ -21,8 +24,5 @@ public class AttivitaViaggioDTO {
 
     @Min(value=0)
     private Double costo;
-
-    @NotNull
-    private Long viaggioId;
 
 }

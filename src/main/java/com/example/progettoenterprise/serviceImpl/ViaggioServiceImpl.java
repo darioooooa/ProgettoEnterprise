@@ -6,9 +6,9 @@ import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
+import com.example.progettoenterprise.data.repositories.specifications.ViaggioSpecification;
 import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
-import com.example.progettoenterprise.security.UtenteLoggato;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -60,14 +60,6 @@ public class ViaggioServiceImpl implements ViaggioService {
     }
 
     @Override
-    public List<ViaggioDTO> getViaggiPerOrganizzatore(Long organizzatoreId) {
-        return viaggioRepository.findViaggioByOrganizzatoreId(organizzatoreId)
-                .stream()
-                .map(v -> modelMapper.map(v, ViaggioDTO.class))
-                .collect(Collectors.toList());
-    }
-
-    @Override
     @Transactional
     public void eliminaViaggio(Long viaggioId, Long organizzatoreId) {
         Viaggio viaggio = viaggioRepository.findById(viaggioId)
@@ -99,5 +91,25 @@ public class ViaggioServiceImpl implements ViaggioService {
                 "mediaRecensioni", viaggio.getMediaRecensioni(),
                 "numeroRecensioni", viaggio.getNumeroRecensioni()
         );
+    }
+
+    @Override
+    public List<ViaggioDTO> ricercaFiltrata(ViaggioSpecification.ViaggioFilter viaggioFilter, Long utenteId) {
+
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> {
+                    log.error("Impossibile creare viaggio: utente ID {} non trovato", utenteId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
+
+        // Se è un organizzatore, si forza il filtro per solo i suoi viaggi
+        if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)){
+            viaggioFilter.setOrganizzatoreId(utenteId);
+        }
+
+        List<Viaggio> viaggi = viaggioRepository.findAll(ViaggioSpecification.withFilter(viaggioFilter));
+        return viaggi.stream()
+                .map(v -> modelMapper.map(v, ViaggioDTO.class))
+                .collect(Collectors.toList());
     }
 }

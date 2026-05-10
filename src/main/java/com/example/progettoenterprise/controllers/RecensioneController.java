@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.repositories.specifications.RecensioneSpecification;
 import com.example.progettoenterprise.data.service.RecensioneService;
 import com.example.progettoenterprise.dto.RecensioneDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
@@ -38,18 +39,17 @@ public class RecensioneController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuovaRecensione);
     }
 
-    // Endpoint per ottenere tutte le recensioni di un viaggio
+    // Endpoint per ricercare le recensioni di un viaggio
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<RecensioneDTO>> getRecensioniViaggio(
+    public ResponseEntity<List<RecensioneDTO>> getRecensioni(
             @PathVariable Long viaggioId,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato){
-
-        log.info("L'utente {} sta visualizzando le recensioni per il viaggio ID: {}",
-                utenteLoggato.getUsername(), viaggioId);
-
-        List<RecensioneDTO> recensioni = recensioneService.getRecensioniViaggio(viaggioId);
-        return ResponseEntity.ok(recensioni);
+            RecensioneSpecification.RecensioneFilter recensioneFilter,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato
+    ){
+        log.info("L'utente {} sta cercando recensioni per il viaggio ID: {} con i filtri{}",utenteLoggato.getUsername(), viaggioId, recensioneFilter);
+        List<RecensioneDTO> risultati = recensioneService.ricercaFiltrata(recensioneFilter, utenteLoggato.getId(), viaggioId);
+        return ResponseEntity.ok(risultati);
     }
 
     // Endpoint per aggiornare una recensione

@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.repositories.specifications.PrenotazioneSpecification;
 import com.example.progettoenterprise.data.service.PrenotazioneService;
 import com.example.progettoenterprise.dto.PrenotazioneDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
@@ -25,41 +26,42 @@ public class PrenotazioneController {
     private final PrenotazioneService prenotazioneService;
 
     // CREA UNA NUOVA PRENOTAZIONE
-    @PostMapping
+    @PostMapping("/viaggi/{viaggioId}/prenota")
     @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<PrenotazioneDTO> creaPrenotazione(
+            @PathVariable Long viaggioId,
             @Valid @RequestBody PrenotazioneDTO richiesta,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
         log.info("L'utente {} sta prenotando il viaggio ID: {} per {} persone",
-                utenteLoggato.getUsername(), richiesta.getViaggioId(), richiesta.getNumeroPersone());
+                utenteLoggato.getUsername(), viaggioId, richiesta.getNumeroPersone());
 
         PrenotazioneDTO nuovaPrenotazione = prenotazioneService.creaPrenotazione(
-                richiesta.getViaggioId(),
+                viaggioId,
                 utenteLoggato.getId(),
                 richiesta.getNumeroPersone()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(nuovaPrenotazione);
     }
 
-    // VISUALIZZA LE PROPRIE PRENOTAZIONI
-    @GetMapping("/mie-prenotazioni")
-    @PreAuthorize("hasRole('VIAGGIATORE')")
-    public ResponseEntity<List<PrenotazioneDTO>> getMiePrenotazioni(
+    // RICERCA FILTRATA DELLE PRENOTAZIONI
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<PrenotazioneDTO>> getPrenotazioni(
+            PrenotazioneSpecification.PrenotazioneFilter prenotazioneFilter,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("Recupero elenco prenotazioni per l'utente: {}", utenteLoggato.getUsername());
-        List<PrenotazioneDTO> lista = prenotazioneService.getPrenotazioneperUtente(utenteLoggato.getId());
-        return ResponseEntity.ok(lista);
+        log.info("L'utente {} sta cercando prenotazioni con i filtri: {}", utenteLoggato.getUsername(), prenotazioneFilter);
+        List<PrenotazioneDTO> risultati = prenotazioneService.ricercaFiltrata(prenotazioneFilter, utenteLoggato.getId());
+        return ResponseEntity.ok(risultati);
     }
 
     // DETTAGLIO SINGOLA PRENOTAZIONE
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PrenotazioneDTO> getDettaglioPrenotazione(@PathVariable Long id) {
+    public ResponseEntity<PrenotazioneDTO> getDettaglioPrenotazione(@PathVariable Long id, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
         log.info("Richiesta dettaglio per la prenotazione ID: {}", id);
-        return ResponseEntity.ok(prenotazioneService.getPrenotazioneById(id));
+        return ResponseEntity.ok(prenotazioneService.getPrenotazioneById(id, utenteLoggato.getId()));
     }
 
     // CANCELLA PRENOTAZIONE

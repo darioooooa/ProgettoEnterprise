@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.repositories.specifications.AttivitaViaggioSpecification;
 import com.example.progettoenterprise.data.service.AttivitaViaggioService;
 import com.example.progettoenterprise.dto.AttivitaViaggioDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
@@ -33,7 +34,7 @@ public class AttivitaViaggioController {
         log.info("L'organizzatore {} sta creando una nuova attività per il viaggio numero {}",
                 utenteLoggato.getUsername(), viaggioId);
 
-        AttivitaViaggioDTO nuovaAttivita = attivitaViaggioService.creaAttivita(attivitaViaggioDTO);
+        AttivitaViaggioDTO nuovaAttivita = attivitaViaggioService.creaAttivita(viaggioId, attivitaViaggioDTO, utenteLoggato.getId());
         return new ResponseEntity<>(nuovaAttivita, HttpStatus.CREATED);
     }
 
@@ -47,59 +48,21 @@ public class AttivitaViaggioController {
         log.info("L'utente {} sta consultando il dettaglio dell'attività numero {} (viaggio {})",
                 utenteLoggato.getUsername(), id, viaggioId);
 
-        return ResponseEntity.ok(attivitaViaggioService.getAttivitaById(id));
+        return ResponseEntity.ok(attivitaViaggioService.getAttivitaById(id, viaggioId, utenteLoggato.getId()));
     }
 
-    @GetMapping("/timeline")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<AttivitaViaggioDTO>> getTimelineSpostamenti(
-            @PathVariable Long viaggioId,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("L'utente {} sta richiedendo la linea temporale delle attività per il viaggio {}",
-                utenteLoggato.getUsername(), viaggioId);
-
-        return ResponseEntity.ok(attivitaViaggioService.getTimelineSpostamenti(viaggioId));
-    }
-
-    @GetMapping("/cerca")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<AttivitaViaggioDTO>> cercaInViaggio(
-            @PathVariable Long viaggioId,
-            @RequestParam String keyword,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("L'utente {} sta cercando la parola '{}' nelle attività del viaggio {}",
-                utenteLoggato.getUsername(), keyword, viaggioId);
-
-        return ResponseEntity.ok(attivitaViaggioService.cercaInViaggio(viaggioId, keyword));
-    }
-
-    @PutMapping("/{id}/modifica")
+    @PutMapping("/{attivitaId}/modifica")
     @PreAuthorize("hasRole('ORGANIZZATORE')")
     public ResponseEntity<AttivitaViaggioDTO> modificaAttivita(
             @PathVariable Long viaggioId,
-            @PathVariable Long id,
+            @PathVariable Long attivitaId,
             @Valid @RequestBody AttivitaViaggioDTO dto,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
         log.info("L'organizzatore {} sta modificando l'attività numero {} del viaggio {}",
-                utenteLoggato.getUsername(), id, viaggioId);
+                utenteLoggato.getUsername(), attivitaId, viaggioId);
 
-        return ResponseEntity.ok(attivitaViaggioService.modificaAttivitaViaggio(id, dto));
-    }
-
-    @GetMapping("/filtra-per-budget")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<AttivitaViaggioDTO>> filtraPerBudget(
-            @PathVariable Long viaggioId,
-            @RequestParam Double budgetMax,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("L'utente {} sta filtrando le attività del viaggio {} con un limite di spesa di {} euro",
-                utenteLoggato.getUsername(), viaggioId, budgetMax);
-
-        return ResponseEntity.ok(attivitaViaggioService.filtraPerBudget(viaggioId, budgetMax));
+        return ResponseEntity.ok(attivitaViaggioService.modificaAttivitaViaggio(attivitaId, dto, utenteLoggato.getId()));
     }
 
     @DeleteMapping("/{attivitaId}")
@@ -112,7 +75,21 @@ public class AttivitaViaggioController {
         log.warn("Attenzione: l'organizzatore {} sta eliminando l'attività numero {} dal viaggio {}",
                 utenteLoggato.getUsername(), attivitaId, viaggioId);
 
-        attivitaViaggioService.eliminaAttivitaViaggio(attivitaId, viaggioId);
+        attivitaViaggioService.eliminaAttivitaViaggio(attivitaId, viaggioId, utenteLoggato.getId());
         return ResponseEntity.ok(Map.of("message", "Attività eliminata con successo dal viaggio."));
+    }
+
+    // Ricerca avanzata delle attività tramite filtri dinamici
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<AttivitaViaggioDTO>> ricercaAttivita(
+            @PathVariable Long viaggioId,
+            AttivitaViaggioSpecification.AttivitaFilter attivitaFilter,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato
+    ){
+        log.info("L'utente {} sta effettuando una ricerca avanzata sulle attività del viaggio {}, con i filtri {}",
+                utenteLoggato.getUsername(), viaggioId, attivitaFilter);
+        List<AttivitaViaggioDTO> risultati = attivitaViaggioService.ricercaFiltrata(attivitaFilter, viaggioId, utenteLoggato.getId());
+        return ResponseEntity.ok(risultati);
     }
 }

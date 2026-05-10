@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.repositories.specifications.UtenteSpecification;
 import com.example.progettoenterprise.data.service.UtenteService;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
@@ -34,6 +35,15 @@ public class UtenteController {
         return ResponseEntity.ok(profilo);
     }
 
+    // RICERCA DEGLI UTENTI
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UtenteDTO>> getUtenti(UtenteSpecification.UtenteFilter utenteFilter, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+        log.info("L'Admin {} sta cercando utenti con i filtri: {}", utenteLoggato.getUsername(), utenteFilter);
+        List<UtenteDTO> risultati = utenteService.ricercaUtenti(utenteFilter);
+        return ResponseEntity.ok(risultati);
+    }
+
     // VISUALIZZA IL PROFILO DI UN ALTRO UTENTE
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -42,16 +52,6 @@ public class UtenteController {
         log.info("Richiesta visualizzazione profilo per l'utente ID: {}", id);
         UtenteDTO profilo = utenteService.getProfiloById(id);
         return ResponseEntity.ok(profilo);
-    }
-
-    // RICERCA UTENTI
-    @GetMapping("/ricerca")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<UtenteDTO>> cercaUtenti(@RequestParam String query) {
-
-        log.info("Ricerca utenti in corso con chiave: '{}'", query);
-        List<UtenteDTO> risultati = utenteService.cercaUtenti(query);
-        return ResponseEntity.ok(risultati);
     }
 
     // AGGIORNA IL PROPRIO PROFILO
@@ -100,6 +100,4 @@ public class UtenteController {
         utenteService.eliminaAccount(utenteLoggato.getId());
         return ResponseEntity.ok(Map.of("message", "Account eliminato definitivamente"));
     }
-
-
 }

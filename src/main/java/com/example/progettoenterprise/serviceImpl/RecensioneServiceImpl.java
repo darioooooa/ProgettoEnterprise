@@ -10,6 +10,7 @@ import com.example.progettoenterprise.data.repositories.PrenotazioneRepository;
 import com.example.progettoenterprise.data.repositories.RecensioneRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
+import com.example.progettoenterprise.data.repositories.specifications.RecensioneSpecification;
 import com.example.progettoenterprise.data.service.RecensioneService;
 import com.example.progettoenterprise.dto.RecensioneDTO;
 import jakarta.persistence.EntityNotFoundException;
@@ -143,11 +144,17 @@ public class RecensioneServiceImpl implements RecensioneService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RecensioneDTO> getRecensioniViaggio(Long viaggioId) {
-        if (!viaggioRepository.existsById(viaggioId)) {
-            throw new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId));
+    public List<RecensioneDTO> ricercaFiltrata(RecensioneSpecification.RecensioneFilter recensioneFilter, Long utenteId, Long viaggioId) {
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId)));
+
+        // Se non è un amministratore, filtra solo le recensioni del viaggio specificato
+        if (!utente.getRuolo().equals(Utente.Ruolo.ROLE_ADMIN)){
+            recensioneFilter.setViaggioId(viaggioId);
         }
-        return recensioneRepository.findByViaggioId(viaggioId).stream()
+
+        List<Recensione> recensioni = recensioneRepository.findAll(RecensioneSpecification.withFilter(recensioneFilter));
+        return recensioni.stream()
                 .map(recensione -> modelMapper.map(recensione, RecensioneDTO.class))
                 .collect(Collectors.toList());
     }

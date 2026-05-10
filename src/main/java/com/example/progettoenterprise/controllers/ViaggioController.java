@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.repositories.specifications.ViaggioSpecification;
 import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
@@ -23,6 +24,16 @@ import java.util.Map;
 public class ViaggioController {
     private final ViaggioService viaggioService;
 
+    // Endpoint per la ricerca filtrata dinamica
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ViaggioDTO>> getViaggi(ViaggioSpecification.ViaggioFilter viaggioFilter, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+        log.info("L'utente {} sta cercando viaggi con i filtri: {}", utenteLoggato.getUsername(), viaggioFilter);
+
+        List<ViaggioDTO> viaggiFiltrati = viaggioService.ricercaFiltrata(viaggioFilter, utenteLoggato.getId());
+        return ResponseEntity.ok(viaggiFiltrati);
+    }
+
     // Endpoint per creare un nuovo viaggio (organizzatore)
     @PostMapping(consumes = "application/json")
     @PreAuthorize("hasRole('ORGANIZZATORE')")
@@ -45,6 +56,7 @@ public class ViaggioController {
 
         return ResponseEntity.ok(statistiche);
     }
+
     @DeleteMapping(value = "/{viaggioId}/viaggio")
     @PreAuthorize("hasRole('ORGANIZZATORE')")
     public ResponseEntity<Void> cancellaViaggio(@PathVariable Long viaggioId,@AuthenticationPrincipal UtenteLoggato organizzatore){
@@ -54,13 +66,5 @@ public class ViaggioController {
 
         viaggioService.eliminaViaggio(viaggioId,organizzatore.getId());
         return ResponseEntity.ok().build();
-    }
-    //scelto un mapping senza id per evitare possibili metodi per poter entrare nella lista viaggi di un organizzatore
-    @GetMapping("/miei-viaggi")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ViaggioDTO>> getMieiViaggi(@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-        List<ViaggioDTO> viaggi = viaggioService.getViaggiPerOrganizzatore(utenteLoggato.getId());
-
-        return ResponseEntity.ok(viaggi);
     }
 }

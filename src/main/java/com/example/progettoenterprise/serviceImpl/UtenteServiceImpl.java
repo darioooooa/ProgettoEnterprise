@@ -2,6 +2,7 @@ package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
+import com.example.progettoenterprise.data.repositories.specifications.UtenteSpecification;
 import com.example.progettoenterprise.data.service.UtenteService;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import jakarta.persistence.EntityNotFoundException;
@@ -64,19 +65,20 @@ public class UtenteServiceImpl implements UtenteService {
     }
 
     @Override
-    public List<UtenteDTO> cercaUtenti(String query) {
-        return utenteRepository.findByUsernameContainingIgnoreCase(query)
-                .stream()
-                .map(u -> modelMapper.map(u, UtenteDTO.class))
-                .collect(Collectors.toList());
-    }
-
-    @Override
     @Transactional
     public void eliminaAccount(Long id) {
         if (!utenteRepository.existsById(id)) {
             throw new EntityNotFoundException(messageLang.getMessage("utente.notexist", id));
         }
         utenteRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UtenteDTO> ricercaUtenti(UtenteSpecification.UtenteFilter utenteFilter) {
+        List<Utente> utenti = utenteRepository.findAll(UtenteSpecification.withFilter(utenteFilter));
+        return utenti.stream()
+                .map(u -> modelMapper.map(u, UtenteDTO.class))
+                .collect(Collectors.toList());
     }
 }

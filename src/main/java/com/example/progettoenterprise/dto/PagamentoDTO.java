@@ -1,4 +1,5 @@
 package com.example.progettoenterprise.dto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -7,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 public class PagamentoDTO {
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotBlank(message = "Il titolare della carta è obbligatorio")
@@ -25,6 +27,7 @@ public class PagamentoDTO {
     private String numeroOscurato;
 
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long idViaggiatore;
 
 

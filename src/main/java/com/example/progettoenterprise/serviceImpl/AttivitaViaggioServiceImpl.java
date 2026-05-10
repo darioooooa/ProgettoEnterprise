@@ -2,8 +2,12 @@ package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.AttivitaViaggio;
+import com.example.progettoenterprise.data.entities.Utente;
+import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.repositories.AttivitaViaggioRepository;
+import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
+import com.example.progettoenterprise.data.repositories.specifications.AttivitaViaggioSpecification;
 import com.example.progettoenterprise.data.service.AttivitaViaggioService;
 import com.example.progettoenterprise.dto.AttivitaViaggioDTO;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,70 +26,71 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
     private final ViaggioRepository viaggioRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
+    private final UtenteRepository utenteRepository;
 
     @Override
     @Transactional
-    public AttivitaViaggioDTO creaAttivita(AttivitaViaggioDTO attivitaViaggioDTO) {
+    public AttivitaViaggioDTO creaAttivita(Long viaggioId, AttivitaViaggioDTO attivitaViaggioDTO, Long organizzatoreId) {
+        Viaggio viaggio = viaggioRepository.findById(viaggioId)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId)));
+
+        // Controlla se l'utente loggato è il proprietario del viaggio
+        if (!viaggio.getOrganizzatore().getId().equals(organizzatoreId)) {
+            throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
+        }
+
         AttivitaViaggio entity = modelMapper.map(attivitaViaggioDTO, AttivitaViaggio.class);
+
+        entity.setViaggio(viaggio);
         AttivitaViaggio salvato = attivitaViaggioRepository.save(entity);
         return modelMapper.map(salvato,AttivitaViaggioDTO.class);
 
     }
 
     @Override
-    public AttivitaViaggioDTO getAttivitaById(Long id) {
+    public AttivitaViaggioDTO getAttivitaById(Long id, Long viaggioId, Long utenteId) {
             AttivitaViaggio attivita=attivitaViaggioRepository.findById(id).orElseThrow(()->
                     new EntityNotFoundException(messageLang.getMessage("attivita.notexist",id)));
+
+            Utente utente = utenteRepository.findById(utenteId)
+                    .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId)));
+
+            // Controlla che l'attività appartenga al viaggio specificato
+            if (!attivita.getViaggio().getId().equals(viaggioId)){
+                throw new EntityNotFoundException(messageLang.getMessage("attivita.notexist", id));
+            }
+
+            // Controlla, se è l'organizzatore del viaggio, che possa vedere solo le sue attività
+            if(utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)){
+                if(!attivita.getViaggio().getOrganizzatore().getId().equals(utenteId)){
+                    throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
+                }
+            }
             return modelMapper.map(attivita,AttivitaViaggioDTO.class);
     }
 
     @Override
-    public List<AttivitaViaggioDTO> getTimelineSpostamenti(Long viaggioId) {
-        return attivitaViaggioRepository.findByViaggioIdOrderByOrarioInizioAsc(viaggioId)
-                .stream()
-                .map(entity -> modelMapper.map(entity, AttivitaViaggioDTO.class))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AttivitaViaggioDTO> cercaInViaggio(Long viaggioId, String keyword) {
-        return attivitaViaggioRepository.findByViaggioIdAndTitoloContainingIgnoreCase(viaggioId,keyword)
-                .stream()
-                .map(entity -> modelMapper.map(entity, AttivitaViaggioDTO.class))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AttivitaViaggioDTO> filtraPerBudget(Long viaggioId, Double budgetMax) {
-        return attivitaViaggioRepository.findByViaggioIdAndCostoLessThanEqual(viaggioId,budgetMax)
-                .stream()
-                .map(entity -> modelMapper.map(entity, AttivitaViaggioDTO.class))
-                .collect(Collectors.toList());
-    }
-
-
-    @Override
     @Transactional
-    public AttivitaViaggioDTO modificaAttivitaViaggio(Long id,AttivitaViaggioDTO dto) {
-        // 1. Cerchiamo l'attività esistente. Se non c'è, lanciamo l'errore (come ha fatto il tuo compagno)
+    public AttivitaViaggioDTO modificaAttivitaViaggio(Long id,AttivitaViaggioDTO dto, Long organizzatoreId) {
+        // Cerca l'attività esistente. Se non c'è, lancia l'errore
         return attivitaViaggioRepository.findById(id).map(entityEsistente -> {
 
-            // 2. Aggiorniamo i campi della Entity con i dati che arrivano dal DTO
-            // Puoi farlo a mano come il tuo compagno
+            if (!entityEsistente.getViaggio().getOrganizzatore().getId().equals(organizzatoreId)) {
+                throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
+            }
+
+            // Aggiorna i campi della Entity con i dati che arrivano dal DTO
             entityEsistente.setTitolo(dto.getTitolo());
             entityEsistente.setDescrizione(dto.getDescrizione());
             entityEsistente.setCosto(dto.getCosto());
             entityEsistente.setOrarioInizio(dto.getOrarioInizio());
             entityEsistente.setOrarioFine(dto.getOrarioFine());
+            entityEsistente.setPosizione(dto.getPosizione());
 
-
-
-
-
-            // 3. Salviamo le modifiche nel database
+            // Salva le modifiche nel database
             AttivitaViaggio salvata = attivitaViaggioRepository.save(entityEsistente);
 
-            // 4. Trasformiamo l'entità aggiornata in DTO e la restituiamo
+            // Trasforma l'entità aggiornata in DTO e la restituisce
             return modelMapper.map(salvata, AttivitaViaggioDTO.class);
 
         }).orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("attivita.notexist", id)));
@@ -93,18 +98,46 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
 
     @Override
     @Transactional
-    public void eliminaAttivitaViaggio(Long idAttivita,Long idViaggio) {
+    public void eliminaAttivitaViaggio(Long idAttivita,Long idViaggio, Long organizzatoreId) {
         AttivitaViaggio attivita = attivitaViaggioRepository.findById(idAttivita)
-                .orElseThrow(() -> new RuntimeException("Attività non trovata con ID: " + idAttivita));
+                .orElseThrow(() -> new EntityNotFoundException("Attività non trovata con ID: " + idAttivita));
 
-        // 2. Controllo di sicurezza: l'attività appartiene al viaggio specificato?
+        // Controllo se l'attività appartiene al viaggio specificato
         if (!attivita.getViaggio().getId().equals(idViaggio)) {
-            throw new RuntimeException("Errore: l'attività non appartiene a questo viaggio!");
+            throw new IllegalArgumentException("Errore: l'attività non appartiene a questo viaggio!");
         }
 
-        // 3. Eliminazione
+        // Controlla che l'organizzatore del viaggio sia l'utente loggato
+        if (!attivita.getViaggio().getOrganizzatore().getId().equals(organizzatoreId)) {
+            throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
+        }
+
+        // Eliminazione
         attivitaViaggioRepository.delete(attivita);
 
+    }
+
+    @Override
+    public List<AttivitaViaggioDTO> ricercaFiltrata(AttivitaViaggioSpecification.AttivitaFilter attivitaFilter, Long viaggioId, Long utenteId) {
+        Viaggio viaggio = viaggioRepository.findById(viaggioId)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId)));
+
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId)));
+
+        // Se è un organizzatore, deve essere l'organizzatore del viaggio per vederne le attività
+        if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)){
+            if (!viaggio.getOrganizzatore().getId().equals(utenteId)){
+                throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
+            }
+        }
+
+        attivitaFilter.setViaggioId(viaggioId);
+        List<AttivitaViaggio> risultati = attivitaViaggioRepository.findAll(AttivitaViaggioSpecification.withFilter(attivitaFilter));
+
+        return risultati.stream()
+                .map(entity -> modelMapper.map(entity, AttivitaViaggioDTO.class))
+                .collect(Collectors.toList());
     }
 
 

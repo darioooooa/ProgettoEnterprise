@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Viaggio } from '../models/viaggio.model';
 
@@ -15,8 +15,17 @@ export class ViaggioService {
 
     return this.http.post<Viaggio>(this.API_URL, viaggio);
   }
-  getViaggi(): Observable<Viaggio[]> {
+  getViaggi(filter?: any): Observable<Viaggio[]> {
+    let params = new HttpParams();
 
-    return this.http.get<Viaggio[]>(`${this.API_URL}/miei-viaggi`);
+    if (filter) {
+      Object.keys(filter).forEach(key => {
+        if (filter[key] !== null && filter[key] !== undefined) {
+          params = params.append(key, filter[key]);
+        }
+      })
+    }
+
+    return this.http.get<Viaggio[]>(this.API_URL, { params } );
   }
 }
