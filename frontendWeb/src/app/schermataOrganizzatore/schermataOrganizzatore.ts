@@ -14,15 +14,21 @@ import {ViaggioService} from '../service/viaggio-service';
 export class SchermataOrganizzatoreComponent implements OnInit{
   constructor(private viaggioService: ViaggioService,
               private cdr: ChangeDetectorRef) {}
+
   listaDeiViaggi: any[] = [];
+  paginaCorrente: number = 0;
+  totalePagine: number = 0;
+
   ngOnInit(): void {
     this.caricaViaggi();
   }
 
-  caricaViaggi() {
-    this.viaggioService.getViaggi().subscribe({
+  caricaViaggi(pagina: number = 0) {
+    this.paginaCorrente = pagina;
+    this.viaggioService.getViaggi(this.paginaCorrente).subscribe({
       next: (data) => {
-        this.listaDeiViaggi = data;
+        this.listaDeiViaggi = data.content;
+        this.totalePagine = data.totalPages;
         //serve per svegliare angular e ricaricare la pagina ogni volta che cambia la lista dei viaggi
         this.cdr.detectChanges();
         console.log('Viaggi caricati:', data);
@@ -30,6 +36,19 @@ export class SchermataOrganizzatoreComponent implements OnInit{
       error: (e) => console.error('Errore durante il caricamento:', e)
     });
   }
+
+  paginaSuccessiva() {
+    if (this.paginaCorrente < this.totalePagine - 1) {
+      this.caricaViaggi(this.paginaCorrente + 1);
+    }
+  }
+
+  paginaPrecedente() {
+    if (this.paginaCorrente > 0) {
+      this.caricaViaggi(this.paginaCorrente - 1);
+    }
+  }
+
   modifica(viaggio: any) {
     console.log("Voglio modificare il viaggio:", viaggio);
 

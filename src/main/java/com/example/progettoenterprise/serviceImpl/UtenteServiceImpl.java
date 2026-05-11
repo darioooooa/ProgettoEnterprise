@@ -6,6 +6,9 @@ import com.example.progettoenterprise.data.repositories.specifications.UtenteSpe
 import com.example.progettoenterprise.data.service.UtenteService;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -13,12 +16,13 @@ import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
 import com.example.progettoenterprise.config.i18n.MessageLang;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class UtenteServiceImpl implements UtenteService {
+
+    // Dimensione della pagina di ricerca
+    private static final int SIZE_FOR_PAGE = 10;
+
     private final UtenteRepository utenteRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
@@ -75,10 +79,18 @@ public class UtenteServiceImpl implements UtenteService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UtenteDTO> ricercaUtenti(UtenteSpecification.UtenteFilter utenteFilter) {
-        List<Utente> utenti = utenteRepository.findAll(UtenteSpecification.withFilter(utenteFilter));
-        return utenti.stream()
-                .map(u -> modelMapper.map(u, UtenteDTO.class))
-                .collect(Collectors.toList());
+    public Page<UtenteDTO> ricercaUtenti(UtenteSpecification.UtenteFilter utenteFilter, int page) {
+
+        // Creazione della richiesta di paginazione
+        PageRequest pageRequest = PageRequest.of(page, SIZE_FOR_PAGE,
+                Sort.by("cognome").ascending().and(Sort.by("nome").ascending()));
+        Page<Utente> utentiPage = utenteRepository.findAll(UtenteSpecification.withFilter(utenteFilter), pageRequest);
+
+        // Controllo sulla pagina corrente
+        if ((page < 0 || page >= utentiPage.getTotalPages()) && utentiPage.getTotalPages() > 0) {
+            throw new IllegalArgumentException(messageLang.getMessage("utente.invalid_page"));
+        }
+
+        return utentiPage.map(utente -> modelMapper.map(utente, UtenteDTO.class));
     }
 }

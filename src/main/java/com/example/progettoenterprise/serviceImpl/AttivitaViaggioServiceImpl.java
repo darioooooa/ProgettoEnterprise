@@ -11,17 +11,21 @@ import com.example.progettoenterprise.data.repositories.specifications.AttivitaV
 import com.example.progettoenterprise.data.service.AttivitaViaggioService;
 import com.example.progettoenterprise.dto.AttivitaViaggioDTO;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
+
+    // Dimensione della pagina per la ricerca
+    private static final int SIZE_FOR_PAGE = 10;
+
     private final AttivitaViaggioRepository attivitaViaggioRepository;
     private final ViaggioRepository viaggioRepository;
     private final ModelMapper modelMapper;
@@ -118,7 +122,8 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
     }
 
     @Override
-    public List<AttivitaViaggioDTO> ricercaFiltrata(AttivitaViaggioSpecification.AttivitaFilter attivitaFilter, Long viaggioId, Long utenteId) {
+    @Transactional(readOnly = true)
+    public Page<AttivitaViaggioDTO> ricercaFiltrata(AttivitaViaggioSpecification.AttivitaFilter attivitaFilter, Long viaggioId, Long utenteId, int page) {
         Viaggio viaggio = viaggioRepository.findById(viaggioId)
                 .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId)));
 
@@ -133,11 +138,18 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
         }
 
         attivitaFilter.setViaggioId(viaggioId);
-        List<AttivitaViaggio> risultati = attivitaViaggioRepository.findAll(AttivitaViaggioSpecification.withFilter(attivitaFilter));
 
-        return risultati.stream()
-                .map(entity -> modelMapper.map(entity, AttivitaViaggioDTO.class))
-                .collect(Collectors.toList());
+        // Paginazione
+        PageRequest pageRequest = PageRequest.of(page, SIZE_FOR_PAGE,
+                Sort.by("orarioInizio").ascending().and(Sort.by("id").ascending()));
+        Page<AttivitaViaggio> attivitaViaggioPage = attivitaViaggioRepository.findAll(AttivitaViaggioSpecification.withFilter(attivitaFilter), pageRequest);
+
+        // Controllo sulla pagina corrente
+        if ((page < 0 || page >= attivitaViaggioPage.getTotalPages()) && attivitaViaggioPage.getTotalPages() > 0) {
+            throw new IllegalArgumentException(messageLang.getMessage("attivita.invalid_page"));
+        }
+
+        return attivitaViaggioPage.map(attivita -> modelMapper.map(attivita, AttivitaViaggioDTO.class));
     }
 
 

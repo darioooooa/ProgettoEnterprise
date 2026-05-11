@@ -7,13 +7,13 @@ import com.example.progettoenterprise.security.UtenteLoggato;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -42,13 +42,15 @@ public class RecensioneController {
     // Endpoint per ricercare le recensioni di un viaggio
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<RecensioneDTO>> getRecensioni(
+    public ResponseEntity<Page<RecensioneDTO>> getRecensioni(
             @PathVariable Long viaggioId,
             RecensioneSpecification.RecensioneFilter recensioneFilter,
+            @RequestParam(defaultValue = "0") int page,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato
     ){
-        log.info("L'utente {} sta cercando recensioni per il viaggio ID: {} con i filtri{}",utenteLoggato.getUsername(), viaggioId, recensioneFilter);
-        List<RecensioneDTO> risultati = recensioneService.ricercaFiltrata(recensioneFilter, utenteLoggato.getId(), viaggioId);
+
+        log.info("L'utente {} sta cercando recensioni (pag: {}) per il viaggio ID: {} con i filtri{}",utenteLoggato.getUsername(), page, viaggioId, recensioneFilter);
+        Page<RecensioneDTO> risultati = recensioneService.ricercaFiltrata(recensioneFilter, utenteLoggato.getId(), viaggioId, page);
         return ResponseEntity.ok(risultati);
     }
 

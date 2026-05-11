@@ -7,6 +7,7 @@ import com.example.progettoenterprise.security.UtenteLoggato;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -47,11 +47,14 @@ public class PrenotazioneController {
     // RICERCA FILTRATA DELLE PRENOTAZIONI
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<PrenotazioneDTO>> getPrenotazioni(
+    public ResponseEntity<Page<PrenotazioneDTO>> getPrenotazioni(
             PrenotazioneSpecification.PrenotazioneFilter prenotazioneFilter,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-        log.info("L'utente {} sta cercando prenotazioni con i filtri: {}", utenteLoggato.getUsername(), prenotazioneFilter);
-        List<PrenotazioneDTO> risultati = prenotazioneService.ricercaFiltrata(prenotazioneFilter, utenteLoggato.getId());
+            @RequestParam(defaultValue = "0") int page,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato
+    ){
+
+        log.info("L'utente {} sta cercando prenotazioni (pag: {}) con i filtri: {}", utenteLoggato.getUsername(), page, prenotazioneFilter);
+        Page<PrenotazioneDTO> risultati = prenotazioneService.ricercaFiltrata(prenotazioneFilter, utenteLoggato.getId(), page);
         return ResponseEntity.ok(risultati);
     }
 

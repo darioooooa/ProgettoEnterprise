@@ -7,13 +7,13 @@ import com.example.progettoenterprise.security.UtenteLoggato;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -27,10 +27,10 @@ public class ViaggioController {
     // Endpoint per la ricerca filtrata dinamica
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ViaggioDTO>> getViaggi(ViaggioSpecification.ViaggioFilter viaggioFilter, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-        log.info("L'utente {} sta cercando viaggi con i filtri: {}", utenteLoggato.getUsername(), viaggioFilter);
+    public ResponseEntity<Page<ViaggioDTO>> getViaggi(ViaggioSpecification.ViaggioFilter viaggioFilter, @RequestParam(defaultValue = "0") int page, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
-        List<ViaggioDTO> viaggiFiltrati = viaggioService.ricercaFiltrata(viaggioFilter, utenteLoggato.getId());
+        log.info("L'utente {} sta cercando viaggi (pag: {}) con i filtri: {}", utenteLoggato.getUsername(), page, viaggioFilter);
+        Page<ViaggioDTO> viaggiFiltrati = viaggioService.ricercaFiltrata(viaggioFilter, utenteLoggato.getId(), page);
         return ResponseEntity.ok(viaggiFiltrati);
     }
 

@@ -15,8 +15,8 @@ export class ViaggioService {
 
     return this.http.post<Viaggio>(this.API_URL, viaggio);
   }
-  getViaggi(filter?: any): Observable<Viaggio[]> {
-    let params = new HttpParams();
+  getViaggi(page: number = 0, filter?: any): Observable<any> {
+    let params = new HttpParams().set('page', page.toString());
 
     if (filter) {
       Object.keys(filter).forEach(key => {
@@ -26,6 +26,6 @@ export class ViaggioService {
       })
     }
 
-    return this.http.get<Viaggio[]>(this.API_URL, { params } );
+    return this.http.get<any>(this.API_URL, { params } );
   }
 }

@@ -14,18 +14,23 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PrenotazioneServiceImpl implements PrenotazioneService {
+
+    // Dimensioni della pagina per la ricerca
+    private static final int SIZE_FOR_PAGE = 10;
+
     private final ViaggioRepository viaggioRepository;
     private final PrenotazioneRepository prenotazioneRepository;
     private final UtenteRepository utenteRepository;
@@ -148,8 +153,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PrenotazioneDTO> ricercaFiltrata(PrenotazioneSpecification.PrenotazioneFilter prenotazioneFilter, Long utenteId) {
-
+    public Page<PrenotazioneDTO> ricercaFiltrata(PrenotazioneSpecification.PrenotazioneFilter prenotazioneFilter, Long utenteId, int page) {
         Utente utente = utenteRepository.findById(utenteId)
                 .orElseThrow(() -> {
                     log.error("Impossibile recuperare le prenotazioni: utente ID {} non trovato", utenteId);
@@ -171,10 +175,17 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             log.debug("Ruolo ADMIN rilevato: forzatura filtro su tutte le prenotazioni");
         }
 
-        List<Prenotazione> prenotazioni = prenotazioneRepository.findAll(PrenotazioneSpecification.withFilter(prenotazioneFilter));
-        return prenotazioni.stream()
-                .map(p -> modelMapper.map(p, PrenotazioneDTO.class))
-                .collect(Collectors.toList());
+        // Paginazione della ricerca
+        PageRequest pageRequest = PageRequest.of(page, SIZE_FOR_PAGE, Sort.by("id").descending());
+        Page<Prenotazione> prenotazionePage = prenotazioneRepository.findAll(PrenotazioneSpecification.withFilter(prenotazioneFilter), pageRequest);
+
+        // Controllo sulla pagina corrente
+        if ((page < 0 || page >= prenotazionePage.getTotalPages()) && prenotazionePage.getTotalPages() > 0) {
+            log.warn("Pagina non valida: {}. Pagina totale: {}", page, prenotazionePage.getTotalPages());
+            throw new IllegalArgumentException(messageLang.getMessage("prenotazione.invalid_page"));
+        }
+
+        return prenotazionePage.map(p -> modelMapper.map(p, PrenotazioneDTO.class));
     }
 
 

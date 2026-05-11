@@ -18,16 +18,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RecensioneServiceImpl implements RecensioneService {
+
+    // Dimensioni della pagina per la ricerca
+    private static final int SIZE_FOR_PAGE = 5;
+
     private final RecensioneRepository recensioneRepository;
     private final ViaggioRepository viaggioRepository;
     private final UtenteRepository utenteRepository;
@@ -48,7 +52,10 @@ public class RecensioneServiceImpl implements RecensioneService {
         }
 
         Utente autore = utenteRepository.findById(utenteId)
-                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId)));
+                .orElseThrow(() -> {
+                    log.error("Impossibile inserire recensione: utente ID {} non trovato", utenteId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
 
         // Controllo utente prenotato nel viaggio che recensisce
         boolean haDiritto = prenotazioneRepository.existsByViaggiatoreIdAndViaggioIdAndStato(utenteId, viaggioId, Prenotazione.StatoPrenotazione.CONFERMATA);
@@ -64,7 +71,10 @@ public class RecensioneServiceImpl implements RecensioneService {
         }
 
         Viaggio viaggio = viaggioRepository.findById(viaggioId)
-                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId)));
+                .orElseThrow(() -> {
+                    log.error("Impossibile inserire recensione: viaggio ID {} non trovato", viaggioId);
+                    return new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId));
+                });
 
         Recensione recensione = new Recensione();
         recensione.setUtente(autore);
@@ -84,7 +94,10 @@ public class RecensioneServiceImpl implements RecensioneService {
     @CacheEvict(value = CacheConfig.CACHE_VIAGGI_MEDIA, key = "#viaggioId")
     public void eliminaRecensione(Long viaggioId, Long recensioneId, Long utenteId) {
         Recensione recensione = recensioneRepository.findById(recensioneId)
-                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("recensione.notexist", recensioneId)));
+                .orElseThrow(() -> {
+                    log.warn("Tentativo di eliminazione fallito: recensione ID {} inesistente", recensioneId);
+                    return new EntityNotFoundException(messageLang.getMessage("recensione.notexist", recensioneId));
+                });
 
         // Controllo che la recensione appartenga al viaggio specificato
         if (!recensione.getViaggio().getId().equals(viaggioId)) {
@@ -124,6 +137,7 @@ public class RecensioneServiceImpl implements RecensioneService {
 
         // Controllo che la recensione appartenga al viaggio specificato
         if (!recensione.getViaggio().getId().equals(viaggioId)) {
+            log.error("Discrepanza dati: la recensione ID {} non appartiene al viaggio ID {}", recensioneId, viaggioId);
             throw new IllegalArgumentException(messageLang.getMessage("recensione.not_part_of_viaggio"));
         }
 
@@ -144,19 +158,29 @@ public class RecensioneServiceImpl implements RecensioneService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RecensioneDTO> ricercaFiltrata(RecensioneSpecification.RecensioneFilter recensioneFilter, Long utenteId, Long viaggioId) {
+    public Page<RecensioneDTO> ricercaFiltrata(RecensioneSpecification.RecensioneFilter recensioneFilter, Long utenteId, Long viaggioId, int page) {
         Utente utente = utenteRepository.findById(utenteId)
-                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId)));
+                .orElseThrow(() -> {
+                    log.error("Impossibile recuperare le recensioni: utente ID {} non trovato", utenteId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
 
         // Se non è un amministratore, filtra solo le recensioni del viaggio specificato
         if (!utente.getRuolo().equals(Utente.Ruolo.ROLE_ADMIN)){
             recensioneFilter.setViaggioId(viaggioId);
         }
 
-        List<Recensione> recensioni = recensioneRepository.findAll(RecensioneSpecification.withFilter(recensioneFilter));
-        return recensioni.stream()
-                .map(recensione -> modelMapper.map(recensione, RecensioneDTO.class))
-                .collect(Collectors.toList());
+        // Paginazione della ricerca
+        PageRequest pageRequest = PageRequest.of(page, SIZE_FOR_PAGE, Sort.by("id").descending());
+        Page<Recensione> recensioniPage = recensioneRepository.findAll(RecensioneSpecification.withFilter(recensioneFilter), pageRequest);
+
+        // Controllo sulla pagina corrente
+        if ((page < 0 || page >= recensioniPage.getTotalPages()) && recensioniPage.getTotalPages() > 0) {
+            log.warn("Pagina non valida: {}. Pagina totale: {}", page, recensioniPage.getTotalPages());
+            throw new IllegalArgumentException(messageLang.getMessage("recensione.invalid_page"));
+        }
+
+        return recensioniPage.map(recensione -> modelMapper.map(recensione, RecensioneDTO.class));
     }
 
 }

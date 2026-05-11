@@ -12,19 +12,23 @@ import com.example.progettoenterprise.dto.ViaggioDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ViaggioServiceImpl implements ViaggioService {
+
+    // Dimensioni della pagina per la ricerca
+    private static final int SIZE_FOR_PAGE = 10;
 
     private final ViaggioRepository viaggioRepository;
     private final UtenteRepository utenteRepository;
@@ -94,7 +98,8 @@ public class ViaggioServiceImpl implements ViaggioService {
     }
 
     @Override
-    public List<ViaggioDTO> ricercaFiltrata(ViaggioSpecification.ViaggioFilter viaggioFilter, Long utenteId) {
+    @Transactional(readOnly = true)
+    public Page<ViaggioDTO> ricercaFiltrata(ViaggioSpecification.ViaggioFilter viaggioFilter, Long utenteId, int page) {
 
         Utente utente = utenteRepository.findById(utenteId)
                 .orElseThrow(() -> {
@@ -107,9 +112,16 @@ public class ViaggioServiceImpl implements ViaggioService {
             viaggioFilter.setOrganizzatoreId(utenteId);
         }
 
-        List<Viaggio> viaggi = viaggioRepository.findAll(ViaggioSpecification.withFilter(viaggioFilter));
-        return viaggi.stream()
-                .map(v -> modelMapper.map(v, ViaggioDTO.class))
-                .collect(Collectors.toList());
+        // Paginazione della ricerca
+        PageRequest pageRequest = PageRequest.of(page, SIZE_FOR_PAGE, Sort.by("id").descending());
+        Page<Viaggio> viaggiPage = viaggioRepository.findAll(ViaggioSpecification.withFilter(viaggioFilter), pageRequest);
+
+        // Controllo sulla pagina corrente
+        if ((page < 0 || page >= viaggiPage.getTotalPages()) && viaggiPage.getTotalPages() > 0) {
+            log.warn("Pagina non valida: {}. Pagina totale: {}", page, viaggiPage.getTotalPages());
+            throw new IllegalArgumentException(messageLang.getMessage("viaggio.invalid_page"));
+        }
+
+        return viaggiPage.map(viaggio -> modelMapper.map(viaggio, ViaggioDTO.class));
     }
 }

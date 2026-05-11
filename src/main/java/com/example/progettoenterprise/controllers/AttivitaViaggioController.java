@@ -7,13 +7,13 @@ import com.example.progettoenterprise.security.UtenteLoggato;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -33,7 +33,6 @@ public class AttivitaViaggioController {
 
         log.info("L'organizzatore {} sta creando una nuova attività per il viaggio numero {}",
                 utenteLoggato.getUsername(), viaggioId);
-
         AttivitaViaggioDTO nuovaAttivita = attivitaViaggioService.creaAttivita(viaggioId, attivitaViaggioDTO, utenteLoggato.getId());
         return new ResponseEntity<>(nuovaAttivita, HttpStatus.CREATED);
     }
@@ -82,14 +81,15 @@ public class AttivitaViaggioController {
     // Ricerca avanzata delle attività tramite filtri dinamici
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<AttivitaViaggioDTO>> ricercaAttivita(
+    public ResponseEntity<Page<AttivitaViaggioDTO>> ricercaAttivita(
             @PathVariable Long viaggioId,
             AttivitaViaggioSpecification.AttivitaFilter attivitaFilter,
+            @RequestParam(defaultValue = "0") int page,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato
     ){
-        log.info("L'utente {} sta effettuando una ricerca avanzata sulle attività del viaggio {}, con i filtri {}",
-                utenteLoggato.getUsername(), viaggioId, attivitaFilter);
-        List<AttivitaViaggioDTO> risultati = attivitaViaggioService.ricercaFiltrata(attivitaFilter, viaggioId, utenteLoggato.getId());
+        log.info("L'utente {} sta effettuando una ricerca avanzata (pag: {}) sulle attività del viaggio {}, con i filtri {}",
+                utenteLoggato.getUsername(), page, viaggioId, attivitaFilter);
+        Page<AttivitaViaggioDTO> risultati = attivitaViaggioService.ricercaFiltrata(attivitaFilter, viaggioId, utenteLoggato.getId(), page);
         return ResponseEntity.ok(risultati);
     }
 }

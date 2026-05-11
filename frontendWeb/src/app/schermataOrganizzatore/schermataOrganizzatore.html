@@ -51,18 +51,48 @@
         </tr>
         </thead>
         <tbody>
+          <tr *ngIf="listaDeiViaggi.length === 0">
+            <td colspan="4" style="text-align: center; padding: 2rem; color: #546e7a;">
+              Nessun viaggio trovato in questa pagina.
+            </td>
+          </tr>
 
-        <tr *ngFor="let v of listaDeiViaggi">
-          <td><strong>{{ v.destinazione }}</strong></td>
-          <td>{{ v.prezzo }}€</td>
-          <td><span class="status status-active">Attivo</span></td>
-          <td style="text-align: center;">
-            <span class="action-icon edit-icon" (click)="modifica(v)">✏️</span>
-            <span class="action-icon delete-icon" (click)="elimina(v)">🗑️</span>
-          </td>
-        </tr>
+          <tr *ngFor="let v of listaDeiViaggi">
+            <td><strong>{{ v.destinazione }}</strong></td>
+            <td>{{ v.prezzo }}€</td>
+            <td><span class="status status-active">Attivo</span></td>
+            <td style="text-align: center;">
+              <span class="action-icon edit-icon" (click)="modifica(v)">✏️</span>
+              <span class="action-icon delete-icon" (click)="elimina(v)">🗑️</span>
+            </td>
+          </tr>
         </tbody>
       </table>
+
+      <div class="pagination-bar" *ngIf="totalePagine > 0">
+        <div class="pagination-info">
+          Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
+        </div>
+
+        <div class="pagination-buttons">
+          <button
+            class="btn-pagination"
+            (click)="paginaPrecedente()"
+            [disabled]="paginaCorrente === 0"
+            [class.disabled]="paginaCorrente === 0">
+            &larr; Precedente
+          </button>
+
+          <button
+            class="btn-pagination"
+            (click)="paginaSuccessiva()"
+            [disabled]="paginaCorrente === totalePagine - 1"
+            [class.disabled]="paginaCorrente === totalePagine - 1">
+            Successiva &rarr;
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 

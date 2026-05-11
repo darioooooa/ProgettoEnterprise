@@ -7,12 +7,12 @@ import com.example.progettoenterprise.security.UtenteLoggato;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -27,8 +27,7 @@ public class UtenteController {
     // PER UNA QUESTIONE DI SICUREZZA
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UtenteDTO> getMioProfilo(
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+    public ResponseEntity<UtenteDTO> getMioProfilo(@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
         log.info("L'utente {} sta visualizzando il proprio profilo", utenteLoggato.getUsername());
         UtenteDTO profilo = utenteService.getProfiloById(utenteLoggato.getId());
@@ -38,9 +37,10 @@ public class UtenteController {
     // RICERCA DEGLI UTENTI
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UtenteDTO>> getUtenti(UtenteSpecification.UtenteFilter utenteFilter, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-        log.info("L'Admin {} sta cercando utenti con i filtri: {}", utenteLoggato.getUsername(), utenteFilter);
-        List<UtenteDTO> risultati = utenteService.ricercaUtenti(utenteFilter);
+    public ResponseEntity<Page<UtenteDTO>> getUtenti(UtenteSpecification.UtenteFilter utenteFilter, @RequestParam(defaultValue = "0") int page, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        log.info("L'Admin {} sta cercando utenti (pag: {}) con i filtri: {}", utenteLoggato.getUsername(), page, utenteFilter);
+        Page<UtenteDTO> risultati = utenteService.ricercaUtenti(utenteFilter, page);
         return ResponseEntity.ok(risultati);
     }
 
