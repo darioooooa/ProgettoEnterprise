@@ -4,6 +4,8 @@ import {SchermataOrganizzatoreComponent} from './schermataOrganizzatore/schermat
 import {CreaViaggio} from './crea-viaggio/crea-viaggio';
 import {Login} from './login/login';
 import {Registrazione} from './registrazione/registrazione';
+import{SchermataUtente} from './schermata-utente/schermata-utente';
+
 export const routes: Routes = [
   {
     path: '',
@@ -28,5 +30,10 @@ export const routes: Routes = [
   {
     path: 'registrazione',
     component: Registrazione
+  },
+  {
+    path: 'profilo',
+    component: SchermataUtente
   }
+
 ];

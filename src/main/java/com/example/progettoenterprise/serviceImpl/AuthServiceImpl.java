@@ -87,7 +87,9 @@ public class AuthServiceImpl implements AuthService {
                 "id", utente.getId().toString(),
                 "email", utente.getEmail(),
                 "username", utente.getUsername(),
-                "ruolo", utente.getRuolo().name()
+                "ruolo", utente.getRuolo().name(),
+                "nome",utente.getNome(),
+                "cognome",utente.getCognome()
         );
     }
 

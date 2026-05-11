@@ -1,0 +1,41 @@
+<div class="sfondo-profilo">
+  <div class="contenitore-profilo-vetro">
+
+    <div class="intestazione-profilo">
+      <div class="cerchio-utente-grande">👤</div>
+      <h1>Il Tuo Profilo</h1>
+      <p>Dettagli dell'account viaggiatore</p>
+    </div>
+
+    <div class="griglia-informazioni">
+
+      <div class="scheda-dato">
+        <label>Nome</label>
+        <p>{{ ottieniNome() }}</p>
+      </div>
+
+      <div class="scheda-dato">
+        <label>Cognome</label>
+        <p>{{ ottieniCognome() }}</p>
+      </div>
+
+      <div class="scheda-dato">
+        <label>Username</label>
+        <p>{{ ottieniUsername() }}</p>
+      </div>
+
+      <div class="scheda-dato">
+        <label>Indirizzo Email</label>
+        <p>{{ ottieniEmail() }}</p>
+      </div>
+
+    </div>
+
+    <div class="azioni-profilo">
+      <button routerLink="/home" class="pulsante-ritorno">
+        Torna alla Home
+      </button>
+    </div>
+
+  </div>
+</div>

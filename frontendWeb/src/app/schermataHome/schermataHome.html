@@ -6,16 +6,28 @@
     <a href="#">Chi Siamo</a>
     <a routerLink="/organizzatore" style="color: #ffd166;">Area Organizzatore</a>
   </nav>
-  <button class="btn">Prenota ora</button>
+
+  <div class="sezioni-finali-nav">
+    <button class="btn">Prenota ora</button>
+    <div class="auth-box">
+      <a *ngIf="!isLoggato()" routerLink="/login" class="btn-accedi-testo">Accedi</a>
+
+      <div *ngIf="isLoggato()" class="user-logged-wrapper" (click)="toggleMenu()">
+        <button class="btn-omino">
+          <span>👤</span>
+        </button>
+        <span class="username-navbar">{{ ottieniUsername() }}</span>
+
+      </div>
+    </div>
+  </div>
 </header>
 
 <section class="hero">
   <div class="overlay"></div>
-
   <div class="hero-content">
     <h1>TRAVEL</h1>
     <p>Scopri le meraviglie naturali del mondo.</p>
-
     <form class="search-bar">
       <input type="text" placeholder="Località (es. Bali, Indonesia)">
       <input type="date">
@@ -31,8 +43,7 @@
 </section>
 
 <section class="destinations">
-  <h2>Il tuo viaggio verso la destinazione perfetta inizia qui </h2>
-
+  <h2>Il tuo viaggio verso la destinazione perfetta inizia qui</h2>
   <div class="cards-container">
     <div class="card" *ngFor="let viaggio of viaggiEsempio">
       <img src="/assets/cammelli-che-attraversa-il-deserto-del-Sahara.jpg" [alt]="viaggio.destinazione">
@@ -44,7 +55,21 @@
   </div>
 </section>
 
+<div class="menu-laterale" [class.attivo]="mostraMenu">
+  <div class="intestazione-menu">
+    <h3>Area Riservata</h3>
+    <button class="pulsante-chiudi" (click)="toggleMenu()">×</button>
+  </div>
+  <div class="contenuto-menu">
+    <a routerLink="/profilo" (click)="toggleMenu()" class="voce-laterale">Il Mio Profilo</a>
+    <a href="#" class="voce-laterale">Le Mie Prenotazioni</a>
+    <button (click)="logout()" class="voce-laterale logout-rosso">Disconnetti</button>
+  </div>
+</div>
+
+<div class="oscuramento-sfondo" *ngIf="mostraMenu" (click)="toggleMenu()"></div>
+
 <footer>
-  <p>🌐 Progetto Enterprise 2025/2026 [cite: 2]</p>
-  <p>Realizzato per la gestione e prenotazione viaggi </p>
+  <p>🌐 Progetto Enterprise 2025/2026</p>
+  <p>Realizzato per la gestione e prenotazione viaggi</p>
 </footer>

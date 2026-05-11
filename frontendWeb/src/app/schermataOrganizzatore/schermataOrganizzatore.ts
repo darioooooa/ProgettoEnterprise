@@ -2,6 +2,7 @@ import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
 import {ViaggioService} from '../service/viaggio-service';
+import {AutenticazioneService} from '../service/autenticazione.service';
 
 
 @Component({
@@ -67,5 +68,6 @@ export class SchermataOrganizzatoreComponent implements OnInit{
   apriModalCreazione() {
     alert("Qui si aprirebbe il form per il nuovo viaggio!");
   }
+
 
 }
