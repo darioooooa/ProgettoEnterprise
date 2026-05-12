@@ -10,7 +10,7 @@ import java.util.Map;
 public interface ViaggioService {
     ViaggioDTO creaViaggio(ViaggioDTO viaggiodto, Long organizzatoreId);
     void eliminaViaggio(Long id, Long organizzatoreId);
-
+    ViaggioDTO modificaViaggio(Long id,ViaggioDTO viaggiodto, Long organizzatoreId);
     Map<String, Object> getStatisticheRecensioni(Long viaggioId);
 
     Page<ViaggioDTO> ricercaFiltrata(ViaggioSpecification.ViaggioFilter viaggioFilter, Long UtenteId, int page);

@@ -1,0 +1,96 @@
+<main class="hero-section">
+  <div class="background-overlay"></div>
+  <nav class="admin-navbar">
+    <div class="logo">ENTERPRISE Admin</div>
+    <div class="user-menu">
+      <span class="admin-username">👤 {{ adminUsername }}</span>
+      <button class="btn-logout" (click)="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="content-wrapper">
+    <div class="glass-form-container dashboard-container">
+      <header class="form-header">
+        <h1>Dashboard Amministratore</h1>
+        <p>Gestisci le richieste di promozione a Organizzatore</p>
+      </header>
+
+      <div class="view-toggle">
+        <button [class.active]="vistaAttuale === 'PENDENTI'" (click)="cambiaVista('PENDENTI')">
+          Richieste Pendenti
+        </button>
+        <button [class.active]="vistaAttuale === 'STORICO'" (click)="cambiaVista('STORICO')">
+          Storico Valutazioni
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="glass-table" *ngIf="richiesteFiltrate.length > 0">
+          <thead>
+          <tr>
+            <th>UTENTE</th>
+            <th>DATA</th>
+            <th>DETTAGLI CANDIDATURA</th>
+            <th>AZIONI</th>
+          </tr>
+          </thead>
+          <tbody>
+
+          <tr *ngFor="let richiesta of richiesteFiltrate">
+
+            <td class="user-info">
+              <span class="username">{{ richiesta.usernameViaggiatore }}</span>
+              <span class="email">{{ richiesta.emailViaggiatore }}</span>
+            </td>
+
+            <td>{{ richiesta.dataRichiesta | date:'dd/MM/yyyy HH:mm' }}</td>
+
+            <td class="motivazione-text">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <p style="margin: 0;"><strong>Motivazione:</strong> {{ richiesta.motivazione }}</p>
+
+                <p style="margin: 0; font-size: 0.9em; opacity: 0.9;" *ngIf="richiesta.biografiaProfessionale">
+                  <strong>Biografia:</strong> {{ richiesta.biografiaProfessionale }}
+                </p>
+
+                <div *ngIf="richiesta.documentiLink">
+                  <a [href]="richiesta.documentiLink" target="_blank" style="color: #90caf9; text-decoration: none; font-weight: bold;">
+                    📄 Visualizza Documenti
+                  </a>
+                </div>
+              </div>
+            </td>
+
+            <td class="actions-cell">
+
+              <ng-container *ngIf="richiesta.stato === 'IN_ATTESA'">
+                <button class="btn-approve" (click)="approva(richiesta.id)">Approva</button>
+                <button class="btn-reject" (click)="rifiuta(richiesta.id)">Rifiuta</button>
+              </ng-container>
+
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;" *ngIf="richiesta.stato === 'APPROVATA'">
+                <span class="badge badge-approved">✅ Accettata</span>
+                <small style="opacity: 0.7; font-size: 0.8em;" *ngIf="richiesta.adminId">
+                  da Admin #{{ richiesta.adminId }}
+                </small>
+              </div>
+
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;" *ngIf="richiesta.stato === 'RIFIUTATA'">
+                <span class="badge badge-rejected">❌ Rifiutata</span>
+                <small style="opacity: 0.7; font-size: 0.8em;" *ngIf="richiesta.adminId">
+                  da Admin #{{ richiesta.adminId }}
+                </small>
+              </div>
+
+            </td>
+
+          </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="richiesteFiltrate.length === 0" style="padding: 20px; text-align: center;">
+          {{ vistaAttuale === 'PENDENTI' ? 'Non ci sono richieste pendenti al momento.' : 'Nessuna richiesta presente nello storico.' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

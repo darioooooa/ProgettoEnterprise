@@ -5,6 +5,9 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "recensione")
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 public class Recensione {
     @Id
@@ -28,12 +32,14 @@ public class Recensione {
     @Size(max = 500, message = "Limite di caratteri del commento superato")
     private String commento;
 
+    @CreatedBy
     @ManyToOne(fetch = FetchType.LAZY)
     private Utente utente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Viaggio viaggio;
 
+    @CreatedDate
     @Column(name = "data_creazione", nullable = false, updatable = false)
     private LocalDateTime dataCreazione;
 

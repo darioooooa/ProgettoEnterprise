@@ -124,4 +124,27 @@ public class ViaggioServiceImpl implements ViaggioService {
 
         return viaggiPage.map(viaggio -> modelMapper.map(viaggio, ViaggioDTO.class));
     }
+    @Override
+    @Transactional
+    public ViaggioDTO modificaViaggio(Long id, ViaggioDTO viaggioDTO, Long organizzatoreId) {
+        Viaggio viaggioEsistente = viaggioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageLang.getMessage("viaggio.notexist", id)));
+
+        if (!viaggioEsistente.getOrganizzatore().getId().equals(organizzatoreId)) {
+            throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
+        }
+
+
+        viaggioEsistente.setTitolo(viaggioDTO.getTitolo());
+        viaggioEsistente.setDescrizione(viaggioDTO.getDescrizione());
+        viaggioEsistente.setDestinazione(viaggioDTO.getDestinazione());
+        viaggioEsistente.setPrezzo(viaggioDTO.getPrezzo());
+        viaggioEsistente.setDataInizio(viaggioDTO.getDataInizio());
+        viaggioEsistente.setDataFine(viaggioDTO.getDataFine());
+
+        Viaggio aggiornato = viaggioRepository.save(viaggioEsistente);
+        return modelMapper.map(aggiornato, ViaggioDTO.class);
+    }
+
 }

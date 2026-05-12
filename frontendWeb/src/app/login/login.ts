@@ -35,7 +35,13 @@ export class Login {
       next: (risposta) => {
         console.log('Login effettuato con successo', risposta);
 
-        this.navigatore.navigate(['/home']);
+        const ruolo = risposta.ruolo;
+
+        if (ruolo === 'ROLE_ADMIN') {
+          this.navigatore.navigate(['/admin-dashboard']);
+        } else {
+          this.navigatore.navigate(['/home']);
+        }
       },
       error: (errore) => {
         console.error('Errore durante il login:', errore);

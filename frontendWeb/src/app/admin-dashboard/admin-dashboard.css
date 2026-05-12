@@ -1,0 +1,214 @@
+/* Ereditiamo la base della hero-section e del glass-container */
+.hero-section {
+  min-height: 100vh;
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-bottom: 50px;
+  position: relative;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.background-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(15, 52, 117, 0.85) 0%, rgba(42, 115, 179, 0.6) 100%);
+  z-index: 1;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 95%;
+  max-width: 1100px; /* Più largo per la tabella */
+  margin-top: 100px;
+}
+
+.glass-form-container {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 30px;
+  padding: 2.5rem;
+  color: #ffffff;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Stile Tabella Glass --- */
+.table-responsive {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.glass-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.glass-table th {
+  padding: 15px;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.glass-table tbody tr {
+  background: rgba(255, 255, 255, 0.05);
+  transition: 0.3s;
+}
+
+.glass-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.01);
+}
+
+.glass-table td {
+  padding: 20px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- Info Utente --- */
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.username {
+  font-weight: 700;
+  color: #fff;
+}
+
+.email {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.motivazione-text {
+  max-width: 300px;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Bottoni Azione --- */
+.actions-cell {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.btn-approve {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-reject {
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Effetti Hover --- */
+.btn-approve:hover {
+  background: #388e3c;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-reject:hover {
+  background: #b71c1c;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+/* --- Stili Navbar Admin --- */
+.admin-navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: rgba(0, 0, 0, 0.2); /* Sfondo scuro semitrasparente */
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  color: white;
+}
+
+.admin-navbar .logo {
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-size: 1.2rem;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn-logout {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 6px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  justify-content: flex-start;
+}
+
+.view-toggle button {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.view-toggle button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.view-toggle button.active {
+  background: rgba(42, 115, 179, 0.8);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
