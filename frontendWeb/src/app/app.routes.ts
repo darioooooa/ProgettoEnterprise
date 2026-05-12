@@ -5,7 +5,7 @@ import {CreaViaggio} from './crea-viaggio/crea-viaggio';
 import {Login} from './login/login';
 import {Registrazione} from './registrazione/registrazione';
 import{SchermataUtente} from './schermata-utente/schermata-utente';
-
+import{SchermataPrenotazioni} from './schermata-prenotazioni/schermata-prenotazioni';
 export const routes: Routes = [
   {
     path: '',
@@ -34,6 +34,11 @@ export const routes: Routes = [
   {
     path: 'profilo',
     component: SchermataUtente
+  },
+  {
+    path: 'prenotazioni',
+    component: SchermataPrenotazioni
+
   }
 
 ];

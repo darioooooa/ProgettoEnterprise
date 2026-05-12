@@ -1,0 +1,145 @@
+/* --- SFONDO --- */
+.sfondo-prenotazioni {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
+  padding: 60px 20px;
+}
+
+/* --- BOX VETRO --- */
+.contenitore-prenotazioni-vetro {
+  background: rgba(15, 32, 66, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 850px;
+  padding: 50px;
+  color: white;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+
+.intestazione-sezione {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.intestazione-sezione h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.intestazione-sezione p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+}
+
+/* --- CARDS LISTA --- */
+.lista-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-prenotazione {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 25px 35px;
+  border-radius: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.card-prenotazione:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.02);
+  border-color: rgba(144, 202, 249, 0.3);
+}
+
+/* --- DETTAGLI --- */
+.sopra-titolo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.codice {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: monospace;
+}
+
+.stato-tag {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 30px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* Colori stati */
+.confermata { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+.attesa { background: rgba(241, 196, 15, 0.2); color: #f1c40f; border: 1px solid #f1c40f; }
+
+.info-viaggio h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.4rem;
+  margin: 5px 0;
+}
+
+.data {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* --- PREZZO --- */
+.prezzo-sezione {
+  text-align: right;
+}
+
+.prezzo-sezione label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #90caf9;
+  margin-bottom: 5px;
+}
+
+.valore-prezzo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* --- BOTTONE RITORNO --- */
+.azioni-finali {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.btn-ritorno {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 12px 40px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-ritorno:hover {
+  background: white;
+  color: #0d47a1;
+}

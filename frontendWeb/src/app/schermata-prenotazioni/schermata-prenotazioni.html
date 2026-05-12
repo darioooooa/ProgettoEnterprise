@@ -1,0 +1,34 @@
+<div class="sfondo-prenotazioni">
+  <div class="contenitore-prenotazioni-vetro">
+
+    <div class="intestazione-sezione">
+      <h1>I Miei Viaggi</h1>
+      <p>Gestisci le tue avventure e i dettagli delle prenotazioni</p>
+    </div>
+
+    <div class="lista-cards">
+      <div class="card-prenotazione" *ngFor="let p of listaPrenotazioni">
+
+        <div class="info-viaggio">
+          <div class="sopra-titolo">
+            <span class="codice">#{{ p.codicePrenotazione }}</span>
+            <span class="stato-tag">{{ p.stato }}</span>
+          </div>
+          <h3>{{ p.destinazione }}</h3>
+          <p class="data"><i class="icona-calendario">📅</i> Partenza: {{ p.dataPartenza | date:'dd MMMM yyyy' }}</p>
+        </div>
+
+        <div class="prezzo-sezione">
+          <label>Prezzo Totale</label>
+          <p class="valore-prezzo">{{ p.prezzoTotale | currency:'EUR' }}</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="azioni-finali">
+      <button routerLink="/" class="btn-ritorno">← Torna alla Home</button>
+    </div>
+
+  </div>
+</div>
