@@ -5,21 +5,27 @@ import com.example.progettoenterprise.data.entities.Notifica;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.NotificaRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
+import com.example.progettoenterprise.data.repositories.specifications.NotificaSpecification;
 import com.example.progettoenterprise.data.service.NotificaService;
 import com.example.progettoenterprise.dto.NotificaDTO;
 import jakarta.persistence.EntityNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class NotificaServiceImpl implements NotificaService {
+
+    private static final int SIZE_FOR_PAGE=10;
+
     private final UtenteRepository utenteRepository;
     private final NotificaRepository notificaRepository;
     private final ModelMapper modelMapper;
@@ -46,18 +52,26 @@ public class NotificaServiceImpl implements NotificaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificaDTO> getNotifiche(Long utenteId) {
-        List<Notifica> notifiche=notificaRepository.findAllByUtenteIdOrderByDataCreazioneDesc(utenteId);
-        return notifiche.stream().map
-                (n->modelMapper.map(n,NotificaDTO.class)).toList();
-    }
+    public Page<NotificaDTO> getNotifiche(Long utenteId, NotificaSpecification.NotificaFilter filter, int page) {
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<NotificaDTO> getNotificheNonLette(Long utenteId) {
-        List<Notifica> notifihceNonLette=notificaRepository.findAllByUtenteIdAndIsLettaIsFalseOrderByDataCreazioneDesc(utenteId);
-        return notifihceNonLette.stream().map
-                (n->modelMapper.map(n,NotificaDTO.class)).toList();
+        // Controlla che l'utente esista
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> {
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
+
+        // Imposta l'utente passato nel filtro
+        filter.setUtenteId(utenteId);
+
+        PageRequest pageRequest = PageRequest.of(page, SIZE_FOR_PAGE, Sort.by("id").descending());
+        Page<Notifica> notifichePage=notificaRepository.findAll(NotificaSpecification.withFilter(filter),pageRequest);
+
+        // Controllo sulla pagina corrente
+        if ((page < 0 || page >= notifichePage.getTotalPages()) && notifichePage.getTotalPages() > 0) {
+            throw new IllegalArgumentException(messageLang.getMessage("notifica.invalid_page"));
+        }
+
+        return notifichePage.map(n->modelMapper.map(n,NotificaDTO.class));
     }
 
     @Override

@@ -1,17 +1,18 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.repositories.specifications.NotificaSpecification;
 import com.example.progettoenterprise.data.service.NotificaService;
 import com.example.progettoenterprise.dto.NotificaDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,34 +39,21 @@ public class NotificaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuovaNotifica);
     }
 
-    //Recupero tutte le notifiche dell'utente
+    //Recupero tutte le notifiche dell'utente con i filtri
     @GetMapping("/utente/{utenteId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<NotificaDTO>> getNotifiche(
+    public ResponseEntity<Page<NotificaDTO>> getNotifiche(
+            NotificaSpecification.NotificaFilter filter,
             @PathVariable Long utenteId,
+            @RequestParam(defaultValue = "0") int page,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
         log.info("L'utente {} sta consultando lo storico notifiche dell'ID: {}",
                 utenteLoggato.getUsername(), utenteId);
 
-        List<NotificaDTO> notifiche = notificaService.getNotifiche(utenteId);
+        Page<NotificaDTO> notifiche = notificaService.getNotifiche(utenteId, filter, page);
         return ResponseEntity.ok(notifiche);
     }
-
-
-    //Recupero tutte le notifiche non lette dell'utente
-    @GetMapping("/utente/{utenteId}/non-lette")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<NotificaDTO>> getNotificheNonLette(
-            @PathVariable Long utenteId,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("Richiesta notifiche da leggere per l'utente ID: {} (richiesto da: {})",
-                utenteId, utenteLoggato.getUsername());
-
-        return ResponseEntity.ok(notificaService.getNotificheNonLette(utenteId));
-    }
-
 
     //Segno una notifica come letta
     @PatchMapping("/{id}/letta")
