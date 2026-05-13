@@ -1,4 +1,5 @@
 package com.example.progettoenterprise.dto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import jakarta.validation.constraints.*;
 
@@ -6,12 +7,17 @@ import jakarta.validation.constraints.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificaDTO {
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
+
     @NotBlank
     private String messaggio;
 
     private boolean isLetta=false;
-    private String dataCreazione;
-    private Long idRiferimento;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String dataCreazione;
+
+    private Long idRiferimento;
 }
