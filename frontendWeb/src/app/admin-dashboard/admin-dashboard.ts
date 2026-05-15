@@ -1,7 +1,7 @@
-import {Component, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {AdminService} from '../service/admin.service';
-import {Router} from '@angular/router'
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core'; // Aggiunti Inject e PLATFORM_ID
+import { CommonModule, isPlatformBrowser } from '@angular/common';      // Aggiunto isPlatformBrowser
+import { AdminService } from '../service/admin.service';
+import { Router } from '@angular/router';
 
 export interface RichiestaPromozione {
   id: number;
@@ -22,24 +22,30 @@ export interface RichiestaPromozione {
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.css',
 })
-
 export class AdminDashboardComponent implements OnInit {
 
   richieste: RichiestaPromozione[] = [];
-  adminUsername: string = '';
+  adminUsername: string = 'Amministratore';
   vistaAttuale: 'PENDENTI' | 'STORICO' = 'PENDENTI';
 
-  constructor(private adminService: AdminService,private navigatore: Router) {
-  }
+  constructor(
+    private adminService: AdminService,
+    private navigatore: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit(): void {
     this.caricaRichieste();
-    this.adminUsername=localStorage.getItem('username')||'Amministratore';
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.adminUsername = localStorage.getItem('username') || 'Amministratore';
+    }
   }
 
   cambiaVista(vista: 'PENDENTI' | 'STORICO') {
     this.vistaAttuale = vista;
   }
+
   get richiesteFiltrate() {
     if (this.vistaAttuale === 'PENDENTI') {
       return this.richieste.filter(r => r.stato === 'IN_ATTESA');
@@ -62,57 +68,62 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   approva(id: number) {
-    const adminIdString = localStorage.getItem('adminId');
+    if (isPlatformBrowser(this.platformId)) {
+      const adminIdString = localStorage.getItem('adminId');
 
-    // Controllo di sicurezza reale
-    if (!adminIdString) {
-      alert('Errore: ID amministratore non trovato. Effettua nuovamente il login.');
-      return; // Interrompe il metodo, non fa la chiamata al server
-    }
+      if (!adminIdString) {
+        alert('Errore: ID amministratore non trovato. Effettua nuovamente il login.');
+        return;
+      }
 
-    const adminId = Number(adminIdString);
+      const adminId = Number(adminIdString);
 
-    if(confirm("Sei sicuro di voler approvare questa richiesta?")) {
-      this.adminService.approvaRichiesta(id, adminId).subscribe({
-        next: (risposta) => {
-          alert('Richiesta approvata con successo!');
-          this.caricaRichieste();
-        },
-        error: (err) => {
-          console.error("Errore durante l'approvazione", err);
-          alert('Errore durante l\'approvazione.');
-        }
-      });
+      if (confirm("Sei sicuro di voler approvare questa richiesta?")) {
+        this.adminService.approvaRichiesta(id, adminId).subscribe({
+          next: (risposta) => {
+            alert('Richiesta approvata con successo!');
+            this.caricaRichieste();
+          },
+          error: (err) => {
+            console.error("Errore durante l'approvazione", err);
+            alert('Errore durante l\'approvazione.');
+          }
+        });
+      }
     }
   }
 
   rifiuta(id: number) {
-    const adminIdString = localStorage.getItem('adminId');
+    if (isPlatformBrowser(this.platformId)) {
+      const adminIdString = localStorage.getItem('adminId');
 
-    // Controllo di sicurezza reale
-    if (!adminIdString) {
-      alert('Errore: ID amministratore non trovato. Effettua nuovamente il login.');
-      return;
-    }
+      if (!adminIdString) {
+        alert('Errore: ID amministratore non trovato. Effettua nuovamente il login.');
+        return;
+      }
 
-    const adminId = Number(adminIdString);
-    const notaRifiuto = prompt("Inserisci la motivazione del rifiuto:");
+      const adminId = Number(adminIdString);
+      const notaRifiuto = prompt("Inserisci la motivazione del rifiuto:");
 
-    if (notaRifiuto) {
-      this.adminService.rifiutaRichiesta(id, notaRifiuto, adminId).subscribe({
-        next: (risposta) => {
-          alert('Richiesta rifiutata.');
-          this.caricaRichieste();
-        },
-        error: (err) => {
-          console.error("Errore durante il rifiuto", err);
-          alert('Errore durante il rifiuto della richiesta.');
-        }
-      });
+      if (notaRifiuto) {
+        this.adminService.rifiutaRichiesta(id, notaRifiuto, adminId).subscribe({
+          next: (risposta) => {
+            alert('Richiesta rifiutata.');
+            this.caricaRichieste();
+          },
+          error: (err) => {
+            console.error("Errore durante il rifiuto", err);
+            alert('Errore durante il rifiuto della richiesta.');
+          }
+        });
+      }
     }
   }
-logout() {
-  localStorage.clear(); // Svuota la memoria (cancella il token)
-  this.navigatore.navigate(['/login']);
-}
+
+  logout() {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.clear();
+    }
+    this.navigatore.navigate(['/login']);
+  }
 }

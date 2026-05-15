@@ -34,9 +34,6 @@ public class RichiestaPromozione {
     @Column(length = 1000)
     private String motivazione;
 
-    @Column(length = 2000)
-    private String biografia;
-
     @Column(length = 500)
     private String documentiLink;
 
