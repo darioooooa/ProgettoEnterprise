@@ -9,6 +9,7 @@ import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.repositories.specifications.ViaggioSpecification;
 import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
+import com.example.progettoenterprise.dto.ViaggioMappaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -20,7 +21,9 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,13 +47,22 @@ public class ViaggioServiceImpl implements ViaggioService {
                     return new EntityNotFoundException(messageLang.getMessage("utente.notexist", organizzatoreId));
                 });
         Viaggio viaggio = modelMapper.map(viaggioDTO, Viaggio.class);
-
+        if (viaggioDTO.getDataInizio() != null) {
+            viaggio.setDataInizio(viaggioDTO.getDataInizio().atStartOfDay());
+        }
+        if (viaggioDTO.getDataFine() != null) {
+            viaggio.setDataFine(viaggioDTO.getDataFine().atStartOfDay());
+        }
+        //assegnare le tappe al viaggio
+        if (viaggio.getTappe() != null) {
+            viaggio.getTappe().forEach(tappa -> tappa.setViaggio(viaggio));
+        }
         // Controllo sui dati del viaggio
         if (viaggio.getPrezzo() <= 0) {
             log.warn("Tentativo di creazione viaggio con prezzo non valido: {}", viaggio.getPrezzo());
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.invalid_price"));
         }
-        if (viaggio.getDataFine().isBefore(viaggio.getDataInizio()) || viaggio.getDataInizio() == null){
+        if (viaggio.getDataInizio() == null || (viaggio.getDataFine() != null && viaggio.getDataFine().isBefore(viaggio.getDataInizio()))){
             log.warn("Tentativo di creazione viaggio con date non valide. Inizio: {}, Fine: {}",
                     viaggio.getDataInizio(), viaggio.getDataFine());
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.invalid_date"));
@@ -124,6 +136,21 @@ public class ViaggioServiceImpl implements ViaggioService {
 
         return viaggiPage.map(viaggio -> modelMapper.map(viaggio, ViaggioDTO.class));
     }
+
+    public List<ViaggioMappaDTO> getViaggiMappa() {
+        List<Viaggio> viaggi = viaggioRepository.findAll();
+
+        // Mappiamo l'Entity nel DTO
+        return viaggi.stream().map(viaggio -> {
+            ViaggioMappaDTO dto = new ViaggioMappaDTO();
+            dto.setId(viaggio.getId());
+            dto.setTitolo(viaggio.getTitolo());
+            dto.setLatitudine(viaggio.getLatitudine());
+            dto.setLongitudine(viaggio.getLongitudine());
+            // dto.setUrlImmagine(viaggio.getUrlImmagine());
+            return dto;
+        }).collect(Collectors.toList());
+    }
     @Override
     @Transactional
     public ViaggioDTO modificaViaggio(Long id, ViaggioDTO viaggioDTO, Long organizzatoreId) {
@@ -140,8 +167,8 @@ public class ViaggioServiceImpl implements ViaggioService {
         viaggioEsistente.setDescrizione(viaggioDTO.getDescrizione());
         viaggioEsistente.setDestinazione(viaggioDTO.getDestinazione());
         viaggioEsistente.setPrezzo(viaggioDTO.getPrezzo());
-        viaggioEsistente.setDataInizio(viaggioDTO.getDataInizio());
-        viaggioEsistente.setDataFine(viaggioDTO.getDataFine());
+        viaggioEsistente.setDataInizio(viaggioDTO.getDataInizio().atStartOfDay());
+        viaggioEsistente.setDataFine(viaggioDTO.getDataFine().atStartOfDay());
 
         Viaggio aggiornato = viaggioRepository.save(viaggioEsistente);
         return modelMapper.map(aggiornato, ViaggioDTO.class);

@@ -3,12 +3,13 @@ import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
 import {ViaggioService} from '../service/viaggio-service';
 import {AutenticazioneService} from '../service/autenticazione.service';
+import {MapComponent} from '../map/map';
 
 
 @Component({
   selector: 'app-schermata-home',
   standalone: true,
-  imports: [CommonModule,RouterLink],
+  imports: [CommonModule, RouterLink, MapComponent],
   templateUrl: './schermataOrganizzatore.html',
   styleUrl: './schermataOrganizzatore.css'
 })

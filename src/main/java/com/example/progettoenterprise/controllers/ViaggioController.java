@@ -3,6 +3,7 @@ package com.example.progettoenterprise.controllers;
 import com.example.progettoenterprise.data.repositories.specifications.ViaggioSpecification;
 import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
+import com.example.progettoenterprise.dto.ViaggioMappaDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -66,5 +68,11 @@ public class ViaggioController {
 
         viaggioService.eliminaViaggio(viaggioId,organizzatore.getId());
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/mappa-viaggi")
+    public ResponseEntity<List<ViaggioMappaDTO>> getViaggiPerMappa() {
+        List<ViaggioMappaDTO> viaggiMappa = viaggioService.getViaggiMappa();
+        return ResponseEntity.ok(viaggiMappa);
+
     }
 }
