@@ -36,7 +36,8 @@ public class Viaggio {
     private LocalDateTime dataInizio;
     private LocalDateTime dataFine;
 
-
+    private Double latitudine;
+    private Double longitudine;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizzatore_id") //il nome del campo che è stato aggiunto nel nostro db

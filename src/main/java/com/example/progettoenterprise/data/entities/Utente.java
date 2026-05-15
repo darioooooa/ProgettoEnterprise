@@ -62,7 +62,7 @@ public abstract class Utente {
         ROLE_ADMIN
     }
 
-    @Column(nullable = false)
+    @Column(nullable = false,columnDefinition = "boolean default true")
     private boolean isAttivo = true;
 
     @Column(length = 500)

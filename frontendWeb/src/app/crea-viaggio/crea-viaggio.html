@@ -36,7 +36,7 @@
         <div class="form-row">
           <div class="input-group">
             <label for="destinazione">Destinazione</label>
-            <input type="text" id="destinazione" [(ngModel)]="nuovoViaggio.destinazione" name="destinazione" required>
+            <input type="text" id="destinazione" [(ngModel)]="nuovoViaggio.destinazione" name="destinazione" (blur)="cercaCoordinate()" required>
           </div>
           <div class="input-group">
             <label for="prezzo">Prezzo (€)</label>

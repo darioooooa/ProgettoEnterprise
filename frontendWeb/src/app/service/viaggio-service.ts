@@ -28,4 +28,7 @@ export class ViaggioService {
 
     return this.http.get<any>(this.API_URL, { params } );
   }
+  getViaggiPerMappa(): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/mappa-viaggi`);
+  }
 }
