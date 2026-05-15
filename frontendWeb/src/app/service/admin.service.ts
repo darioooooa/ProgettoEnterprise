@@ -17,15 +17,12 @@ export class AdminService {
     return this.http.get<RichiestaPromozione[]>(this.apiUrl);
   }
 
-  approvaRichiesta(id: number,idAdmin: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/approva`, {}, { responseType: 'text' });
-    return this.http.post(`${this.apiUrl}/${id}/approva?adminIdCorrente=${idAdmin}`, {});
+  approvaRichiesta(id: number, adminId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/approva?adminIdCorrente=${adminId}`, {}, { responseType: 'text' });
   }
 
-
   rifiutaRichiesta(id: number, note: string, adminId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/rifiuta`, { noteAdmin: note }, { responseType: 'text' })
-    const payload = { note: note };
-    return this.http.post(`${this.apiUrl}/${id}/rifiuta?adminIdCorrente=${adminId}`, payload)
+    const payload = { noteAdmin: note };
+    return this.http.post(`${this.apiUrl}/${id}/rifiuta?adminIdCorrente=${adminId}`, payload, { responseType: 'text' });
   }
 }

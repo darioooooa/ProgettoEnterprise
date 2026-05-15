@@ -41,6 +41,9 @@ export class AutenticazioneService {
           localStorage.setItem('cognome', risposta.cognome);
           localStorage.setItem('email', risposta.email);
 
+          if(risposta.id) {
+            localStorage.setItem('adminId', risposta.id);
+          }
         }
       })
     );
@@ -56,6 +59,7 @@ export class AutenticazioneService {
       localStorage.removeItem('nome');
       localStorage.removeItem('cognome');
       localStorage.removeItem('email');
+      localStorage.removeItem('adminId');
     }
   }
 
