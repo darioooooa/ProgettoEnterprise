@@ -62,6 +62,12 @@ public abstract class Utente {
         ROLE_ADMIN
     }
 
+    @Column(nullable = false,columnDefinition = "boolean default true")
+    private boolean isAttivo = true;
+
+    @Column(length = 500)
+    private String motivoSospensione;
+
     @CreatedDate
     @Column(name = "data_creazione", updatable = false)
     private LocalDateTime dataCreazione;

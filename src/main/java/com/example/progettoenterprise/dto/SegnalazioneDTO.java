@@ -1,35 +1,37 @@
 package com.example.progettoenterprise.dto;
 
-import com.example.progettoenterprise.data.entities.Amicizia.StatoAmicizia;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AmiciziaDTO {
+public class SegnalazioneDTO {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private Long richiedenteId;
+    private String stato;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private String richiedenteUsername;
-
-    private Long riceventeId;
+    private LocalDateTime dataSegnalazione;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private String riceventeUsername;
+    private LocalDateTime dataRisoluzione;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private StatoAmicizia stato;
+    private Long adminId;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private LocalDateTime dataRichiesta;
+    private Long segnalatoreId;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private LocalDateTime dataRisposta;
+    private String tipo;
+    private Long idRiferimento;
+    private String motivo;
+    private String descrizione;
 }

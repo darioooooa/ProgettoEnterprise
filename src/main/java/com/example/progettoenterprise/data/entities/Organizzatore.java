@@ -18,9 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Organizzatore extends Utente{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @OneToMany(mappedBy = "organizzatore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Viaggio> viaggiCreati;

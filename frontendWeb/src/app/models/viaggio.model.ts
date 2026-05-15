@@ -6,5 +6,7 @@ export interface Viaggio {
   prezzo: number;
   dataInizio: string;
   dataFine: string;
-  tappe: any[]; // Qui puoi essere più specifico se hai un modello per le tappe
+  tappe: any[];
+  longitudine: number;
+  latitudine: number;
 }
