@@ -34,6 +34,18 @@ public class UtenteServiceImpl implements UtenteService {
                 () -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", id)));
         return modelMapper.map(utente, UtenteDTO.class);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UtenteDTO findByUsername(String username) {
+        // Cerca l'utente tramite il nickname, altrimenti lancia l'eccezione i18n
+        Utente utente = utenteRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageLang.getMessage("utente.username_notexist", username)));
+
+        // Converte l'entità database nel DTO per il frontend
+        return modelMapper.map(utente, UtenteDTO.class);
+    }
     @Override
     @Transactional
     public UtenteDTO aggiornaProfilo(Long id, UtenteDTO utenteDto) {

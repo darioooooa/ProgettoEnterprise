@@ -34,4 +34,4 @@ build/
 
 .env
 
-src/environments
+frontendWeb/src/environments/envMap.ts

@@ -11,7 +11,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "viaggio")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)

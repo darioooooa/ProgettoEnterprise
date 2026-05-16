@@ -2,9 +2,12 @@ package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.ItinerarioPreferito;
+import com.example.progettoenterprise.data.entities.ListaViaggio;
 import com.example.progettoenterprise.data.entities.Utente;
+import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.repositories.ItinerarioPreferitoRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
+import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.service.ItinerarioPreferitoService;
 import com.example.progettoenterprise.dto.ItinerarioPreferitoDTO;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,6 +27,7 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
 
     private final ItinerarioPreferitoRepository itinerarioRepository;
     private final UtenteRepository utenteRepository;
+    private final ViaggioRepository viaggioRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
 
@@ -105,5 +109,56 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
             throw new IllegalArgumentException(messageLang.getMessage("lista.unauthorized"));
         }
         itinerarioRepository.delete(lista);
+    }
+
+    @Override
+    @Transactional
+    public void aggiungiViaggioAllaLista(Long idLista, Long idViaggio, Long idUtente) {
+        ItinerarioPreferito lista = itinerarioRepository.findById(idLista)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("itinerario.notexist", idLista)));
+        if (!lista.getProprietario().getId().equals(idUtente)) {
+            throw new IllegalArgumentException(messageLang.getMessage("itinerario.unauthorized"));
+        }
+        Viaggio viaggio = viaggioRepository.findById(idViaggio)
+                .orElseThrow(() -> new EntityNotFoundException("Viaggio non trovato con ID: " + idViaggio));
+
+        boolean giaPresente = lista.getContenuti().stream()
+                .anyMatch(collegamento -> collegamento.getViaggio().getId().equals(idViaggio));
+
+        if (giaPresente) {
+            throw new IllegalArgumentException("Il viaggio è già presente in questa lista.");
+        }
+
+        ListaViaggio collegamento = new ListaViaggio();
+        collegamento.setLista(lista);
+        collegamento.setViaggio(viaggio);
+
+        lista.getContenuti().add(collegamento);
+        itinerarioRepository.save(lista);
+
+        log.info("Viaggio {} aggiunto alla lista {} dall'utente {}", idViaggio, idLista, idUtente);
+    }
+
+    @Override
+    @Transactional
+    public void rimuoviViaggioDallaLista(Long idLista, Long idViaggio, Long idUtente) {
+
+        ItinerarioPreferito lista = itinerarioRepository.findById(idLista)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("itinerario.notexist", idLista)));
+
+        if (!lista.getProprietario().getId().equals(idUtente)) {
+            throw new IllegalArgumentException(messageLang.getMessage("itinerario.unauthorized"));
+        }
+        boolean rimosso = lista.getContenuti().removeIf(collegamento ->
+                collegamento.getViaggio().getId().equals(idViaggio)
+        );
+
+        if (!rimosso) {
+            throw new IllegalArgumentException("Il viaggio non è presente in questa lista.");
+        }
+
+        itinerarioRepository.save(lista);
+
+        log.info("Viaggio {} rimosso dalla lista {} dall'utente {}", idViaggio, idLista, idUtente);
     }
 }

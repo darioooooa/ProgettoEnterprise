@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"richiedente_id", "ricevente_id"})
 })
 //UniqueConstraint viene usato per evitare duplicati (richiedente che manda l'amicizia piu volte allo stesso ricevente)
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)

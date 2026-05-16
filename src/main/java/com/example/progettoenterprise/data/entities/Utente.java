@@ -15,7 +15,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "utente")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)

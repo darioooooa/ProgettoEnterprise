@@ -5,7 +5,8 @@ import java.io.Serializable;
 import lombok.*;
 
 @Embeddable
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ListaViaggioKey implements Serializable {

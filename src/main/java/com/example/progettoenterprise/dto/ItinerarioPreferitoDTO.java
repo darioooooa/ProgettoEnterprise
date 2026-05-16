@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -21,4 +22,7 @@ public class ItinerarioPreferitoDTO {
 
     @NotNull
     private Visibilita visibilita;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<ViaggioDTO> viaggiContenuti;
 }
