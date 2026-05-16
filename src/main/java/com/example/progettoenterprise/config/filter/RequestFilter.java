@@ -50,6 +50,8 @@ public class RequestFilter extends OncePerRequestFilter {
                 // Autenticazione dell'utente con il token di autenticazione
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } catch (Exception e) {
+                System.out.println("ATTENZIONE! Errore nel token: " + e.getMessage());
+                e.printStackTrace();
                 // Token non valido
                 // Spring Security bloccherà la richiesta più avanti se la rotta è protetta
             }

@@ -13,7 +13,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "lista_itinerari")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)

@@ -23,16 +23,16 @@ public class AmiciziaController {
     private final AmiciziaService amiciziaService;
 
     // ENDPOINT PER INVIO RICHIESTA DI AMICIZIA
-    @PostMapping("/richiesta/{riceventeId}")
+    @PostMapping("/richiesta/{riceventeUsername}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AmiciziaDTO> inviaRichiesta(
-            @PathVariable Long riceventeId,
+            @PathVariable String riceventeUsername,
             @AuthenticationPrincipal UtenteLoggato mittente) {
 
-        log.info("L'utente {} (ID: {}) sta inviando una richiesta di amicizia all'ID: {}",
-                mittente.getUsername(), mittente.getId(), riceventeId);
+        log.info("L'utente {} (ID: {}) sta inviando una richiesta di amicizia a: {}",
+                mittente.getUsername(), mittente.getId(), riceventeUsername);
 
-        AmiciziaDTO nuovaAmicizia = amiciziaService.inviaRichiesta(mittente.getId(), riceventeId);
+        AmiciziaDTO nuovaAmicizia = amiciziaService.inviaRichiesta(mittente.getId(), riceventeUsername);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuovaAmicizia);
     }
 

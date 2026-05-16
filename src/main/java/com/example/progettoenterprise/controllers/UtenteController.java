@@ -23,8 +23,6 @@ public class UtenteController {
 
     private final UtenteService utenteService;
 
-    // VISUALIZZARE IL PROPRIO PROFILO: UTILIZO COME ENDPOINT ME E NON L'ID DELL'UTENTE
-    // PER UNA QUESTIONE DI SICUREZZA
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UtenteDTO> getMioProfilo(@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
@@ -34,7 +32,15 @@ public class UtenteController {
         return ResponseEntity.ok(profilo);
     }
 
-    // RICERCA DEGLI UTENTI
+    @GetMapping("/cerca")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UtenteDTO> getProfiloByUsername(@RequestParam String username) {
+        log.info("Richiesta visualizzazione profilo per lo username via QueryParam: {}", username);
+        UtenteDTO profilo = utenteService.findByUsername(username);
+        return ResponseEntity.ok(profilo);
+    }
+
+    // RICERCA DEGLI UTENTI DA PARTE DELL'ADMIN
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UtenteDTO>> getUtenti(UtenteSpecification.UtenteFilter utenteFilter, @RequestParam(defaultValue = "0") int page, @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
@@ -44,7 +50,7 @@ public class UtenteController {
         return ResponseEntity.ok(risultati);
     }
 
-    // VISUALIZZA IL PROFILO DI UN ALTRO UTENTE
+    // VISUALIZZA IL PROFILO DI UN ALTRO UTENTE (TRAMITE ID NUMERICO)
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UtenteDTO> getProfiloById(@PathVariable Long id) {

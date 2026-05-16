@@ -1,13 +1,15 @@
 package com.example.progettoenterprise.data.entities;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.stereotype.Service;
 
 @Entity
 @Table(name = "lista_viaggio")
-@Data
+@Getter
+@Setter
 public class ListaViaggio {
     @EmbeddedId
-    private ListaViaggioKey id;
+    private ListaViaggioKey id=new ListaViaggioKey();
 
     @ManyToOne
     @MapsId("listaId")

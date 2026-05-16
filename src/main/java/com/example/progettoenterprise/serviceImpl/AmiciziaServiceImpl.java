@@ -30,28 +30,31 @@ public class AmiciziaServiceImpl implements AmiciziaService {
 
     @Override
     @Transactional
-    public AmiciziaDTO inviaRichiesta(Long richiedenteId, Long riceventeId) {
-        log.info("Tentativo di invio richiesta amicizia: da ID {} a ID {}", richiedenteId, riceventeId);
-
-        if (richiedenteId.equals(riceventeId)) {
-            log.error("L'utente {} ha provato a chiedere l'amicizia a se stesso", richiedenteId);
-            throw new IllegalArgumentException(messageLang.getMessage("amicizia.self_request"));
-        }
+    public AmiciziaDTO inviaRichiesta(Long richiedenteId, String riceventeUsername) {
+        log.info("Tentativo di invio richiesta amicizia: da utente ID {} a username {}", richiedenteId, riceventeUsername);
 
         Utente richiedente = utenteRepository.findById(richiedenteId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageLang.getMessage("utente.notexist", richiedenteId)));
 
-        Utente ricevente = utenteRepository.findById(riceventeId)
+        Utente ricevente = utenteRepository.findByUsername(riceventeUsername)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        messageLang.getMessage("utente.notexist", riceventeId)));
+                        messageLang.getMessage("utente.username_notexist", riceventeUsername)));
 
+        // 3. Controllo di sicurezza: non puoi inviare richieste a te stesso
+        if (richiedente.getId().equals(ricevente.getId())) {
+            log.error("L'utente {} ha provato a chiedere l'amicizia a se stesso", richiedenteId);
+            throw new IllegalArgumentException(messageLang.getMessage("amicizia.self_request"));
+        }
+
+        // 4. Controlliamo se esiste una relazione in QUALSIASI direzione (A->B oppure B->A)
         amiciziaRepository.findQualsiasiRelazione(richiedente, ricevente)
                 .ifPresent(a -> {
                     log.warn("Richiesta fallita: esiste già una relazione tra {} e {}", richiedente.getUsername(), ricevente.getUsername());
                     throw new IllegalStateException(messageLang.getMessage("amicizia.already_exists"));
                 });
 
+        // 5. Creazione della relazione
         Amicizia nuovaAmicizia = new Amicizia();
         nuovaAmicizia.setRichiedente(richiedente);
         nuovaAmicizia.setRicevente(ricevente);
@@ -63,7 +66,6 @@ public class AmiciziaServiceImpl implements AmiciziaService {
 
         return modelMapper.map(salvata, AmiciziaDTO.class);
     }
-
     @Override
     @Transactional
     public AmiciziaDTO accettaRichiesta(Long amiciziaId, Long riceventeId) {

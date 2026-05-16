@@ -98,4 +98,26 @@ public class ItinerarioPreferitoController {
         itinerarioService.eliminaLista(id, utenteLoggato.getId());
         return ResponseEntity.ok(Map.of("message", "Lista eliminata con successo"));
     }
+
+    @PostMapping("/{idLista}/viaggi/{idViaggio}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> aggiungiViaggio(
+            @PathVariable Long idLista,
+            @PathVariable Long idViaggio,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        itinerarioService.aggiungiViaggioAllaLista(idLista, idViaggio, utenteLoggato.getId());
+        return ResponseEntity.ok(Map.of("message", "Viaggio aggiunto con successo all'itinerario!"));
+    }
+
+    @DeleteMapping("/{idLista}/viaggi/{idViaggio}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> rimuoviViaggio(
+            @PathVariable Long idLista,
+            @PathVariable Long idViaggio,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        itinerarioService.rimuoviViaggioDallaLista(idLista, idViaggio, utenteLoggato.getId());
+        return ResponseEntity.ok(Map.of("message", "Viaggio rimosso con successo dall'itinerario!"));
+    }
 }

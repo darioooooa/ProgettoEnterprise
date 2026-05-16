@@ -14,17 +14,52 @@ body {
   overflow-x: hidden;
 }
 
-/* --- NAVBAR TRASPARENTE --- */
+/* --- CLASSI CONDIVISE --- */
+.navbar,
+.sezioni-finali-nav,
+.user-logged-wrapper,
+.btn-omino,
+.modale-header-amici,
+.amico-item,
+.amico-info,
+.modale-tabs-amici {
+  display: flex;
+  align-items: center;
+}
+
+.navbar,
+.modale-header-amici,
+.amico-item {
+  justify-content: space-between;
+}
+
+.btn-omino,
+.hero,
+.modale-overlay-amici,
+.btn-accetta,
+.btn-rifiuta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pulsante-chiudi,
+.voce-laterale,
+.btn-chiudi-amici,
+.btn-indietro,
+.tab-link {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* --- NAVBAR --- */
 .navbar {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 1.5rem 5%;
-  background: transparent;
   z-index: 100;
 }
 
@@ -49,11 +84,25 @@ body {
   color: #90caf9;
 }
 
-/* --- SEZIONE AUTH (ACCEDI / OMINO + NOME) --- */
 .sezioni-finali-nav {
-  display: flex;
-  align-items: center;
   gap: 20px;
+}
+
+/* --- BOTTONI NAVBAR --- */
+.btn {
+  background: #fff;
+  color: #0d47a1;
+  border: none;
+  border-radius: 40px;
+  padding: 12px 35px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #e3f2fd;
+  transform: scale(1.05);
 }
 
 .btn-accedi-testo {
@@ -73,11 +122,8 @@ body {
   color: #0d47a1;
 }
 
-/* WRAPPER UTENTE: Allineamento perfetto orizzontale */
+/* --- PROFILO LOGGATO NAVBAR --- */
 .user-logged-wrapper {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
   gap: 12px;
   cursor: pointer;
   padding: 6px 16px;
@@ -100,16 +146,11 @@ body {
   font-size: 0.85rem;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: white;
   filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.5));
 }
 
 .btn-omino {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -118,17 +159,13 @@ body {
   border-radius: 50%;
   color: white;
   font-size: 1.2rem;
-  cursor: pointer;
 }
 
 /* --- HERO SECTION --- */
 .hero {
   height: 100vh;
   position: relative;
-  display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   text-align: center;
   color: #fff;
   background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
@@ -136,8 +173,10 @@ body {
 
 .hero .overlay {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(135deg, rgba(15, 52, 117, 0.7) 0%, rgba(42, 115, 179, 0.4) 100%);
   z-index: 1;
 }
@@ -163,7 +202,7 @@ body {
   margin-top: 10px;
 }
 
-/* --- BARRA DI RICERCA GLASSMORPHISM --- */
+/* --- BARRA DI RICERCA --- */
 .search-bar {
   display: inline-flex;
   background: rgba(255, 255, 255, 0.15);
@@ -177,7 +216,8 @@ body {
   justify-content: center;
 }
 
-.search-bar input, .search-bar select {
+.search-bar input,
+.search-bar select {
   background: transparent;
   border: none;
   color: white;
@@ -185,22 +225,22 @@ body {
   outline: none;
 }
 
-.search-bar select option { color: #333; }
-
-.btn {
-  background: #fff;
-  color: #0d47a1;
-  border: none;
-  border-radius: 40px;
-  padding: 12px 35px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.3s;
+.search-bar select option {
+  color: #333;
 }
 
-.btn:hover { background: #e3f2fd; transform: scale(1.05); }
+/* --- SIDEBAR MENU (AREA RISERVATA) --- */
+.oscuramento-sfondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 2500;
+}
 
-/* --- SIDEBAR MIDNIGHT GLASS --- */
 .menu-laterale {
   position: fixed;
   top: 0;
@@ -218,11 +258,14 @@ body {
   box-shadow: -20px 0 50px rgba(0, 0, 0, 0.4);
 }
 
-.menu-laterale.attivo { right: 0; }
+.menu-laterale.attivo {
+  right: 0;
+}
 
 .intestazione-menu {
   padding: 45px 30px 30px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
 }
 
 .intestazione-menu h3 {
@@ -234,13 +277,14 @@ body {
 
 .pulsante-chiudi {
   position: absolute;
-  top: 20px; right: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  width: 35px; height: 35px;
+  top: 20px;
+  right: 20px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
-  color: white; font-size: 1.5rem;
-  cursor: pointer;
+  color: white;
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .contenuto-menu {
@@ -258,9 +302,6 @@ body {
   border-radius: 12px;
   text-align: left;
   transition: 0.3s;
-  background: transparent;
-  border: none;
-  cursor: pointer;
 }
 
 .voce-laterale:hover {
@@ -279,18 +320,277 @@ body {
   border: 1px solid rgba(255, 138, 128, 0.2);
 }
 
-.logout-rosso:hover { background: #d32f2f; color: white; }
-
-.oscuramento-sfondo {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  z-index: 2500;
+.logout-rosso:hover {
+  background: #d32f2f;
+  color: white;
+  padding-left: 25px;
 }
 
-/* --- DESTINATIONS --- */
+/* --- MODALE OVERLAY --- */
+.modale-overlay-amici {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 32, 66, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 4000;
+}
+
+.modale-content-amici {
+  background: #ffffff;
+  width: 90%;
+  max-width: 450px;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* --- SCHEDE DELLA MODALE (TABS) --- */
+.modale-tabs-amici {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 10px 15px 0 20px;
+}
+
+.tab-link {
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: 0.2s;
+}
+
+.tab-link:hover {
+  color: #0d47a1;
+}
+
+.tab-link.attivo {
+  color: #0d47a1;
+  border-bottom-color: #0d47a1;
+}
+
+.modale-tabs-amici .btn-chiudi-amici {
+  margin-left: auto;
+  padding-bottom: 10px;
+}
+
+/* --- HEADER FINESTRE DI DETTAGLIO --- */
+.modale-header-amici {
+  padding: 20px 25px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modale-header-amici h2 {
+  font-size: 1.2rem;
+  color: #0d47a1;
+}
+
+.btn-chiudi-amici {
+  font-size: 1.8rem;
+  color: #888;
+  transition: 0.3s;
+}
+
+.btn-chiudi-amici:hover {
+  color: #d32f2f;
+}
+
+.btn-indietro {
+  font-size: 1rem;
+  color: #0d47a1;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.btn-indietro:hover {
+  text-decoration: underline;
+}
+
+/* --- CORPO DELLA MODALE --- */
+.modale-body-amici {
+  padding: 25px;
+  min-height: 200px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.testo-vuoto {
+  text-align: center;
+  color: #777;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+/* --- LISTE ELEMENTI AMICI --- */
+.lista-amici {
+  list-style: none;
+}
+
+.amico-item {
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.amico-item:last-child {
+  border-bottom: none;
+}
+
+.amico-info {
+  gap: 12px;
+}
+
+.icona-amico {
+  background: #e3f2fd;
+  color: #0d47a1;
+  padding: 10px;
+  border-radius: 50%;
+  font-size: 1rem;
+}
+
+.nome-amico {
+  font-weight: 600;
+  color: #333;
+}
+
+.titolo-amico {
+  font-size: 1.1rem;
+  color: #1a237e;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.box-ricerca {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.box-ricerca input {
+  flex-grow: 1;
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.box-ricerca input:focus {
+  border-color: #0d47a1;
+}
+
+.testo-errore {
+  color: #c62828;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.risultato-ricerca-box {
+  background: #f8f9fa;
+  padding: 5px 15px;
+  border-radius: 15px;
+  border: 1px solid #e0e0e0;
+  margin-top: 15px;
+}
+
+.nome-reale {
+  color: #666;
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 2px;
+}
+
+.badge-inviata {
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: #e8f5e9;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* --- PULSANTI AZIONE AZZURRI --- */
+.btn-itinerari {
+  background: #0d47a1;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn-itinerari:hover {
+  background: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3);
+}
+
+/* --- PULSANTI ACCETTA / RIFIUTA RICHIESTE --- */
+.icona-richiesta {
+  background: #fff8e1;
+  color: #ffb300;
+  padding: 10px;
+  border-radius: 50%;
+  font-size: 1rem;
+}
+
+.azioni-richiesta {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accetta,
+.btn-rifiuta {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.btn-accetta {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-accetta:hover {
+  background: #2e7d32;
+  color: white;
+}
+
+.btn-rifiuta {
+  background: #ffebee;
+  color: #c62828;
+  font-size: 1.2rem;
+}
+
+.btn-rifiuta:hover {
+  background: #c62828;
+  color: white;
+}
+
+/* --- SEZIONE DESTINAZIONI CATALOGO --- */
 .destinations {
   padding: 5rem 8%;
   background: white;
@@ -314,16 +614,25 @@ body {
   background: #fff;
   border-radius: 20px;
   width: 300px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   transition: 0.4s;
   overflow: hidden;
 }
 
-.card:hover { transform: translateY(-10px); }
+.card:hover {
+  transform: translateY(-10px);
+}
 
-.card img { width: 100%; height: 200px; object-fit: cover; }
+.card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
 
-.card-info { padding: 1.5rem; text-align: left; }
+.card-info {
+  padding: 1.5rem;
+  text-align: left;
+}
 
 /* --- FOOTER --- */
 footer {

@@ -9,6 +9,8 @@ public interface ItinerarioPreferitoService {
     List<ItinerarioPreferitoDTO> getMieListe(Long proprietarioId);
     List<ItinerarioPreferitoDTO> getListeCondiviseConMe(Long utenteId);
     List<ItinerarioPreferitoDTO> cercaListePubbliche(String nome);
+    void aggiungiViaggioAllaLista(Long idLista, Long idViaggio, Long idUtente);
+    void rimuoviViaggioDallaLista(Long idLista, Long idViaggio, Long idUtente);
     void eliminaLista(Long id, Long utenteId);
     ItinerarioPreferitoDTO cambiaVisibilita(Long id, String visibilita, Long utenteId);
 }

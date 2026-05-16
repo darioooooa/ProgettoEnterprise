@@ -22,14 +22,11 @@ export class AutenticazioneService {
   ottieniDatiUtenteDalDatabase(username: string): Observable<any> {
     const token = this.ottieniToken();
 
-
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
-
-    return this.http.get<any>(`${this.indirizzoUtente}/${username}`, { headers });
+    return this.http.get<any>(`${this.indirizzoUtente}/cerca?username=${username}`, { headers });
   }
-
 
   effettuaAccesso(datiLogin: any): Observable<any> {
     return this.http.post<any>(`${this.indirizzoAuth}/login`, datiLogin).pipe(

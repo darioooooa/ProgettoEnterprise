@@ -81,7 +81,7 @@ public class SecurityConfiguration {
         // Permetti al frontend Angular
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
         // Permetti tutti i metodi (GET, POST, PUT, DELETE, ecc.)
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"));
         // Permetti tutti gli header (per il JWT)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         // Permetti l'invio di credenziali (se servono)
