@@ -68,9 +68,9 @@ public class GlobalExceptionHandler {
 
     // Gestisce dati non validi o conflitti (409)
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErroreDTO handleIllegalArgument(WebRequest request, IllegalArgumentException e) {
-        return buildErrorResponse(HttpStatus.CONFLICT, request, e.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, request, e.getMessage());
     }
 
     // Gestisce errori di autenticazione (401)

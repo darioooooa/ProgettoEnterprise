@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -28,4 +29,7 @@ public class RegistrazioneDTO {
     @NotBlank(message = "Il cognome è obbligatorio")
     @Size(max = 50, message = "Il cognome non può superare i 50 caratteri")
     private String cognome;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String ruolo;
 }

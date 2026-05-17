@@ -4,7 +4,6 @@ import com.example.progettoenterprise.data.repositories.specifications.UtenteSpe
 import com.example.progettoenterprise.data.service.UtenteService;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -70,28 +69,6 @@ public class UtenteController {
         log.info("L'utente {} sta aggiornando il proprio profilo", utenteLoggato.getUsername());
         UtenteDTO profiloAggiornato = utenteService.aggiornaProfilo(utenteLoggato.getId(), utenteDto);
         return ResponseEntity.ok(profiloAggiornato);
-    }
-
-    // CAMBIO PASSWORD
-    @Data
-    public static class CambioPasswordRequest {
-        private String vecchiaPassword;
-        private String nuovaPassword;
-    }
-
-    @PatchMapping("/me/password")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> aggiornaPassword(
-            @RequestBody CambioPasswordRequest request,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("L'utente {} ha richiesto il cambio della password", utenteLoggato.getUsername());
-        utenteService.aggiornaPassword(
-                utenteLoggato.getId(),
-                request.getVecchiaPassword(),
-                request.getNuovaPassword()
-        );
-        return ResponseEntity.ok(Map.of("message", "Password aggiornata con successo"));
     }
 
     // ELIMINA IL PROPRIO ACCOUNT

@@ -35,7 +35,7 @@ export class Login {
       next: (risposta) => {
         console.log('Login effettuato con successo', risposta);
 
-        const ruolo = risposta.ruolo;
+        const ruolo = this.servizioAuth.ottieniRuolo();
 
         if (ruolo === 'ROLE_ADMIN') {
           this.navigatore.navigate(['/admin-dashboard']);

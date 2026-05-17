@@ -23,19 +23,21 @@ export class SchermataHomeComponent implements OnInit {
   // --- DATI MODALE AMICI, RICHIESTE E RICERCA ---
   modaleAmiciAperta = false;
   vistaAttuale: 'listaAmici' | 'itinerariAmico' = 'listaAmici';
-  schedaAttiva: 'amici' | 'richieste' | 'cerca' = 'amici';
+  schedaAttiva: 'amici' | 'richieste' | 'inviate' | 'cerca' = 'amici';
 
   listaAmici: any[] = [];
   richiesteRicevute: any[] = [];
+  richiesteInviate: any[] = [];
+  richiesteRifiutate: any[] = [];
   amicoSelezionato: any = null;
   itinerariAmico: any[] = [];
   mioUsername: string = '';
 
   // Variabili dedicate alla ricerca utenti
   usernameCercato: string = '';
-  utenteTrovato: any = null;
+  utentiTrovati: any[] = [];
   erroreRicerca: string = '';
-  richiestaInviataConSuccesso = false;
+  richiesteCompletate: string[] = [];
 
   constructor(
     private servAuth: AutenticazioneService,
@@ -69,6 +71,8 @@ export class SchermataHomeComponent implements OnInit {
   }
 
   caricaDatiAmicizieInBackground() {
+
+    // Amici accettati
     this.amiciziaService.ottieniMieiAmici().subscribe({
       next: (amici) => {
         this.listaAmici = amici;
@@ -77,12 +81,32 @@ export class SchermataHomeComponent implements OnInit {
       error: (err) => console.error("Errore recupero amici", err)
     });
 
+    // Richieste in arrivo
     this.amiciziaService.ottieniRichiesteRicevute().subscribe({
       next: (richieste) => {
         this.richiesteRicevute = richieste;
         this.cdr.detectChanges(); // Forza il refresh
       },
       error: (err) => console.error("Errore recupero richieste", err)
+    });
+
+    // Richieste inviate
+    this.amiciziaService.ottieniRichiesteInviate().subscribe({
+      next: (inviate) => {
+        this.richiesteInviate = inviate;
+        this.richiesteCompletate = inviate.map(r => r.riceventeUsername);
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Errore recupero richieste inviate", err)
+    });
+
+    // Recupera le richieste rifiutate
+    this.amiciziaService.ottieniRichiesteRifiutate().subscribe({
+      next: (rifiutate) => {
+        this.richiesteRifiutate = rifiutate;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Errore recupero richieste rifiutate", err)
     });
   }
 
@@ -100,26 +124,25 @@ export class SchermataHomeComponent implements OnInit {
     this.amicoSelezionato = null;
   }
 
-  cambiaScheda(scheda: 'amici' | 'richieste' | 'cerca') {
+  cambiaScheda(scheda: 'amici' | 'richieste' | 'inviate' | 'cerca') {
     this.schedaAttiva = scheda;
     if (scheda === 'cerca') {
       this.pulisciRicerca();
     }
+    this.caricaDatiAmicizieInBackground();
     this.cdr.detectChanges();
   }
 
   pulisciRicerca() {
     this.usernameCercato = '';
-    this.utenteTrovato = null;
+    this.utentiTrovati = [];
     this.erroreRicerca = '';
-    this.richiestaInviataConSuccesso = false;
     this.cdr.detectChanges();
   }
 
   cercaUtente() {
     this.erroreRicerca = '';
-    this.utenteTrovato = null;
-    this.richiestaInviataConSuccesso = false;
+    this.utentiTrovati = [];
 
     if (!this.usernameCercato.trim()) return;
 
@@ -129,8 +152,17 @@ export class SchermataHomeComponent implements OnInit {
     }
 
     this.servAuth.ottieniDatiUtenteDalDatabase(this.usernameCercato.trim()).subscribe({
-      next: (utente) => {
-        this.utenteTrovato = utente;
+      next: (rispostaArray) => {
+        if (rispostaArray && rispostaArray.length > 0) {
+          this.utentiTrovati = rispostaArray.filter((utente: any) =>
+            utente.username.toLowerCase() !== this.mioUsername.toLowerCase()
+          );
+          if (this.utentiTrovati.length === 0) {
+            this.erroreRicerca = "Nessun altro utente trovato con questo nome.";
+          }
+        } else {
+          this.erroreRicerca = "Nessun utente trovato con questo nome.";
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -144,7 +176,7 @@ export class SchermataHomeComponent implements OnInit {
   inviaRichiestaAmicizia(riceventeUsername: string) {
     this.amiciziaService.inviaRichiesta(riceventeUsername).subscribe({
       next: () => {
-        this.richiestaInviataConSuccesso = true;
+        this.richiesteCompletate = [...this.richiesteCompletate, riceventeUsername];
         this.cdr.detectChanges();
         this.caricaDatiAmicizieInBackground();
       },
@@ -156,16 +188,33 @@ export class SchermataHomeComponent implements OnInit {
     });
   }
 
+  // Metodo per sapere se mostrare il bottone o la spunta
+  haInviatoRichiesta(username: string): boolean {
+    return this.richiesteCompletate.includes(username);
+  }
+  haRicevutoRichiesta(username: string): boolean {
+    return this.richiesteRicevute.some(req => req.richiedenteUsername === username);
+  }
+
+  isRichiestaRifiutata(usernameCercato: string): boolean {
+    return this.richiesteRifiutate.some(req =>
+      req.richiedenteUsername === usernameCercato ||
+      req.riceventeUsername === usernameCercato
+    );
+  }
+
+  // Metodo peer controllare se l'utente cercato è già nella lista amici
+  sonoGiaAmici(usernameCercato: string): boolean {
+    return this.listaAmici.some(amico =>
+      amico.richiedenteUsername === usernameCercato ||
+      amico.riceventeUsername === usernameCercato
+    );
+  }
+
   accettaRichiesta(amiciziaId: number) {
     this.amiciziaService.accettaRichiesta(amiciziaId).subscribe({
       next: (amiciziaAggiornata) => {
-        const richiestaAccettata = this.richiesteRicevute.find(r => r.id === amiciziaId);
-
-        if (richiestaAccettata) {
-          this.richiesteRicevute = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
-          amiciziaAggiornata.stato = 'ACCETTATA';
-          this.listaAmici = [...this.listaAmici, amiciziaAggiornata];
-        }
+        this.richiesteRicevute = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
         this.cdr.detectChanges();
         this.caricaDatiAmicizieInBackground();
       },
@@ -176,6 +225,10 @@ export class SchermataHomeComponent implements OnInit {
   rifiutaRichiesta(amiciziaId: number) {
     this.amiciziaService.rifiutaRichiesta(amiciziaId).subscribe({
       next: () => {
+        const richiestaDaRifiutare = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
+        if (richiestaDaRifiutare) {
+          this.richiesteRifiutate.push(richiestaDaRifiutare);
+        }
         this.richiesteRicevute = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
         this.cdr.detectChanges();
         this.caricaDatiAmicizieInBackground();

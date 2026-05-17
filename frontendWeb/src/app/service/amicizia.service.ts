@@ -10,48 +10,37 @@ export class AmiciziaService {
 
   private readonly baseUrl = 'http://localhost:8080/api/v1/amicizie';
 
-  constructor(
-    private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) { }
+  constructor(private http: HttpClient) { }
 
-  private creaHeaders(): HttpHeaders {
-    let headers = new HttpHeaders();
-    if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem('token_accesso');
-      if (token) {
-        headers = headers.set('Authorization', `Bearer ${token}`);
-      }
-    }
-    return headers;
-  }
-
-  // CORRETTO: Adesso passa la stringa e gli header sono formattati bene
   inviaRichiesta(riceventeUsername: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/richiesta/${riceventeUsername}`, {}, { headers: this.creaHeaders() });
+    return this.http.post<any>(`${this.baseUrl}/richiesta/${riceventeUsername}`, {});
   }
 
   accettaRichiesta(amiciziaId: number): Observable<any> {
-    return this.http.patch<any>(`${this.baseUrl}/${amiciziaId}/accetta`, {}, { headers: this.creaHeaders() });
+    return this.http.patch<any>(`${this.baseUrl}/${amiciziaId}/accetta`, {});
   }
 
   ottieniMieiAmici(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/miei-amici`, { headers: this.creaHeaders() });
+    return this.http.get<any[]>(`${this.baseUrl}/miei-amici`);
   }
 
   ottieniRichiesteRicevute(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/richieste/ricevute`, { headers: this.creaHeaders() });
+    return this.http.get<any[]>(`${this.baseUrl}/richieste/ricevute`);
   }
 
   ottieniRichiesteInviate(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/richieste/inviate`, { headers: this.creaHeaders() });
+    return this.http.get<any[]>(`${this.baseUrl}/richieste/inviate`);
+  }
+
+  ottieniRichiesteRifiutate(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/richieste/rifiutate`);
   }
 
   rifiutaRichiesta(amiciziaId: number): Observable<any> {
-    return this.http.patch<any>(`${this.baseUrl}/${amiciziaId}/rifiuta`, {}, { headers: this.creaHeaders() });
+    return this.http.patch<any>(`${this.baseUrl}/${amiciziaId}/rifiuta`, {});
   }
 
   rimuoviAmico(amicoId: number): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/rimuovi/${amicoId}`, { headers: this.creaHeaders() });
+    return this.http.delete<any>(`${this.baseUrl}/rimuovi/${amicoId}`);
   }
 }

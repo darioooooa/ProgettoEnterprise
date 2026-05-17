@@ -8,7 +8,6 @@ public interface UtenteService {
     UtenteDTO getProfiloById(Long id);
     UtenteDTO findByUsername(String username);
     UtenteDTO aggiornaProfilo(Long id, UtenteDTO utenteDto);
-    void aggiornaPassword(Long id, String vecchiaPassword, String nuovaPassword);
     void eliminaAccount(Long id);
     Page<UtenteDTO> ricercaUtenti(UtenteSpecification.UtenteFilter utenteFilter, int page);
 }

@@ -1,15 +1,17 @@
 package com.example.progettoenterprise.serviceImpl;
 
+import com.example.progettoenterprise.config.CacheConfig;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.specifications.UtenteSpecification;
 import com.example.progettoenterprise.data.service.UtenteService;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import com.example.progettoenterprise.config.i18n.MessageLang;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UtenteServiceImpl implements UtenteService {
 
     // Dimensione della pagina di ricerca
@@ -26,12 +29,14 @@ public class UtenteServiceImpl implements UtenteService {
     private final UtenteRepository utenteRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
-    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public UtenteDTO getProfiloById(Long id) {
         Utente utente = utenteRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", id)));
+                () -> {
+                    log.warn("Recupero fallito: Impossibile recuperare l'utente con id {}", id);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", id));
+                });
         return modelMapper.map(utente, UtenteDTO.class);
     }
 
@@ -40,14 +45,17 @@ public class UtenteServiceImpl implements UtenteService {
     public UtenteDTO findByUsername(String username) {
         // Cerca l'utente tramite il nickname, altrimenti lancia l'eccezione i18n
         Utente utente = utenteRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        messageLang.getMessage("utente.username_notexist", username)));
+                .orElseThrow(() -> {
+                    log.warn("Recupero fallito: Impossibile recuperare l'utente con username {}", username);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.username_notexist", username));
+                });
 
         // Converte l'entità database nel DTO per il frontend
         return modelMapper.map(utente, UtenteDTO.class);
     }
     @Override
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_UTENTI_AUTH, key = "#result.email")
     public UtenteDTO aggiornaProfilo(Long id, UtenteDTO utenteDto) {
         return utenteRepository.findById(id).map(utente -> {
             utente.setNome(utenteDto.getNome());
@@ -56,34 +64,18 @@ public class UtenteServiceImpl implements UtenteService {
 
             Utente salvato = utenteRepository.save(utente);
             return modelMapper.map(salvato, UtenteDTO.class);
-        }).orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", id)));
+        }).orElseThrow(() -> {
+            log.warn("Aggiornamento fallito: Impossibile aggiornare l'utente con id {}, perchè non presente", id);
+            return new EntityNotFoundException(messageLang.getMessage("utente.notexist", id));
+        });
     }
 
     @Override
     @Transactional
-    public void aggiornaPassword(Long id, String vecchiaPassword, String nuovaPassword){
-        Utente utente = utenteRepository.findById(id).orElseThrow(
-                ()-> new EntityNotFoundException(messageLang.getMessage("utente.notexist", id))
-                );
-        //Controllo se la vecchia password corrisponde
-        if (!passwordEncoder.matches(vecchiaPassword, utente.getPassword())) {
-            throw new IllegalArgumentException(messageLang.getMessage("password.must_be_as_old"));
-        }
-
-
-        if (vecchiaPassword.equals(nuovaPassword)) {
-            throw new IllegalArgumentException(messageLang.getMessage("password.same_as_old"));
-        }
-        String passwordCriptata=passwordEncoder.encode(nuovaPassword);
-        utente.setPassword(passwordCriptata);
-        utenteRepository.save(utente);
-
-    }
-
-    @Override
-    @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_UTENTI_AUTH, key = "#result.email")
     public void eliminaAccount(Long id) {
         if (!utenteRepository.existsById(id)) {
+            log.warn("Eliminazione fallita: Impossibile eliminare l'utente con id {} perchè non presente", id);
             throw new EntityNotFoundException(messageLang.getMessage("utente.notexist", id));
         }
         utenteRepository.deleteById(id);
@@ -100,6 +92,7 @@ public class UtenteServiceImpl implements UtenteService {
 
         // Controllo sulla pagina corrente
         if ((page < 0 || page >= utentiPage.getTotalPages()) && utentiPage.getTotalPages() > 0) {
+            log.warn("Pagina non valida: {}. Pagina totale: {}", page, utentiPage.getTotalPages());
             throw new IllegalArgumentException(messageLang.getMessage("utente.invalid_page"));
         }
 

@@ -1,6 +1,8 @@
 package com.example.progettoenterprise.data.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,17 +36,18 @@ public class RichiestaPromozione {
     @Column(length = 1000)
     private String motivazione;
 
-    @Column(length = 500)
+    @Column(name = "documenti_link", length = 500)
     private String documentiLink;
 
     @CreatedDate
-    @Column(updatable = false)
+    @Column(name = "data_richiesta", updatable = false)
     private LocalDateTime dataRichiesta;
 
     @LastModifiedDate
+    @Column(name = "data_valutazione")
     private LocalDateTime dataValutazione;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "biografia_professionale", columnDefinition = "TEXT")
     private String biografiaProfessionale;
 
     @Column(name = "admin_id")
@@ -56,6 +59,15 @@ public class RichiestaPromozione {
         APPROVATA,
         RIFIUTATA
     }
+
+    @NotBlank
+    @Column(name = "username_richiesto", unique = true, nullable = false)
+    private String usernameRichiesto;
+
+    @NotBlank
+    @Email
+    @Column(name = "email_professionale", unique = true, nullable = false)
+    private String emailProfessionale;
 
 
 }

@@ -108,4 +108,14 @@ public class AmiciziaController {
         amiciziaService.rimuoviAmico(utenteLoggato.getId(), amicoId);
         return ResponseEntity.ok(Map.of("message", "Amicizia rimossa con successo"));
     }
+
+    // ENDPOINT PER OTTENERE LA LISTA DELLE AMICIZIE RIFIUTATE
+    @GetMapping("/richieste/rifiutate")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<AmiciziaDTO>> getRichiesteRifiutate(
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        log.info("Recupero richieste rifiutate (da o verso) per: {}", utenteLoggato.getUsername());
+        return ResponseEntity.ok(amiciziaService.getRichiesteRifiutate(utenteLoggato.getId()));
+    }
 }

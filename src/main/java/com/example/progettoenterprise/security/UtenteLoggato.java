@@ -10,8 +10,8 @@ import java.util.Collection;
 public class UtenteLoggato extends User {
     private final Long id;
 
-    public UtenteLoggato(Long id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
-        super(username, password, authorities);
+    public UtenteLoggato(Long id, String username, Collection<? extends GrantedAuthority> authorities) {
+        super(username, "PASSWORD_KEYCLOAK", authorities);
         this.id = id;
     }
 
