@@ -14,7 +14,6 @@ import java.util.Optional;
 
 @Repository
 public interface AmiciziaRepository extends JpaRepository<Amicizia, Long> {
-    Optional<Amicizia> findByRichiedenteAndRicevente(Utente richiedente, Utente ricevente);
     List<Amicizia> findByRiceventeAndStato(Utente ricevente, StatoAmicizia stato);
     List<Amicizia> findByRichiedenteAndStato(Utente richiedente, StatoAmicizia stato);
 
@@ -28,4 +27,8 @@ public interface AmiciziaRepository extends JpaRepository<Amicizia, Long> {
     @Query("SELECT a FROM Amicizia a WHERE " +
             "a.stato = 'ACCETTATA' AND (a.richiedente = :utente OR a.ricevente = :utente)")
     List<Amicizia> findAllAmiciConfermati(@Param("utente") Utente utente);
+
+    // Trova tutte le relazioni di un utente filtrate per uno specifico stato
+    @Query("SELECT a FROM Amicizia a WHERE (a.richiedente = :utente OR a.ricevente = :utente) AND a.stato = :stato")
+    List<Amicizia> findAllRelazioniPerStato(@Param("utente") Utente utente, @Param("stato") StatoAmicizia stato);
 }

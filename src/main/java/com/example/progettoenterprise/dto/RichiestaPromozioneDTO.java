@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.dto;
 
+import jakarta.validation.constraints.Email;
 import lombok.Data;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,4 +38,11 @@ public class RichiestaPromozioneDTO {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String stato;
+
+    @NotBlank(message = "Lo username professionale è obbligatorio")
+    private String usernameRichiesto;
+
+    @NotBlank(message = "L'email professionale è obbligatoria")
+    @Email(message = "Inserisci un indirizzo email valido")
+    private String emailProfessionale;
 }

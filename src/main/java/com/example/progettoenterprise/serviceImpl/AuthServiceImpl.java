@@ -1,97 +1,85 @@
 package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
-import com.example.progettoenterprise.data.entities.Utente;
-import com.example.progettoenterprise.data.entities.Viaggiatore;
-import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.service.AuthService;
-import com.example.progettoenterprise.dto.LoginDTO;
 import com.example.progettoenterprise.dto.RegistrazioneDTO;
 import com.example.progettoenterprise.dto.UtenteDTO;
-import com.example.progettoenterprise.security.TokenStore;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final AuthenticationManager authenticationManager;
-    private final TokenStore tokenStore;
-    private final UtenteRepository utenteRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
-    private final ModelMapper modelMapper;
+    private final Keycloak keycloak;
+    private static final String REALM_NAME = "enterprise-realm";
     private final MessageLang messageLang;
 
     // Metodo per registrare un nuovo utente
     @Override
-    @Transactional
-    public UtenteDTO registraUtente(RegistrazioneDTO regDTO){
+    public UtenteDTO registraUtente(RegistrazioneDTO dto){
 
-        // Controlla se l'email esiste già
-        if (utenteRepository.findByEmail(regDTO.getEmail()).isPresent()) {
-            log.warn("Tentativo di registrazione con email già esistente: {}", regDTO.getEmail());
-            throw new IllegalArgumentException(messageLang.getMessage("auth.email.duplicate"));
+        // Controllo sullo username
+        List<UserRepresentation> existingUsersByUsername = keycloak.realm(REALM_NAME).users().search(dto.getUsername(), true);
+        if (!existingUsersByUsername.isEmpty()) {
+            log.warn("Registrazione bloccata: lo username '{}' è già in uso", dto.getUsername());
+            throw new IllegalArgumentException(messageLang.getMessage("utente.username.exist", dto.getUsername()));
         }
 
-        // Controlla se lo username esiste già
-        if (utenteRepository.findByUsername(regDTO.getUsername()).isPresent()) {
-            log.warn("Tentativo di registrazione con username già esistente: {}", regDTO.getUsername());
-            throw new IllegalArgumentException(messageLang.getMessage("auth.username.duplicate"));
+        // Controllo sull'email
+        List<UserRepresentation> existingUsersByEmail = keycloak.realm(REALM_NAME).users().searchByEmail(dto.getEmail(), true);
+        if (!existingUsersByEmail.isEmpty()) {
+            log.warn("Registrazione bloccata: l'email '{}' è già registrata", dto.getEmail());
+            throw new IllegalArgumentException(messageLang.getMessage("utente.email.exist", dto.getEmail()));
         }
 
-        Viaggiatore nuovoViaggiatore = modelMapper.map(regDTO, Viaggiatore.class);
+        // Creazione dell'utente
+        UserRepresentation keycloakUser = new UserRepresentation();
+        keycloakUser.setUsername(dto.getUsername());
+        keycloakUser.setEmail(dto.getEmail());
+        keycloakUser.setFirstName(dto.getNome());
+        keycloakUser.setLastName(dto.getCognome());
+        keycloakUser.setEnabled(true);
 
-        nuovoViaggiatore.setRuolo(Utente.Ruolo.ROLE_VIAGGIATORE);
-        // Cifratura della password
-        nuovoViaggiatore.setPassword(passwordEncoder.encode(regDTO.getPassword()));
+        CredentialRepresentation credential = new CredentialRepresentation();
+        credential.setType(CredentialRepresentation.PASSWORD);
+        credential.setValue(dto.getPassword());
+        credential.setTemporary(false); // La password è subito definitiva
+        keycloakUser.setCredentials(Collections.singletonList(credential));
 
-        Viaggiatore salvato = utenteRepository.save(nuovoViaggiatore);
+        int status;
+        try (Response response = keycloak.realm(REALM_NAME).users().create(keycloakUser)) {
+            status = response.getStatus();
+        } catch (Exception e) {
+            // Keycloak è irraggiungibile
+            log.error("Errore critico di connessione di rete con Keycloak", e);
+            throw new RuntimeException(messageLang.getMessage("utente.registration_failed"));
+        }
 
-        log.info("Nuovo utente registrato con successo: {} (ID: {})", salvato.getUsername(), salvato.getId());
-        return modelMapper.map(salvato, UtenteDTO.class);
+        if (status == 201) {
+            UtenteDTO utenteCreato = new UtenteDTO();
+            utenteCreato.setUsername(dto.getUsername());
+            utenteCreato.setEmail(dto.getEmail());
+            utenteCreato.setNome(dto.getNome());
+            utenteCreato.setCognome(dto.getCognome());
+            return utenteCreato;
+
+        } else if (status == 409) {
+            log.warn("Conflitto imprevisto su Keycloak per: {}", dto.getUsername());
+            throw new IllegalArgumentException(messageLang.getMessage("utente.conflict", dto.getUsername()));
+        } else {
+            log.error("Keycloak ha risposto con un codice HTTP imprevisto: {}", status);
+            throw new RuntimeException(messageLang.getMessage("utente.registration_failed"));
+        }
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<String, String> eseguiLogin(LoginDTO loginDTO) throws Exception{
-        // Valida le credenziali
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
-
-        // Cerca l'utente
-        Utente utente = utenteRepository.findByUsernameOrEmail(loginDTO.getUsername(),loginDTO.getUsername())
-                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("auth.user.notfound", loginDTO.getUsername())));
-
-        // Crea il token, includendo le informazioni dell'utente nel payload
-        String token = tokenStore.createToken(Map.of(
-                "id", utente.getId().toString(),
-                "username", utente.getUsername(),
-                "role",utente.getRuolo().name()
-        ));
-
-        log.info("Utente autenticato: {} (ID: {})", utente.getUsername(), utente.getId());
-
-        // Restituisce i dati impacchettati al controller
-        return Map.of(
-                "token", token,
-                "id", utente.getId().toString(),
-                "email", utente.getEmail(),
-                "username", utente.getUsername(),
-                "ruolo", utente.getRuolo().name(),
-                "nome",utente.getNome(),
-                "cognome",utente.getCognome()
-        );
-    }
-
-
 }

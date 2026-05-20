@@ -11,4 +11,5 @@ public interface AmiciziaService {
     void rifiutaRichiesta(Long amiciziaId, Long riceventeId);
     void rimuoviAmico(Long richiedenteId, Long riceventeId);
     List<AmiciziaDTO> getRichiesteInviate(Long utenteId);
+    List<AmiciziaDTO> getRichiesteRifiutate(Long utenteId);
 }

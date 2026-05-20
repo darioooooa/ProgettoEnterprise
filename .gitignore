@@ -35,3 +35,4 @@ build/
 .env
 
 frontendWeb/src/environments/envMap.ts
+/node_modules

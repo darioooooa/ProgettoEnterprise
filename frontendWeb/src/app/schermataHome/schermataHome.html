@@ -79,7 +79,10 @@
           Amici ({{listaAmici.length}})
         </button>
         <button class="tab-link" [class.attivo]="schedaAttiva === 'richieste'" (click)="cambiaScheda('richieste')">
-          Richieste ({{richiesteRicevute.length}})
+          Ricevute ({{richiesteRicevute.length}})
+        </button>
+        <button class="tab-link" [class.attivo]="schedaAttiva === 'inviate'" (click)="cambiaScheda('inviate')">
+          Inviate ({{richiesteInviate.length}})
         </button>
         <button class="tab-link" [class.attivo]="schedaAttiva === 'cerca'" (click)="cambiaScheda('cerca')">
           🔍 Trova Amici
@@ -105,7 +108,7 @@
         </div>
 
         <div *ngIf="schedaAttiva === 'richieste'">
-          <p *ngIf="richiesteRicevute.length === 0" class="testo-vuoto">Nessuna richiesta in sospeso.</p>
+          <p *ngIf="richiesteRicevute.length === 0" class="testo-vuoto">Nessuna richiesta ricevuta in sospeso.</p>
           <ul class="lista-amici">
             <li *ngFor="let req of richiesteRicevute" class="amico-item">
               <div class="amico-info">
@@ -120,6 +123,19 @@
           </ul>
         </div>
 
+        <div *ngIf="schedaAttiva === 'inviate'">
+          <p *ngIf="richiesteInviate.length === 0" class="testo-vuoto">Non hai richieste inviate in attesa.</p>
+          <ul class="lista-amici">
+            <li *ngFor="let req of richiesteInviate" class="amico-item">
+              <div class="amico-info">
+                <span class="icona-richiesta">📤</span>
+                <span class="nome-amico">{{ req.riceventeUsername }}</span>
+              </div>
+              <span class="badge-inviata" style="background-color: #f1f1f1; color: #666; border: 1px solid #ccc;">In attesa...</span>
+            </li>
+          </ul>
+        </div>
+
         <div *ngIf="schedaAttiva === 'cerca'">
           <div class="box-ricerca">
             <input type="text" #inputUsername placeholder="Inserisci lo username..." (input)="usernameCercato = inputUsername.value" (keyup.enter)="cercaUtente()">
@@ -128,21 +144,39 @@
 
           <p *ngIf="erroreRicerca" class="testo-errore">{{ erroreRicerca }}</p>
 
-          <div *ngIf="utenteTrovato" class="risultato-ricerca-box">
-            <div class="amico-item">
-              <div class="amico-info">
-                <span class="icona-amico">👤</span>
-                <div>
-                  <span class="nome-amico">{{ utenteTrovato?.username }}</span>
-                  <small class="nome-reale">{{ utenteTrovato?.nome }} {{ utenteTrovato?.cognome }}</small>
+          <div *ngIf="utentiTrovati.length > 0" class="risultato-ricerca-box" style="max-height: 250px; overflow-y: auto; margin-top: 15px;">
+            <ul class="lista-amici" style="padding: 0; margin: 0; list-style: none;">
+              <li *ngFor="let utente of utentiTrovati" class="amico-item" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
+                <div class="amico-info">
+                  <span class="icona-amico">👤</span>
+                  <div>
+                    <span class="nome-amico">{{ utente.username }}</span>
+                    <small class="nome-reale" *ngIf="utente.nome || utente.cognome">
+                      {{ utente.nome || '' }} {{ utente.cognome || '' }}
+                    </small>
+                  </div>
                 </div>
-              </div>
+                <span *ngIf="isRichiestaRifiutata(utente.username)" class="badge-rifiutata" style="color: #dc3545; font-weight: bold; font-size: 0.9em; padding: 4px 8px; border: 1px solid #dc3545; border-radius: 4px;">
+                  Non disponibile 🚫
+                </span>
 
-              <button *ngIf="!richiestaInviataConSuccesso" class="btn-itinerari" (click)="inviaRichiestaAmicizia(utenteTrovato?.username)">
-                Aggiungi
-              </button>
-              <span *ngIf="richiestaInviataConSuccesso" class="badge-inviata">Inviata ✓</span>
-            </div>
+                <span *ngIf="!isRichiestaRifiutata(utente.username) && sonoGiaAmici(utente.username)" class="badge-amici" style="color: #007bff; font-weight: bold; font-size: 0.9em;">
+                  Già Amici 🤝
+                </span>
+
+                <div *ngIf="!isRichiestaRifiutata(utente.username) && !sonoGiaAmici(utente.username) && haRicevutoRichiesta(utente.username)" style="display: flex; gap: 8px; align-items: center;">
+                  <span style="color: #ff9f1c; font-weight: bold; font-size: 0.9em;">Ti ha invitato! 📩</span>
+                </div>
+
+                <span *ngIf="!isRichiestaRifiutata(utente.username) && !sonoGiaAmici(utente.username) && !haRicevutoRichiesta(utente.username) && haInviatoRichiesta(utente.username)" class="badge-inviata" style="color: green; font-weight: bold; font-size: 0.9em;">
+                  Inviata ✓
+                </span>
+
+                <button *ngIf="!isRichiestaRifiutata(utente.username) && !sonoGiaAmici(utente.username) && !haRicevutoRichiesta(utente.username) && !haInviatoRichiesta(utente.username)" class="btn-itinerari" (click)="inviaRichiestaAmicizia(utente.username)">
+                  Aggiungi
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
 

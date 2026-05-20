@@ -1,6 +1,6 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, throwError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
@@ -8,38 +8,89 @@ import { isPlatformBrowser } from '@angular/common';
 })
 export class AutenticazioneService {
 
-  // Endpoint per login e registrazione
-  private readonly indirizzoAuth = 'http://localhost:8080/api/v1/auth';
-  // Endpoint per recuperare i dati del profilo (regolalo in base al tuo Controller Java)
-  private readonly indirizzoUtente = 'http://localhost:8080/api/v1/utenti';
+  // Endpoint di keycloak per prendere il token
+  private readonly keycloakTokenUrl = 'http://localhost:8081/realms/enterprise-realm/protocol/openid-connect/token';
+  // Endpoint per il backend
+  private readonly backendUrl = 'http://localhost:8080/api/v1';
+
+  private clientId = 'enterprise-client';
 
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
-
-  ottieniDatiUtenteDalDatabase(username: string): Observable<any> {
-    const token = this.ottieniToken();
-
+  effettuaAccesso(datiLogin: any): Observable<any> {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
+      'Content-Type': 'application/x-www-form-urlencoded'
     });
-    return this.http.get<any>(`${this.indirizzoUtente}/cerca?username=${username}`, { headers });
+
+    const body = new URLSearchParams();
+    body.set('grant_type', 'password');
+    body.set('client_id', 'enterprise-client');
+    body.set('username', datiLogin.username);
+    body.set('password', datiLogin.password);
+
+
+    return this.http.post<any>(this.keycloakTokenUrl, body.toString(), { headers }).pipe(
+      tap(rispostaKeycloak => {
+        if (rispostaKeycloak && rispostaKeycloak.access_token) {
+
+          const token = rispostaKeycloak.access_token;
+          const refreshToken = rispostaKeycloak.refresh_token;
+
+          localStorage.setItem('token_accesso', token);
+          if (rispostaKeycloak.refresh_token) {
+            localStorage.setItem('token_refresh', refreshToken);
+          }
+
+          // Decodifica il JWT per estrarre i dati dell'utente
+          const payloadCodificato = token.split('.')[1];
+          const payloadDecodificato = JSON.parse(window.atob(payloadCodificato));
+
+          // Salva le informazioni estratte da Keycloak
+          localStorage.setItem('username', payloadDecodificato.preferred_username);
+          localStorage.setItem('email', payloadDecodificato.email);
+          localStorage.setItem('nome', payloadDecodificato.given_name);
+          localStorage.setItem('cognome', payloadDecodificato.family_name);
+
+          // Estrae il ruolo
+          const ruoliKeycloak = payloadDecodificato.realm_access?.roles || [];
+          let ruoloPrincipale = 'ROLE_VIAGGIATORE'; // Default
+
+          if (ruoliKeycloak.includes('ADMIN')) {
+            ruoloPrincipale = 'ROLE_ADMIN';
+          } else if (ruoliKeycloak.includes('ORGANIZZATORE')) {
+            ruoloPrincipale = 'ROLE_ORGANIZZATORE';
+          }
+
+          localStorage.setItem('ruolo', ruoloPrincipale);
+        }
+      })
+    );
   }
 
-  effettuaAccesso(datiLogin: any): Observable<any> {
-    return this.http.post<any>(`${this.indirizzoAuth}/login`, datiLogin).pipe(
-      tap(risposta => {
-        if (risposta && risposta.token) {
-          localStorage.setItem('token_accesso', risposta.token);
-          localStorage.setItem('username', risposta.username);
-          localStorage.setItem('nome', risposta.nome);
-          localStorage.setItem('cognome', risposta.cognome);
-          localStorage.setItem('email', risposta.email);
+  eseguiRefresh(): Observable<any> {
+    const refreshToken = this.ottieniRefreshToken();
+    if (!refreshToken) {
+      return throwError(() => new Error("Nessun refresh token disponibile."));
+    }
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
 
-          if(risposta.id) {
-            localStorage.setItem('adminId', risposta.id);
+    const body = new URLSearchParams();
+    body.set('grant_type', 'refresh_token');
+    body.set('client_id', this.clientId);
+    body.set('refresh_token', refreshToken);
+
+    return this.http.post<any>(this.keycloakTokenUrl, body.toString(), { headers }).pipe(
+      tap((rispostaKeycloak: any) => {
+        if (rispostaKeycloak && rispostaKeycloak.access_token) {
+          // Aggiorna i nuovi token
+          localStorage.setItem('token_accesso', rispostaKeycloak.access_token);
+          if (rispostaKeycloak.refresh_token) {
+            localStorage.setItem('token_refresh', rispostaKeycloak.refresh_token);
           }
         }
       })
@@ -47,26 +98,25 @@ export class AutenticazioneService {
   }
 
   esci(): void {
-    // Il logout lato server è opzionale a seconda di come hai gestito JWT
-    this.http.post(`${this.indirizzoAuth}/logout`, {}).subscribe();
-
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('token_accesso');
-      localStorage.removeItem('username');
-      localStorage.removeItem('nome');
-      localStorage.removeItem('cognome');
-      localStorage.removeItem('email');
-      localStorage.removeItem('adminId');
+      localStorage.clear(); // Svuota tutto
     }
   }
 
   registraNuovoUtente(datiRegistrazione: any): Observable<any> {
-    return this.http.post<any>(`${this.indirizzoAuth}/register`, datiRegistrazione);
+    return this.http.post<any>(`${this.backendUrl}/auth/register`, datiRegistrazione);
   }
 
   ottieniToken(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('token_accesso');
+    }
+    return null;
+  }
+
+  ottieniRefreshToken(): string | null{
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('token_refresh');
     }
     return null;
   }
@@ -96,7 +146,19 @@ export class AutenticazioneService {
     return null;
   }
 
+  ottieniRuolo(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('ruolo');
+    }
+    return null;
+  }
+
   isLoggato(): boolean {
     return !!this.ottieniToken();
+  }
+
+  // Ricerca Utenti
+  ottieniDatiUtenteDalDatabase(username: string): Observable<any> {
+    return this.http.get<any>(`${this.backendUrl}/viaggiatori/cerca?query=${username}`);
   }
 }

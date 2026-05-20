@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -188,5 +187,21 @@ public class AmiciziaServiceImpl implements AmiciziaService {
         amiciziaRepository.delete(esistente);
         log.info("Relazione di amicizia ID {} eliminata con successo tra {} e {}",
                 esistente.getId(), richiedente.getUsername(), ricevente.getUsername());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AmiciziaDTO> getRichiesteRifiutate(Long utenteId) {
+
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> {
+                    log.warn("Recupero richieste fallito: utente ID {} non trovato", utenteId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
+
+        return amiciziaRepository.findAllRelazioniPerStato(utente, StatoAmicizia.RIFIUTATA)
+                .stream()
+                .map(a -> modelMapper.map(a, AmiciziaDTO.class))
+                .collect(Collectors.toList());
     }
 }

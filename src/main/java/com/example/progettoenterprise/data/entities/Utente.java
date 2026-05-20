@@ -38,12 +38,6 @@ public abstract class Utente {
     @NotBlank(message = "L'email è obbligatoria")
     private String email;
 
-    @Column(nullable = false)
-    @Size(min = 6, message = "La password deve contenere almeno 6 caratteri")
-    @NotBlank(message = "La password è obbligatoria")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Permette di escludere la password dalla risposta JSON del server
-    private String password;
-
     @Column(length = 50)
     @Size(max = 50, message = "Il nome non può superare i 50 caratteri")
     private String nome;
@@ -63,10 +57,10 @@ public abstract class Utente {
         ROLE_ADMIN
     }
 
-    @Column(nullable = false,columnDefinition = "boolean default true")
+    @Column(name = "is_attivo", nullable = false,columnDefinition = "boolean default true")
     private boolean isAttivo = true;
 
-    @Column(length = 500)
+    @Column(name = "motivo_sospensione", length = 500)
     private String motivoSospensione;
 
     @CreatedDate

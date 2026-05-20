@@ -10,13 +10,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(),//serve per fare richieste http,ora si fornisce il client a livello globale dell'applicazione
     provideClientHydration(withEventReplay()),
 
-
     provideHttpClient(
-      withInterceptorsFromDi(),
-      withFetch()
+      withFetch(),
+      withInterceptorsFromDi()
     ),
 
 
