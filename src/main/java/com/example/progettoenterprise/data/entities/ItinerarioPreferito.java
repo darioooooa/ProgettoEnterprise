@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -52,8 +53,8 @@ public class ItinerarioPreferito {
     private Utente proprietario;
 
     @OneToMany(mappedBy = "lista", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ListaViaggio> contenuti;
+    private Set<ListaViaggio> contenuti = new HashSet<>();
 
     @OneToMany(mappedBy = "lista", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ListaUtente> utentiAutorizzati;
+    private Set<ListaUtente> utentiAutorizzati = new HashSet<>();
 }

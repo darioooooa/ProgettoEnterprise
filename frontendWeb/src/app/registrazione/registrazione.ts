@@ -1,14 +1,14 @@
-import { Component } from '@angular/core';
-import { Router,RouterLink } from '@angular/router';
+import { Component, ChangeDetectorRef } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { AutenticazioneService } from '../service/autenticazione.service';
-import {FormsModule} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-registrazione',
   templateUrl: './registrazione.html',
   imports: [
-    FormsModule,CommonModule,RouterLink
+    FormsModule, CommonModule, RouterLink
   ],
   styleUrls: ['./registrazione.css']
 })
@@ -27,7 +27,8 @@ export class Registrazione {
 
   constructor(
     private servizioAuth: AutenticazioneService,
-    private navigatore: Router
+    private navigatore: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   confermaIscrizione() {
@@ -40,6 +41,8 @@ export class Registrazione {
       error: (errore) => {
         console.error('Qualcosa è andato storto:', errore);
         this.messaggioDiAvviso = 'Ops! Sembra che questa email sia già registrata.';
+
+        this.cdr.detectChanges();
       }
     });
   }

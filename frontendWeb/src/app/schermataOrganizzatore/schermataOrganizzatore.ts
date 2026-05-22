@@ -1,7 +1,7 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
-import {ViaggioService} from '../service/viaggio-service';
+import {ViaggioService} from '../service/viaggio.service';
 import {AutenticazioneService} from '../service/autenticazione.service';
 import {MapComponent} from '../map/map';
 

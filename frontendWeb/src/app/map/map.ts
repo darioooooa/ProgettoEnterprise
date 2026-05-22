@@ -1,5 +1,5 @@
 import {AfterViewInit, Component,PLATFORM_ID,inject} from '@angular/core';
-import {ViaggioService} from '../service/viaggio-service';
+import {ViaggioService} from '../service/viaggio.service';
 import mapboxgl from 'mapbox-gl';
 import {isPlatformBrowser} from '@angular/common';
 import{envMap} from '../../environments/envMap';

@@ -3,7 +3,7 @@
   <nav>
     <a routerLink="/">Home</a>
     <a href="#">Destinazioni</a>
-    <a href="#">Chi Siamo</a>
+    <a routerLink="/miei-itinerari">I Miei Itinerari preferiti</a>
     <a routerLink="/organizzatore" style="color: #ffd166;">Area Organizzatore</a>
   </nav>
 
@@ -17,7 +17,6 @@
           <span>👤</span>
         </button>
         <span class="username-navbar">{{ ottieniUsername() }}</span>
-
       </div>
     </div>
   </div>
@@ -28,29 +27,77 @@
   <div class="hero-content">
     <h1>TRAVEL</h1>
     <p>Scopri le meraviglie naturali del mondo.</p>
-    <form class="search-bar">
-      <input type="text" placeholder="Località (es. Bali, Indonesia)">
-      <input type="date">
-      <select>
-        <option>2 Persone</option>
-        <option>1 Persona</option>
-        <option>3 Persone</option>
-        <option>4+ Persone</option>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Località (es. Bali, Indonesia)" [(ngModel)]="filtriViaggio.destinazione">
+      <input type="date" [(ngModel)]="filtriViaggio.dataInizioMin">
+      <select [(ngModel)]="filtriViaggio.maxPartecipanti">
+        <option value="">Qualsiasi numero di persone</option>
+        <option value="1">1 Persona</option>
+        <option value="2">2 Persone</option>
+        <option value="3">3 Persone</option>
+        <option value="4">4+ Persone</option>
       </select>
-      <button type="submit" class="btn">Cerca</button>
-    </form>
+      <button type="button" class="btn" (click)="avviaRicercaViaggi($event)">Cerca</button>
+    </div>
   </div>
 </section>
 
-<section class="destinations">
-  <h2>Il tuo viaggio verso la destinazione perfetta inizia qui</h2>
-  <div class="cards-container">
-    <div class="card" *ngFor="let viaggio of viaggiEsempio">
+<section class="destinations" *ngIf="haCercato" style="background-color: #f9f9f9; padding-top: 40px;">
+  <h2>Risultati della tua ricerca</h2>
+
+  <p *ngIf="viaggiTrovati.length === 0" style="text-align: center; font-size: 1.2rem;">
+    Nessun viaggio trovato con questi filtri. Prova a cambiare destinazione o date!
+  </p>
+
+  <div class="cards-container" *ngIf="viaggiTrovati.length > 0">
+    <div class="card" *ngFor="let viaggio of viaggiTrovati">
+
       <img src="/assets/cammelli-che-attraversa-il-deserto-del-Sahara.jpg" [alt]="viaggio.destinazione">
+
+      <button class="plus-icon-button" (click)="toggleItineraryMenu(viaggio.id, $event)">+</button>
+
       <div class="card-info">
-        <h3>{{ viaggio.destinazione }}</h3>
-        <p>{{ viaggio.prezzo }}€ / a persona</p>
+        <h3>{{ viaggio.titolo }}</h3>
+        <p>📍 {{ viaggio.destinazione }}</p>
+        <p><strong>{{ viaggio.prezzo }}€ / persona</strong></p>
+        <p>Partenza: {{ viaggio.dataInizio | date:'dd/MM/yyyy' }}</p>
       </div>
+
+      <div class="itinerary-dropdown" *ngIf="openItineraryMenuId === viaggio.id" (click)="$event.stopPropagation()">
+
+        <div class="dropdown-header">
+          <div class="btn-nuovo-itinerario" (click)=apriModaleItinerario()>
+            + Crea nuovo itinerario
+          </div>
+        </div>
+
+        <ul class="dropdown-list">
+          <li *ngFor="let it of mieiItinerari" (click)="selezionaItinerario(it.idItinerario, viaggio.id)">
+            {{ it.nome }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination-bar" *ngIf="totalePagine > 0" style="margin-top: 30px; padding-bottom: 30px; text-align: center;">
+    <div class="pagination-info" style="font-size: 1.1rem; margin-bottom: 15px;">
+      Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
+    </div>
+
+    <div class="pagination-buttons" style="display: flex; justify-content: center;">
+      <button class="btn" style="background-color: #666; margin-right: 10px;"
+              (click)="paginaPrecedente()"
+              [disabled]="paginaCorrente === 0">
+        &larr; Precedente
+      </button>
+
+      <button class="btn" style="margin-left: 10px;"
+              (click)="paginaSuccessiva()"
+              [disabled]="paginaCorrente === totalePagine - 1">
+        Successiva &rarr;
+      </button>
     </div>
   </div>
 </section>
@@ -91,7 +138,6 @@
       </div>
 
       <div class="modale-body-amici">
-
         <div *ngIf="schedaAttiva === 'amici'">
           <p *ngIf="listaAmici.length === 0" class="testo-vuoto">Non hai ancora aggiunto amici.</p>
           <ul class="lista-amici">
@@ -106,7 +152,6 @@
             </li>
           </ul>
         </div>
-
         <div *ngIf="schedaAttiva === 'richieste'">
           <p *ngIf="richiesteRicevute.length === 0" class="testo-vuoto">Nessuna richiesta ricevuta in sospeso.</p>
           <ul class="lista-amici">
@@ -122,7 +167,6 @@
             </li>
           </ul>
         </div>
-
         <div *ngIf="schedaAttiva === 'inviate'">
           <p *ngIf="richiesteInviate.length === 0" class="testo-vuoto">Non hai richieste inviate in attesa.</p>
           <ul class="lista-amici">
@@ -135,15 +179,12 @@
             </li>
           </ul>
         </div>
-
         <div *ngIf="schedaAttiva === 'cerca'">
           <div class="box-ricerca">
             <input type="text" #inputUsername placeholder="Inserisci lo username..." (input)="usernameCercato = inputUsername.value" (keyup.enter)="cercaUtente()">
             <button class="btn-itinerari" (click)="cercaUtente()">Cerca</button>
           </div>
-
           <p *ngIf="erroreRicerca" class="testo-errore">{{ erroreRicerca }}</p>
-
           <div *ngIf="utentiTrovati.length > 0" class="risultato-ricerca-box" style="max-height: 250px; overflow-y: auto; margin-top: 15px;">
             <ul class="lista-amici" style="padding: 0; margin: 0; list-style: none;">
               <li *ngFor="let utente of utentiTrovati" class="amico-item" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
@@ -151,35 +192,13 @@
                   <span class="icona-amico">👤</span>
                   <div>
                     <span class="nome-amico">{{ utente.username }}</span>
-                    <small class="nome-reale" *ngIf="utente.nome || utente.cognome">
-                      {{ utente.nome || '' }} {{ utente.cognome || '' }}
-                    </small>
                   </div>
                 </div>
-                <span *ngIf="isRichiestaRifiutata(utente.username)" class="badge-rifiutata" style="color: #dc3545; font-weight: bold; font-size: 0.9em; padding: 4px 8px; border: 1px solid #dc3545; border-radius: 4px;">
-                  Non disponibile 🚫
-                </span>
-
-                <span *ngIf="!isRichiestaRifiutata(utente.username) && sonoGiaAmici(utente.username)" class="badge-amici" style="color: #007bff; font-weight: bold; font-size: 0.9em;">
-                  Già Amici 🤝
-                </span>
-
-                <div *ngIf="!isRichiestaRifiutata(utente.username) && !sonoGiaAmici(utente.username) && haRicevutoRichiesta(utente.username)" style="display: flex; gap: 8px; align-items: center;">
-                  <span style="color: #ff9f1c; font-weight: bold; font-size: 0.9em;">Ti ha invitato! 📩</span>
-                </div>
-
-                <span *ngIf="!isRichiestaRifiutata(utente.username) && !sonoGiaAmici(utente.username) && !haRicevutoRichiesta(utente.username) && haInviatoRichiesta(utente.username)" class="badge-inviata" style="color: green; font-weight: bold; font-size: 0.9em;">
-                  Inviata ✓
-                </span>
-
-                <button *ngIf="!isRichiestaRifiutata(utente.username) && !sonoGiaAmici(utente.username) && !haRicevutoRichiesta(utente.username) && !haInviatoRichiesta(utente.username)" class="btn-itinerari" (click)="inviaRichiestaAmicizia(utente.username)">
-                  Aggiungi
-                </button>
+                <button class="btn-itinerari" (click)="inviaRichiestaAmicizia(utente.username)">Aggiungi</button>
               </li>
             </ul>
           </div>
         </div>
-
       </div>
     </ng-container>
 
@@ -188,22 +207,30 @@
         <button class="btn-indietro" (click)="tornaIndietro()">&#8592; Indietro</button>
         <button class="btn-chiudi-amici" (click)="chiudiModale()">&times;</button>
       </div>
-
       <div class="modale-body-amici">
-        <h3 class="titolo-amico">
-          Viaggi di {{ amicoSelezionato?.richiedenteUsername === mioUsername ? amicoSelezionato?.riceventeUsername : amicoSelezionato?.richiedenteUsername }}
-        </h3>
-
-        <p *ngIf="itinerariAmico.length === 0" class="testo-vuoto">
-          Questo utente non ha itinerari pubblici al momento.
-        </p>
+        <h3 class="titolo-amico">Itinerari dell'amico</h3>
+        <p class="testo-vuoto">Nessun itinerario pubblico.</p>
       </div>
     </ng-container>
+  </div>
+</div>
 
+<div class="modale-overlay-amici" *ngIf="modaleItinerarioAperta" (click)="chiudiModaleItinerario()">
+  <div class="modale-content-amici" (click)="$event.stopPropagation()">
+    <div class="modale-header-amici">
+      <h3>Nuovo Itinerario</h3>
+      <button class="btn-chiudi-amici" (click)="chiudiModaleItinerario()">&times;</button>
+    </div>
+    <div class="modale-body-amici">
+      <input type="text" [(ngModel)]="nomeNuovoItinerario" placeholder="Nome dell'itinerario..."
+             style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px;">
+      <button class="btn-itinerari" style="width: 100%; padding: 12px;" (click)="salvaNuovoItinerario()">
+        Crea Itinerario
+      </button>
+    </div>
   </div>
 </div>
 
 <footer>
   <p>🌐 Progetto Enterprise 2025/2026</p>
-  <p>Realizzato per la gestione e prenotazione viaggi</p>
 </footer>

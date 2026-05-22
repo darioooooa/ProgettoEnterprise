@@ -16,6 +16,7 @@ public class ViaggioSpecification {
         private String destinazione;
         private Double prezzoMin;
         private Double prezzoMax;
+        private Integer maxPartecipanti;
         @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime dataInizioMin;
         @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
@@ -44,6 +45,9 @@ public class ViaggioSpecification {
             }
             if (viaggioFilter.getPrezzoMax() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("prezzo"), viaggioFilter.getPrezzoMax()));
+            }
+            if (viaggioFilter.getMaxPartecipanti() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("maxPartecipanti"), viaggioFilter.getMaxPartecipanti()));
             }
 
             // Filtra per data
