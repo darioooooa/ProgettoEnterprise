@@ -57,28 +57,43 @@ public class AuthServiceImpl implements AuthService {
         credential.setTemporary(false); // La password è subito definitiva
         keycloakUser.setCredentials(Collections.singletonList(credential));
 
-        int status;
         try (Response response = keycloak.realm(REALM_NAME).users().create(keycloakUser)) {
-            status = response.getStatus();
+            int status = response.getStatus();
+
+            if (status == 201) {
+                String path = response.getLocation().getPath();
+                String userId = path.substring(path.lastIndexOf('/') + 1);
+
+                log.info("Utente creato con successo su Keycloak. Id generato: {}. Tentato invio email di verifica...", userId);
+
+                try {
+                    keycloak.realm(REALM_NAME).users().get(userId).executeActionsEmail(List.of("VERIFY_EMAIL"));
+                    log.info("Email di verifica inviata con successo all'indirizzo dell'utente");
+                } catch (Exception e) {
+                    log.error("Impossibile inviare l'email di verifica per l'utente ID: {}", userId, e);
+                }
+
+                UtenteDTO utenteCreato = new UtenteDTO();
+                utenteCreato.setUsername(dto.getUsername());
+                utenteCreato.setEmail(dto.getEmail());
+                utenteCreato.setNome(dto.getNome());
+                utenteCreato.setCognome(dto.getCognome());
+                return utenteCreato;
+
+            } else if (status == 409) {
+                log.warn("Conflitto imprevisto su Keycloak per: {}", dto.getUsername());
+                throw new IllegalArgumentException(messageLang.getMessage("utente.conflict", dto.getUsername()));
+            } else {
+                log.error("Keycloak ha risposto con un codice HTTP imprevisto: {}", status);
+                throw new RuntimeException(messageLang.getMessage("utente.registration_failed"));
+            }
+
+        } catch (IllegalArgumentException e) {
+            // Rilancio dell'eccezione di conflitto intatta
+            throw e;
         } catch (Exception e) {
-            // Keycloak è irraggiungibile
-            log.error("Errore critico di connessione di rete con Keycloak", e);
-            throw new RuntimeException(messageLang.getMessage("utente.registration_failed"));
-        }
-
-        if (status == 201) {
-            UtenteDTO utenteCreato = new UtenteDTO();
-            utenteCreato.setUsername(dto.getUsername());
-            utenteCreato.setEmail(dto.getEmail());
-            utenteCreato.setNome(dto.getNome());
-            utenteCreato.setCognome(dto.getCognome());
-            return utenteCreato;
-
-        } else if (status == 409) {
-            log.warn("Conflitto imprevisto su Keycloak per: {}", dto.getUsername());
-            throw new IllegalArgumentException(messageLang.getMessage("utente.conflict", dto.getUsername()));
-        } else {
-            log.error("Keycloak ha risposto con un codice HTTP imprevisto: {}", status);
+            // Cattura i problemi di rete o altre eccezioni impreviste
+            log.error("Errore critico durante la comunicazione con Keycloak", e);
             throw new RuntimeException(messageLang.getMessage("utente.registration_failed"));
         }
     }

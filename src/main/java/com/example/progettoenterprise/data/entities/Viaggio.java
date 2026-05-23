@@ -36,8 +36,8 @@ public class Viaggio {
 
     private Double prezzo;
     private Integer maxPartecipanti;
-    private LocalDate dataInizio;
-    private LocalDate dataFine;
+    private LocalDateTime dataInizio;
+    private LocalDateTime dataFine;
 
     private Double latitudine;
     private Double longitudine;
