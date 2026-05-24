@@ -616,7 +616,8 @@ body {
   width: 300px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   transition: 0.4s;
-  overflow: hidden;
+  position: relative; /* Base per il menu a tendina */
+  /* Rimosso overflow: hidden per non tagliare il menu */
 }
 
 .card:hover {
@@ -627,11 +628,117 @@ body {
   width: 100%;
   height: 200px;
   object-fit: cover;
+  border-top-left-radius: 20px; /* Arrotonda gli angoli alti dell'immagine */
+  border-top-right-radius: 20px;
 }
 
 .card-info {
   padding: 1.5rem;
   text-align: left;
+}
+
+
+/* --- PULSANTE AGGIUNGI ITINERARIO SU CARD --- */
+.plus-icon-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #0d47a1;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.plus-icon-button:hover {
+  background-color: #0d47a1;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* --- MENU DROPDOWN TIPO SPOTIFY --- */
+.itinerary-dropdown {
+  position: absolute;
+  top: 60px; /* Subito sotto al pulsante + */
+  right: 15px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  width: 220px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  text-align: left;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-header {
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-header input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.dropdown-header input:focus {
+  border-color: #0d47a1;
+}
+
+.btn-nuovo-itinerario {
+  display: block;
+  color: #0d47a1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-nuovo-itinerario:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.dropdown-list {
+  list-style: none;
+  max-height: 180px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 8px 0;
+}
+
+.dropdown-list li {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.dropdown-list li:hover {
+  background-color: #f1f5f9;
+  color: #0d47a1;
 }
 
 /* --- FOOTER --- */

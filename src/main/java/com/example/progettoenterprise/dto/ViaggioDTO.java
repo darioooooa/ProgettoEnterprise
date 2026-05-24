@@ -21,6 +21,10 @@ public class ViaggioDTO {
 
     private String descrizione;
 
+    @NotNull(message = "Il numero massimo di partecipanti è obbligatorio")
+    @Min(value = 1, message = "Il viaggio deve avere almeno 1 partecipante")
+    private Integer maxPartecipanti;
+
     @NotBlank(message = "La destinazione è obbligatoria")
     private String destinazione;
 

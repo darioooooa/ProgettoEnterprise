@@ -1,0 +1,142 @@
+
+.sfondo-globale {
+  min-height: 100vh;
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.glass-container {
+  background: rgba(30, 39, 56, 0.85);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 800px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  color: white;
+}
+
+.titolo-glass {
+  font-size: 2rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.sottotitolo-glass {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 30px;
+}
+
+
+.lista-itinerari-glass {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.lista-itinerari-glass::-webkit-scrollbar { width: 6px; }
+.lista-itinerari-glass::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+
+.card-glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: left;
+  transition: 0.3s;
+}
+
+.card-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.id-tag {
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 15px;
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: #e2e8f0;
+  letter-spacing: 1px;
+}
+
+.card-main h2 {
+  font-size: 1.4rem;
+  margin-bottom: 5px;
+  color: #ffffff;
+}
+
+.data {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.viaggi-contenuti {
+  margin-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 15px;
+}
+
+.viaggi-contenuti ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.viaggi-contenuti li {
+  font-size: 0.95rem;
+  margin-bottom: 5px;
+  color: #e2e8f0;
+}
+
+.destinazione {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+
+.testo-vuoto {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.btn-indietro {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 10px 25px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-indietro:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+}

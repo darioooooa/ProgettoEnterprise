@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 
@@ -34,6 +35,7 @@ public class Viaggio {
     private String destinazione;
 
     private Double prezzo;
+    private Integer maxPartecipanti;
     private LocalDateTime dataInizio;
     private LocalDateTime dataFine;
 

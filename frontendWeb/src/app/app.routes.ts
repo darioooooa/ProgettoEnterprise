@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { autenticazioneGuard } from './autenticazione.guard';
 import { SchermataHomeComponent } from './schermataHome/schermataHome';
 import {SchermataOrganizzatoreComponent} from './schermataOrganizzatore/schermataOrganizzatore';
 import {CreaViaggio} from './crea-viaggio/crea-viaggio';
@@ -7,6 +8,7 @@ import {Registrazione} from './registrazione/registrazione';
 import{SchermataUtente} from './schermata-utente/schermata-utente';
 import{SchermataPrenotazioni} from './schermata-prenotazioni/schermata-prenotazioni';
 import {AdminDashboardComponent} from './admin-dashboard/admin-dashboard';
+import{MieiItinerari} from './miei-itinerari/miei-itinerari';
 
 export const routes: Routes = [
   {
@@ -43,8 +45,13 @@ export const routes: Routes = [
 
   },
   {
-    path:'admin-dashboard',
+    path: 'admin-dashboard',
     component: AdminDashboardComponent
+  },
+  {
+    path:'miei-itinerari',
+    component: MieiItinerari,
+    canActivate: [autenticazioneGuard]
   }
 
 ];

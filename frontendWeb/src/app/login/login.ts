@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {ChangeDetectorRef, Component} from '@angular/core';
 import {Router, RouterLink} from '@angular/router';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import {FormsModule} from '@angular/forms';
@@ -25,12 +25,17 @@ export class Login {
 
   constructor(
     private servizioAuth: AutenticazioneService,
-    private navigatore: Router
+    private navigatore: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
 
   eseguiAccesso() {
     console.log('Tentativo di accesso per:', this.datiAccesso.username);
+
+    // Reset dell'errore precedente
+    this.messaggioErrore = '';
+
     this.servizioAuth.effettuaAccesso(this.datiAccesso).subscribe({
       next: (risposta) => {
         console.log('Login effettuato con successo', risposta);
@@ -45,7 +50,21 @@ export class Login {
       },
       error: (errore) => {
         console.error('Errore durante il login:', errore);
-        this.messaggioErrore = 'Credenziali non valide, riprova!';
+
+        const erroreCorpo = errore.error;
+        const erroreStringa = JSON.stringify(errore);
+
+        if (
+          (erroreCorpo?.error === 'invalid_grant' && erroreCorpo?.error_description === 'Account is not fully set up') ||
+          erroreStringa.includes('Account is not fully set up')
+        ) {
+          this.messaggioErrore = 'Il tuo account non è ancora attivo! Controlla la tua casella di posta e clicca sul link di conferma per attivarlo.';
+        } else {
+          this.messaggioErrore = 'Credenziali non valide, riprova!';
+        }
+
+        // Forza angular ad aggiornare la schermata visivamente
+        this.cdr.detectChanges();
       }
     });
   }

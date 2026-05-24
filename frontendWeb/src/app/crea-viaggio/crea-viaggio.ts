@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { Viaggio } from '../models/viaggio.model';
-import {ViaggioService} from '../service/viaggio-service';
+import {ViaggioService} from '../service/viaggio.service';
 import {HttpClient} from '@angular/common/http';
 
 

@@ -1,0 +1,35 @@
+<div class="sfondo-globale">
+  <div class="glass-container">
+    <h1 class="titolo-glass">I MIEI ITINERARI</h1>
+    <p class="sottotitolo-glass">Gestisci le tue avventure e i dettagli delle prenotazioni</p>
+
+    <div class="lista-itinerari-glass">
+      <div class="card-glass" *ngFor="let it of itinerari">
+
+        <div class="card-top">
+          <div>
+            <span class="id-tag">#ITN-{{ it.idItinerario }}</span>
+            <span class="badge">{{ it.visibilita }}</span>
+          </div>
+        </div>
+
+        <div class="card-main">
+          <h2>{{ it.nome }}</h2>
+          <p class="data">📅 Creazione: {{ it.dataCreazione | date:'dd/MM/yyyy' }}</p>
+        </div>
+
+        <div class="viaggi-contenuti">
+          <ul *ngIf="it.viaggiContenuti?.length > 0; else vuoto">
+            <li *ngFor="let v of it.viaggiContenuti">
+              <strong>{{ v.titolo }}</strong> <span class="destinazione">- {{ v.destinazione }}</span>
+            </li>
+          </ul>
+          <ng-template #vuoto><p class="testo-vuoto">Nessun viaggio aggiunto.</p></ng-template>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="btn-indietro" routerLink="/">← Torna alla Home</button>
+  </div>
+</div>

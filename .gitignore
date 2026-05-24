@@ -33,6 +33,6 @@ build/
 .vscode/
 
 .env
-
+node_modules/
 frontendWeb/src/environments/envMap.ts
 /node_modules
