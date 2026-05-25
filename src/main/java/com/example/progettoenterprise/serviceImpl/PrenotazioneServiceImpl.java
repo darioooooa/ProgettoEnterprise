@@ -19,7 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.LocalDateTime;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
@@ -131,20 +131,28 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
                 });
 
         Viaggio viaggio = prenotazione.getViaggio();
+        java.time.LocalDateTime dataInizio = viaggio.getDataInizio();
+        java.time.LocalDateTime dataFine = viaggio.getDataFine();
 
+
+        //formatto per lo stringBuilder
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
+        String dataInizioStr = dataInizio.format(formatter);
+        String dataFineStr = dataFine.format(formatter);
+        String dataCreazioneStr = java.time.LocalDateTime.now().format(formatter);
         StringBuilder ics = new StringBuilder();
         ics.append("BEGIN:VCALENDAR\n")
                 .append("VERSION:2.0\n")
-                .append("PRODID:-//ProgettoEnterprise//GestioneViaggi//IT\n")
+                .append("PRODID:-//Progetto Enterprise//Calendario Viaggi//IT\n")
+                .append("CALSCALE:GREGORIAN\n")
                 .append("BEGIN:VEVENT\n")
-                .append("UID:").append(prenotazione.getId()).append("@gestione-viaggi.it\n")
-                .append("SUMMARY:").append(viaggio.getTitolo()).append("\n")
-                .append("DESCRIPTION:Prenotazione per ").append(prenotazione.getNumeroPersone()).append(" persone\n")
-
-                // Ora passiamo LocalDateTime, e il metodo lo gestirà correttamente
-                .append("DTSTART:").append(formattaDataIcs(viaggio.getDataInizio())).append("\n")
-                .append("DTEND:").append(formattaDataIcs(viaggio.getDataFine())).append("\n")
-
+                .append("UID:viaggio-").append(viaggio.getId()).append("@progettoenterprise.com\n")
+                .append("DTSTAMP:").append(dataCreazioneStr).append("\n")
+                .append("DTSTART:").append(dataInizioStr).append("\n")
+                .append("DTEND:").append(dataFineStr).append("\n")
+                .append("SUMMARY:Viaggio: ").append(viaggio.getTitolo()).append("\n")
+                .append("DESCRIPTION:Promemoria per il tuo viaggio a ").append(viaggio.getDestinazione()).append("\n")
+                .append("LOCATION:").append(viaggio.getDestinazione()).append("\n")
                 .append("END:VEVENT\n")
                 .append("END:VCALENDAR");
 

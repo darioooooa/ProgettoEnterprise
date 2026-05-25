@@ -1,0 +1,52 @@
+<div class="sfondo-prenotazioni">
+  <div class="contenitore-prenotazioni-vetro">
+
+    <div class="barra-superiore">
+      <button routerLink="/prenotazioni" class="btn-indietro">← Torna ai Miei Viaggi</button>
+    </div>
+
+    <div *ngIf="viaggioDati">
+
+      <div class="intestazione-viaggio">
+        <span class="id-viaggio">ID VIAGGIO: #{{ viaggioDati.id }}</span>
+        <h1>{{ viaggioDati.titolo }}</h1>
+        <p class="meta"><i class="icona">📍</i> {{ viaggioDati.destinazione }}</p>
+      </div>
+
+      <div class="griglia-informazioni">
+
+        <div class="scheda-info estesa">
+          <h3>Informazioni sul Viaggio</h3>
+          <p class="descrizione-testo">{{ viaggioDati.descrizione || 'Nessuna descrizione disponibile per questo viaggio.' }}</p>
+        </div>
+
+        <div class="scheda-info estesa">
+          <h3>Periodo del Viaggio</h3>
+          <div class="dettaglio-riga">
+            <span class="etichetta">Data di Partenza:</span>
+            <span class="valore">{{ viaggioDati.dataInizio | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="dettaglio-riga">
+            <span class="etichetta">Data di Ritorno:</span>
+            <span class="valore">{{ viaggioDati.dataFine | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sezione-prezzo-viaggio">
+        <div class="Prezzo-box">
+          <label>Prezzo del Viaggio (a persona)</label>
+          <p class="valore-prezzo">{{ viaggioDati.prezzo | currency:'EUR':'symbol' }}</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div *ngIf="!viaggioDati && erroreMessaggio" class="box-stato-caricamento">
+      <p class="testo-errore">⚠️ {{ erroreMessaggio }}</p>
+      <button routerLink="/prenotazioni" class="btn-esplora">Torna alla lista</button>
+    </div>
+
+  </div>
+</div>

@@ -173,5 +173,25 @@ public class ViaggioServiceImpl implements ViaggioService {
         Viaggio aggiornato = viaggioRepository.save(viaggioEsistente);
         return modelMapper.map(aggiornato, ViaggioDTO.class);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public ViaggioDTO getViaggioById(Long id) {
+        Viaggio viaggio = viaggioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageLang.getMessage("viaggio.notexist", id)));
+
+
+        ViaggioDTO dto = modelMapper.map(viaggio, ViaggioDTO.class);
+
+
+        if (viaggio.getDataInizio() != null) {
+            dto.setDataInizio(viaggio.getDataInizio().toLocalDate());
+        }
+        if (viaggio.getDataFine() != null) {
+            dto.setDataFine(viaggio.getDataFine().toLocalDate());
+        }
+
+        return dto;
+    }
 
 }

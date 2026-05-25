@@ -9,6 +9,7 @@ import{SchermataUtente} from './schermata-utente/schermata-utente';
 import{SchermataPrenotazioni} from './schermata-prenotazioni/schermata-prenotazioni';
 import {AdminDashboardComponent} from './admin-dashboard/admin-dashboard';
 import{MieiItinerari} from './miei-itinerari/miei-itinerari';
+import {DettagliViaggio} from './dettagli-viaggio/dettagli-viaggio';
 
 export const routes: Routes = [
   {
@@ -51,6 +52,11 @@ export const routes: Routes = [
   {
     path:'miei-itinerari',
     component: MieiItinerari,
+    canActivate: [autenticazioneGuard]
+  },
+  {
+    path:'dettagli-viaggio/:id',
+    component: DettagliViaggio,
     canActivate: [autenticazioneGuard]
   }
 

@@ -8,6 +8,6 @@ public interface PrenotazioneService {
     PrenotazioneDTO creaPrenotazione(Long idPrenotazione, Long idUtente, Integer numeroPersone);
     void cancellaPrenotazione(Long id,Long idUtente);
     PrenotazioneDTO getPrenotazioneById(Long id, Long utenteId);
-    byte[] esportaPrenotazioni(Long viaggioId);
+    byte[] esportaPrenotazioni(Long idPrenotazione);
     Page<PrenotazioneDTO> ricercaFiltrata(PrenotazioneSpecification.PrenotazioneFilter prenotazioneFilter, Long utenteId, int page);
 }

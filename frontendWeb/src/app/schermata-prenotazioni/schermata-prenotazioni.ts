@@ -1,42 +1,55 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core'; // 1. AGGIUNGI ChangeDetectorRef QUI
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Prenotazione } from '../models/prenotazioni.model';
+import { PrenotazioneService } from '../service/prenotazioni.service';
+import { AutenticazioneService } from '../service/autenticazione.service';
 
 @Component({
   selector: 'app-schermata-prenotazioni',
   standalone: true,
-  imports: [CommonModule ],
+  imports: [CommonModule, RouterLink],
   templateUrl: './schermata-prenotazioni.html',
   styleUrl: './schermata-prenotazioni.css'
 })
-export class SchermataPrenotazioni {
+export class SchermataPrenotazioni implements OnInit {
 
-  // Dati statici poi cambiamo con dati del db
-  listaPrenotazioni = [
-    {
-      destinazione: 'Bali, Indonesia',
-      dataPartenza: '2025-05-12',
-      prezzoTotale: 1250.00,
-      stato: 'Confermata',
-      codicePrenotazione: 'TRV-8821'
-    },
-    {
-      destinazione: 'Sahara, Marocco',
-      dataPartenza: '2025-08-05',
-      prezzoTotale: 890.50,
-      stato: 'In Attesa',
-      codicePrenotazione: 'TRV-4432'
-    },
-    {
-      destinazione: 'Dolomiti, Italia',
-      dataPartenza: '2025-12-20',
-      prezzoTotale: 450.00,
-      stato: 'Confermata',
-      codicePrenotazione: 'TRV-1109'
+  listaPrenotazioni: Prenotazione[] = [];
+
+  constructor(
+    private prenotazioneService: PrenotazioneService,
+    private authService: AutenticazioneService,
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
+
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const token = this.authService.ottieniToken();
+
+      if (token) {
+        this.caricaPrenotazioniDalDB();
+      } else {
+        console.log('Token non ancora pronto nel browser, aspetto il caricamento...');
+        setTimeout(() => {
+          this.caricaPrenotazioniDalDB();
+        }, 1000);
+      }
     }
-  ];
+  }
 
-  constructor() {
+  caricaPrenotazioniDalDB(): void {
+    this.prenotazioneService.getListaPrenotazioni().subscribe({
+      next: (rispostaPaginata: any) => {
+        this.listaPrenotazioni = rispostaPaginata.content;
+        console.log('Prenotazioni reali caricate:', this.listaPrenotazioni);
 
+        // 3. FORZA IL DISEGNO DELL'HTML APPENA ARRIVANO I DATI
+        this.cdr.detectChanges();
+      },
+      error: (errore) => {
+        console.error('Errore nel recupero delle prenotazioni:', errore);
+      }
+    });
   }
 }
