@@ -1,0 +1,125 @@
+<div id="sezione-community" class="itinerary-section">
+  <legend>Cosa ne pensa la community</legend>
+
+  <div id="avviso-community" *ngIf="messaggioAvviso" [class.alert-errore-backend]="tipoAvviso === 'errore'" [class.alert-successo-backend]="tipoAvviso === 'successo'">
+    <p>{{ messaggioAvviso }}</p>
+    <button type="button" class="btn-chiudi-alert" (click)="messaggioAvviso = null">×</button>
+  </div>
+
+  <div *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE' && laMiaRecensione && !inModifica" class="recensione-card la-mia-recensione-evidenza" style="margin-bottom: 30px; border-left: 4px solid #a5d6a7; background: rgba(76,175,80,0.05);">
+    <div class="recensione-header">
+      <span class="utente-nome" style="color: #a5d6a7;">⭐ La tua recensione del {{ laMiaRecensione.dataCreazione | date:'dd/MM/yyyy' }}</span>
+      <span class="stelle">{{ '⭐'.repeat(laMiaRecensione.voto) }}</span>
+    </div>
+    <p class="recensione-testo">
+      <span *ngIf="laMiaRecensione.commento && laMiaRecensione.commento.trim().length > 0">{{ laMiaRecensione.commento }}</span>
+      <span *ngIf="!laMiaRecensione.commento || laMiaRecensione.commento.trim().length === 0" style="font-style: italic; color: rgba(255,255,255,0.4);">
+              Hai rilasciato solo una valutazione a stelle.
+            </span>
+    </p>
+    <div style="display: flex; gap: 15px; margin-top: 8px;">
+      <button type="button" class="btn-elimina-rec" style="color: #90caf9; text-decoration: underline;" (click)="avviaModificaRecensione(laMiaRecensione)">
+        ✏️ Modifica la tua recensione
+      </button>
+      <button type="button" class="btn-elimina-rec" [class.stato-conferma]="idRecensioneDaEliminare === laMiaRecensione.id" (click)="cancellaRecensione(laMiaRecensione.id)">
+        {{ idRecensioneDaEliminare === laMiaRecensione.id ? '⚠️ Confermi eliminazione?' : '❌ Elimina' }}
+      </button>
+    </div>
+  </div>
+
+  <form *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE' && (!laMiaRecensione || inModifica)" (ngSubmit)="aggiungiRecensione()" class="recensione-form">
+    <h3>{{ inModifica ? 'Modifica la tua recensione' : 'Lascia la tua recensione' }}</h3>
+    <div class="form-recensione-grid">
+      <div class="input-group col-valutazione">
+        <label>Valutazione</label>
+        <select [(ngModel)]="nuovaRecensione.voto" name="voto">
+          <option [value]="5">⭐⭐⭐⭐⭐ (5)</option>
+          <option [value]="4">⭐⭐⭐⭐ (4)</option>
+          <option [value]="3">⭐⭐⭐ (3)</option>
+          <option [value]="2">⭐⭐ (2)</option>
+          <option [value]="1">⭐ (1)</option>
+        </select>
+      </div>
+      <div class="input-group col-commento">
+        <label>Il tuo commento</label>
+        <textarea [(ngModel)]="nuovaRecensione.commento" name="commento" placeholder="Raccontaci la tua esperienza..."></textarea>
+      </div>
+    </div>
+    <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+      <button *ngIf="inModifica" type="button" class="btn-reset-filtri" style="height: 44px;" (click)="annullaModificaRecensione()">
+        Annulla modifica
+      </button>
+      <button type="submit" class="btn-invia-recensione">
+        {{ inModifica ? 'Aggiorna recensione' : 'Invia recensione' }}
+      </button>
+    </div>
+  </form>
+
+  <div class="recensioni-filter-bar">
+    <div class="input-group search-commenti">
+      <label>Cerca nei commenti</label>
+      <input type="text" [(ngModel)]="filtriRecensioni.parolaChiave" (keyup.enter)="filtraRecensioni()" placeholder="Inserisci parola chiave...">
+    </div>
+    <div class="input-group select-voto">
+      <label>Voto</label>
+      <select [(ngModel)]="filtriRecensioni.votoEsatto">
+        <option value="">Qualsiasi</option>
+        <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+        <option value="4">⭐⭐⭐⭐ (4)</option>
+        <option value="3">⭐⭐⭐ (3)</option>
+        <option value="2">⭐⭐ (2)</option>
+        <option value="1">⭐ (1)</option>
+      </select>
+    </div>
+    <div class="input-group date-picker">
+      <label>Da data</label>
+      <input type="date" [(ngModel)]="filtriRecensioni.dataDa">
+    </div>
+    <div class="input-group date-picker">
+      <label>A data</label>
+      <input type="date" [(ngModel)]="filtriRecensioni.dataA">
+    </div>
+    <div class="filter-actions">
+      <button type="button" class="btn-add-tappa" (click)="filtraRecensioni()">Cerca</button>
+      <button type="button" class="btn-reset-filtri" (click)="pulisciFiltriRecensioni()">Resetta</button>
+    </div>
+  </div>
+
+  <p *ngIf="recensioni.length === 0" class="testo-vuoto-vetro" style="margin-top: 20px;">Nessuna recensione trovata.</p>
+
+  <div class="recensioni-container" *ngIf="recensioni.length > 0">
+    <ng-container *ngFor="let rec of recensioni">
+      <div class="recensione-card" *ngIf="rec.utenteUsername !== mioUsername">
+        <div class="recensione-header">
+          <span class="utente-nome">👤 {{ rec.utenteUsername || 'Viaggiatore' }}</span>
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.4);">
+              📅 {{ rec.dataCreazione | date:'dd MMMM yyyy' }}
+            </span>
+            <span class="stelle">{{ '⭐'.repeat(rec.voto) }}</span>
+          </div>
+        </div>
+        <p class="recensione-testo">
+          <span *ngIf="rec.commento && rec.commento.trim().length > 0">{{ rec.commento }}</span>
+          <span *ngIf="!rec.commento || rec.commento.trim().length === 0" style="font-style: italic; color: rgba(255,255,255,0.4);">
+                  L'utente ha rilasciato solo una valutazione a stelle.
+                </span>
+        </p>
+        <div style="display: flex; gap: 15px; align-items: center; margin-top: 4px;">
+          <button *ngIf="rec.utenteUsername === mioUsername || ottieniRuolo() === 'ROLE_ADMIN' || isMioViaggio"
+                  class="btn-elimina-rec"
+                  [class.stato-conferma]="idRecensioneDaEliminare === rec.id"
+                  (click)="cancellaRecensione(rec.id)">
+            {{ idRecensioneDaEliminare === rec.id ? '⚠️ Clicca ancora per confermare!' : 'Elimina recensione' }}
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="paginazione-mini" *ngIf="totalePagineRecensioni > 1">
+    <button [disabled]="paginaRecensioni === 0" (click)="cambiaPaginaRecensioni(-1)">&larr;</button>
+    <span>{{ paginaRecensioni + 1 }} di {{ totalePagineRecensioni }}</span>
+    <button [disabled]="paginaRecensioni === totalePagineRecensioni - 1" (click)="cambiaPaginaRecensioni(1)">&rarr;</button>
+  </div>
+</div>

@@ -104,8 +104,10 @@ public class ViaggioServiceImpl implements ViaggioService {
 
         return Map.of(
                 "viaggioId", viaggio.getId(),
+                "destinazione", viaggio.getDestinazione() != null ? viaggio.getDestinazione() : "",
                 "mediaRecensioni", viaggio.getMediaRecensioni(),
-                "numeroRecensioni", viaggio.getNumeroRecensioni()
+                "numeroRecensioni", viaggio.getNumeroRecensioni(),
+                "organizzatoreUsername", viaggio.getOrganizzatore() != null ? viaggio.getOrganizzatore().getUsername() : ""
         );
     }
 

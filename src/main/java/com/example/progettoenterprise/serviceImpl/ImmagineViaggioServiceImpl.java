@@ -41,7 +41,7 @@ public class ImmagineViaggioServiceImpl implements ImmagineViaggioService {
         if (matcher.find()) {
             String fileId = matcher.group(1);
             // Restituisce il formato interpretato correttamente come immagine
-            return "https://drive.google.com/uc?export=view&id=" + fileId;
+            return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w1920";
         }
 
         log.warn("Tentativo di conversione fallito per URL non valido: {}", url);

@@ -1,0 +1,46 @@
+<div id="sezione-galleria" class="itinerary-section">
+  <legend>Galleria fotografica</legend>
+
+  <div id="avviso-galleria" *ngIf="messaggioAvviso"
+       [class.alert-errore-backend]="tipoAvviso === 'errore'"
+       [class.alert-successo-backend]="tipoAvviso === 'successo'">
+    <p>{{ messaggioAvviso }}</p>
+    <button type="button" class="btn-chiudi-alert" (click)="messaggioAvviso = null">×</button>
+  </div>
+
+  <div *ngIf="isMioViaggio" class="organizzatore-mini-form" style="margin-bottom: 25px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+    <input type="text" TYPE="text" [(ngModel)]="nuovaImmagineUrl" placeholder="Incolla l'URL di un'immagine pubblica di google drive..." style="flex: 2; min-width: 250px;">
+
+    <select [(ngModel)]="nuovaImmaginePubblica" style="width: 140px; height: 44px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; color: white; padding: 0 10px; font-family: 'Poppins', sans-serif;">
+      <option [ngValue]="true">👁️ Pubblica</option>
+      <option [ngValue]="false">🔒 Privata</option>
+    </select>
+    <button type="button" class="btn-premium-organizzatore" (click)="aggiungiImmagineGalleria()">Aggiungi immagine</button>
+  </div>
+
+  <p *ngIf="immagini.length === 0" class="testo-vuoto-vetro">Nessuna immagine presente in galleria per questo viaggio.</p>
+
+  <div class="galleria-slider-container" *ngIf="immagini.length > 0">
+    <button type="button" class="slider-arrow arrow-sinistar" (click)="navigaLightbox(-1, $event)">&larr;</button>
+    <div class="slider-frame">
+      <img [src]="immagini[immagineCorrenteIndex]?.url" alt="Immagine del viaggio" class="slider-foto-attiva" loading="lazy">
+      <img [src]="immagini[immagineCorrenteIndex]?.url" class="slider-foto-blurred-bg" aria-hidden="true">
+      <span class="slider-info-counter">Foto {{ immagineCorrenteIndex + 1 }} di {{ immagini.length }}</span>
+
+      <button *ngIf="isMioViaggio" type="button" class="btn-visibilita-badge"
+              [class.is-pubblica]="immagini[immagineCorrenteIndex]?.pubblica"
+              [class.is-privata]="!immagini[immagineCorrenteIndex]?.pubblica"
+              (click)="cambiaVisibilitaImmagine(immagini[immagineCorrenteIndex])"
+              title="Clicca per cambiare visibilità">
+        {{ immagini[immagineCorrenteIndex]?.pubblica ? '👁️ Pubblica' : '🔒 Privata' }}
+      </button>
+
+      <button *ngIf="isMioViaggio" class="btn-elimina-foto-overlay"
+              [class.conferma]="idImmagineDaEliminare === immagini[immagineCorrenteIndex]?.id"
+              (click)="cancellaImmagineGalleria(immagini[immagineCorrenteIndex]?.id)">
+        {{ idImmagineDaEliminare === immagini[immagineCorrenteIndex]?.id ? 'Conferma eliminazione' : 'Elimina questa foto' }}
+      </button>
+    </div>
+    <button type="button" class="slider-arrow arrow-destra" (click)="navigaLightbox(1, $event)">&rarr;</button>
+  </div>
+</div>

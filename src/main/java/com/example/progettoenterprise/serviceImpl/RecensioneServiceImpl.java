@@ -108,7 +108,13 @@ public class RecensioneServiceImpl implements RecensioneService {
         // Controllo che l'utente sia l'autore o l'organizzatore del viaggio
         boolean isAutore = recensione.getUtente().getId().equals(utenteId);
         boolean isOrganizzatore = recensione.getViaggio().getOrganizzatore().getId().equals(utenteId);
-        if (!isAutore && !isOrganizzatore) {
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> {
+                    log.warn("Tentativo di eliminazione fallito: utente id {} non trovato", utenteId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
+        boolean isAdmin = utente.getRuolo().equals(Utente.Ruolo.ROLE_ADMIN);
+        if (!isAutore && !isOrganizzatore && !isAdmin) {
             log.error("Tentativo di eliminazione non autorizzato: l'utente ID {} non nè autore nè organizzatore per la recensione ID {}", utenteId, recensioneId);
             throw new IllegalArgumentException(messageLang.getMessage("recensione.unauthorized_utente"));
         }
