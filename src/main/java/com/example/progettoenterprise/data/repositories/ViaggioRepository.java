@@ -45,4 +45,5 @@ public interface ViaggioRepository extends JpaRepository<Viaggio,Long>, JpaSpeci
             "v.numeroRecensioni = v.numeroRecensioni - 1 " +
             "WHERE v.id = :viaggioId")
     void ricalcolaMediaPerEliminazione(@Param("viaggioId") Long viaggioId, @Param("votoSottratto") int votoSottratto);
+
 }

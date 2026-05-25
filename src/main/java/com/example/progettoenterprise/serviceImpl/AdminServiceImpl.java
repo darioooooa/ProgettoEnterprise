@@ -3,6 +3,7 @@ package com.example.progettoenterprise.serviceImpl;
 import com.example.progettoenterprise.data.entities.*;
 import com.example.progettoenterprise.data.repositories.OrganizzatoreRepository;
 import com.example.progettoenterprise.data.repositories.RichiestaPromozioneRepository;
+import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.service.AdminService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,9 +27,11 @@ import java.util.UUID;
 @Slf4j
 public class AdminServiceImpl implements AdminService {
 
+    private final UtenteRepository utenteRepository;
     private final RichiestaPromozioneRepository richiestaRepository;
     private final OrganizzatoreRepository organizzatoreRepository;
     private final Keycloak keycloak;
+    private final EmailServiceImpl emailService;
 
     private static final String REALM_NAME = "enterprise-realm";
 
@@ -77,7 +80,7 @@ public class AdminServiceImpl implements AdminService {
         keycloakUser.setEnabled(true);
 
         // Impostazione password temporanea
-        String passwordTemporanea = UUID.randomUUID().toString().substring(0,8);
+        String passwordTemporanea = UUID.randomUUID().toString().substring(0, 8);
 
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
@@ -158,4 +161,18 @@ public class AdminServiceImpl implements AdminService {
         richiesta.setAdminId(adminIdCorrente);
         richiestaRepository.save(richiesta);
     }
+
+    @Override
+    @Transactional
+    public void banUtente(Long userId) {
+        Utente utente = utenteRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+
+        utente.setAttivo(false);
+        utente.setMotivoSospensione("Violazione dei termini di servizio");
+        utenteRepository.save(utente);
+
+        emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
+    }
 }
+
