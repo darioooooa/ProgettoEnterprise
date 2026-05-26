@@ -13,7 +13,6 @@ import com.example.progettoenterprise.dto.ViaggioDTO;
 import com.example.progettoenterprise.dto.ViaggioMappaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -233,10 +232,10 @@ public class ViaggioServiceImpl implements ViaggioService {
 
 
         if (viaggio.getDataInizio() != null) {
-            dto.setDataInizio(viaggio.getDataInizio().toLocalDate());
+            dto.setDataInizio(viaggio.getDataInizio());
         }
         if (viaggio.getDataFine() != null) {
-            dto.setDataFine(viaggio.getDataFine().toLocalDate());
+            dto.setDataFine(viaggio.getDataFine());
         }
 
         return dto;

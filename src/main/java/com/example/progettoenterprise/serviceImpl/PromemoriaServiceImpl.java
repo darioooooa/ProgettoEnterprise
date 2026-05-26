@@ -42,7 +42,7 @@ public class PromemoriaServiceImpl {
                 String email = p.getViaggiatore().getEmail();
                 long giorniMancanti = ChronoUnit.DAYS.between(
                         LocalDate.now(),
-                        p.getViaggio().getDataInizio().toLocalDate()
+                        p.getViaggio().getDataInizio()
                 );
 
                 String giornoTesto = (giorniMancanti == 1) ? "giorno" : "giorni";

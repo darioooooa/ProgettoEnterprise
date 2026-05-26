@@ -19,10 +19,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -132,8 +130,8 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
                 });
 
         Viaggio viaggio = prenotazione.getViaggio();
-        java.time.LocalDateTime dataInizio = viaggio.getDataInizio();
-        java.time.LocalDateTime dataFine = viaggio.getDataFine();
+        java.time.LocalDateTime dataInizio = viaggio.getDataInizio().atStartOfDay();
+        java.time.LocalDateTime dataFine = viaggio.getDataFine().atTime(java.time.LocalTime.MAX);
 
 
         //formatto per lo stringBuilder
