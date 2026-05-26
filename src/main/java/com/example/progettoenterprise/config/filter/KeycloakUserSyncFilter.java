@@ -97,15 +97,27 @@ public class KeycloakUserSyncFilter extends OncePerRequestFilter {
                     authorities
             );
 
-            // Sostituisce il JWT generico con il nostro utente personalizzato all'interno di spring
-            UsernamePasswordAuthenticationToken customAuth = new UsernamePasswordAuthenticationToken(
-                    utenteLoggato, null, authorities
-            );
+            CustomJwtAuthenticationToken customAuth = new CustomJwtAuthenticationToken( jwtAuth, utenteLoggato, authorities);
             SecurityContextHolder.getContext().setAuthentication(customAuth);
-
         }
 
         // Va avanti con la catena dei filtri
         filterChain.doFilter(request, response);
+    }
+
+    // Classe per mantenere l'autenticazione compatibile con il resource server OAuth2
+    private static class CustomJwtAuthenticationToken extends JwtAuthenticationToken {
+        private final UtenteLoggato principal;
+
+        public CustomJwtAuthenticationToken(JwtAuthenticationToken originalToken, UtenteLoggato principal, Collection<GrantedAuthority> authorities) {
+            super(originalToken.getToken(), authorities, originalToken.getName());
+            this.principal = principal;
+            this.setDetails(originalToken.getDetails());
+        }
+
+        @Override
+        public Object getPrincipal() {
+            return this.principal;
+        }
     }
 }

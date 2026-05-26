@@ -9,4 +9,5 @@ export interface Viaggio {
   tappe: any[];
   longitudine: number;
   latitudine: number;
+  maxPartecipanti: number;
 }

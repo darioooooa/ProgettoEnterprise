@@ -1,0 +1,69 @@
+<main class="hero-section">
+  <div class="background-overlay"></div>
+
+  <section class="content-wrapper">
+    <div class="glass-form-container">
+
+      <header class="form-header" style="display: flex; justify-content: space-between; align-items: flex-start; wrap: wrap; gap: 15px;">
+        <div>
+          <h1>Esplora la destinazione</h1>
+          <p>📍 {{ statistiche?.destinazione || 'Dettagli Itinerario di Viaggio' }}</p>
+        </div>
+
+        <button type="button"
+                (click)="scaricaFileIcs()"
+                class="tab-link"
+                style="font-size: 0.9rem; padding: 10px 16px; border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: #a5d6a7; border: 1px solid rgba(165, 214, 167, 0.3); transition: all 0.3s ease; cursor: pointer;">
+          📅 Esporta nei tuoi Calendari (.ics)
+        </button>
+      </header>
+
+      <div class="stats-banner" *ngIf="statistiche">
+        <div class="stat-card">
+          <span class="stat-icon">⭐</span>
+          <div class="stat-info">
+            <label>Media Voti</label>
+            <p *ngIf="statistiche?.numeroRecensioni > 0">
+              {{ statistiche.mediaRecensioni | number:'1.1-1' }} / 5
+            </p>
+            <p *ngIf="!statistiche || statistiche.numeroRecensioni === 0"
+               style="font-size: 1rem; letter-spacing: 0.5px; margin-top: 4px;">
+              Nessuna valutazione
+            </p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">💬</span>
+          <div class="stat-info">
+            <label>Recensioni totali</label>
+            <p>{{ statistiche.numeroRecensioni || 0 }} recensioni</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="itinerary-nav-tabs">
+        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'galleria'" (click)="tabAttivo = 'galleria'">🖼️ Galleria</button>
+        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
+        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'community'" (click)="tabAttivo = 'community'">💬 Community</button>
+      </nav>
+
+      <app-galleria  *ngIf="tabAttivo === 'galleria'"
+                     [viaggioId]="viaggioId"
+                     [isMioViaggio]="isMioViaggio()">
+      </app-galleria>
+
+      <app-programma *ngIf="tabAttivo === 'programma'"
+                     [viaggioId]="viaggioId"
+                     [isMioViaggio]="isMioViaggio()">
+      </app-programma>
+
+      <app-community *ngIf="tabAttivo === 'community'"
+                     [viaggioId]="viaggioId"
+                     [mioUsername]="mioUsername"
+                     [isMioViaggio]="isMioViaggio()"
+                     (richiestaRefreshPadre)="onSincronizzaRichiesta()">
+      </app-community>
+
+    </div>
+  </section>
+</main>

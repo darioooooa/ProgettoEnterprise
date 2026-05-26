@@ -42,4 +42,12 @@ public class AdminController {
         adminService.rifiutaRichiesta(id, note,adminIdCorrente);
         return ResponseEntity.ok("Richiesta rifiutata correttamente.");
     }
+
+    @PostMapping("/utenti/{userId}/ban")
+    public ResponseEntity<String> banUtente(
+            @PathVariable Long userId) {
+
+        adminService.banUtente(userId);
+        return ResponseEntity.ok("Utente bannato con successo");
+    }
 }

@@ -75,4 +75,14 @@ public class ViaggioController {
         return ResponseEntity.ok(viaggiMappa);
 
     }
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ViaggioDTO> getViaggioById(@PathVariable Long id) {
+        log.info("Richiesta ricevuta per recuperare i dettagli del viaggio con ID: {}", id);
+
+        // Chiamiamo il service per recuperare il DTO del viaggio
+        ViaggioDTO viaggioDTO = viaggioService.getViaggioById(id);
+
+        return ResponseEntity.ok(viaggioDTO);
+    }
 }

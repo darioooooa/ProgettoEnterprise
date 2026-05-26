@@ -31,7 +31,7 @@ export class CreaViaggio {
     tappe: [],
     longitudine: 0.0,
     latitudine: 0.0,
-
+    maxPartecipanti: 10
   };
 
   constructor(

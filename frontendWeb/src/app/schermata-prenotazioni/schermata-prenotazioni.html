@@ -7,27 +7,37 @@
     </div>
 
     <div class="lista-cards">
-      <div class="card-prenotazione" *ngFor="let p of listaPrenotazioni">
+
+      <div class="card-prenotazione" *ngFor="let p of listaPrenotazioni" [routerLink]="['/viaggi', p.viaggioId]" style="cursor: pointer;">
 
         <div class="info-viaggio">
           <div class="sopra-titolo">
-            <span class="codice">#{{ p.codicePrenotazione }}</span>
-            <span class="stato-tag">{{ p.stato }}</span>
+            <span class="codice">#PREN-{{ p.id }}</span>
+            <span class="stato-tag confermata">Attiva</span>
           </div>
-          <h3>{{ p.destinazione }}</h3>
-          <p class="data"><i class="icona-calendario">📅</i> Partenza: {{ p.dataPartenza | date:'dd MMMM yyyy' }}</p>
+
+          <h3>{{ p.viaggioTitolo }}</h3>
+
+          <p class="data"><i class="icona-calendario">📅</i> Prenotato il: {{ p.dataPrenotazione | date:'dd MMMM yyyy' }}</p>
+          <p class="passeggeri">👥 Persone: {{ p.numeroPersone }}</p>
         </div>
 
         <div class="prezzo-sezione">
-          <label>Prezzo Totale</label>
-          <p class="valore-prezzo">{{ p.prezzoTotale | currency:'EUR' }}</p>
+          <label>Stato Pagamento</label>
+          <p class="valore-prezzo">Confermato</p>
         </div>
 
       </div>
+
+      <div class="messaggio-vuoto" *ngIf="listaPrenotazioni.length === 0">
+        <p>Non hai ancora prenotato nessun viaggio. Che aspetti a partire?</p>
+        <button routerLink="/esplora" class="btn-esplora">Esplora i Viaggi</button>
+      </div>
+
     </div>
 
     <div class="azioni-finali">
-      <button routerLink="/" class="btn-ritorno">← Torna alla Home</button>
+      <button routerLink="/home" class="btn-ritorno"> Torna alla Home</button>
     </div>
 
   </div>

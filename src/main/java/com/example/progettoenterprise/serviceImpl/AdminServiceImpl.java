@@ -3,6 +3,7 @@ package com.example.progettoenterprise.serviceImpl;
 import com.example.progettoenterprise.data.entities.*;
 import com.example.progettoenterprise.data.repositories.OrganizzatoreRepository;
 import com.example.progettoenterprise.data.repositories.RichiestaPromozioneRepository;
+import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.service.AdminService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,9 +27,11 @@ import java.util.UUID;
 @Slf4j
 public class AdminServiceImpl implements AdminService {
 
+    private final UtenteRepository utenteRepository;
     private final RichiestaPromozioneRepository richiestaRepository;
     private final OrganizzatoreRepository organizzatoreRepository;
     private final Keycloak keycloak;
+    private final EmailServiceImpl emailService;
 
     private static final String REALM_NAME = "enterprise-realm";
 
@@ -75,14 +78,16 @@ public class AdminServiceImpl implements AdminService {
         keycloakUser.setFirstName(viaggiatore.getNome());
         keycloakUser.setLastName(viaggiatore.getCognome());
         keycloakUser.setEnabled(true);
+        keycloakUser.setEmailVerified(true);
 
         // Impostazione password temporanea
-        String passwordTemporanea = UUID.randomUUID().toString().substring(0,8);
+        String passwordTemporanea = UUID.randomUUID().toString().substring(0, 8);
 
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(passwordTemporanea);
-        credential.setTemporary(true); // Al primo login keycloak costringerà l'utente a cambiarla
+        // Credenziali temporanee. L'utente dovrà cambiare la password
+        credential.setTemporary(true);
         keycloakUser.setCredentials(Collections.singletonList(credential));
 
         // Crea il nuovo utente su keycloak
@@ -97,14 +102,15 @@ public class AdminServiceImpl implements AdminService {
                 RoleRepresentation orgRole = keycloak.realm(REALM_NAME).roles().get("ORGANIZZATORE").toRepresentation();
                 keycloak.realm(REALM_NAME).users().get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(orgRole));
 
-                // TODO: Per ora così, da implementare poi tramite invio con email
-                System.out.println("=========================================================");
-                System.out.println("PROMOZIONE COMPLETATA CON SUCCESSO!");
-                System.out.println("Inviare la seguente password temporanea all'organizzatore:");
-                System.out.println("Username: " + nuovoUsername);
-                System.out.println("Email: " + nuovaEmail);
-                System.out.println("Password: " + passwordTemporanea);
-                System.out.println("=========================================================");
+                try {
+                    // Forza l'invio dell'email di aggiornamento password
+                    keycloak.realm(REALM_NAME).users().get(keycloakUserId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
+                    log.info("Email di aggiornamento password inviata con successo all'organizzatore con email: {}", nuovaEmail);
+                }catch (Exception e){
+                    log.error("Impossibile inviare l'email di aggiornamento password per l'utente id: {}", keycloakUserId, e);
+                }
+
+                // L'utente dovrà cambiare password, tramite il link inviato sull'email indicata
             }
         } else if (response.getStatus() == 409) {
             // Email o username già esistenti su keycloak
@@ -158,4 +164,18 @@ public class AdminServiceImpl implements AdminService {
         richiesta.setAdminId(adminIdCorrente);
         richiestaRepository.save(richiesta);
     }
+
+    @Override
+    @Transactional
+    public void banUtente(Long userId) {
+        Utente utente = utenteRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+
+        utente.setAttivo(false);
+        utente.setMotivoSospensione("Violazione dei termini di servizio");
+        utenteRepository.save(utente);
+
+        emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
+    }
 }
+

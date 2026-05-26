@@ -32,7 +32,6 @@ public class Recensione {
     @Size(max = 500, message = "Limite di caratteri del commento superato")
     private String commento;
 
-    @CreatedBy
     @ManyToOne(fetch = FetchType.LAZY)
     private Utente utente;
 

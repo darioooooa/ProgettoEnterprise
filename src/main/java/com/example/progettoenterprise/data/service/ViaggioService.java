@@ -17,4 +17,5 @@ public interface ViaggioService {
 
     Page<ViaggioDTO> ricercaFiltrata(ViaggioSpecification.ViaggioFilter viaggioFilter, Long UtenteId, int page);
     List<ViaggioMappaDTO> getViaggiMappa();
+    ViaggioDTO getViaggioById(Long id);
 }

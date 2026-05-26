@@ -1,0 +1,146 @@
+<div class="layout-wrapper">
+  <header class="navbar">
+    <div class="logo">🌍 ENTERPRISE</div>
+    <nav>
+      <a routerLink="/home">Home</a>
+      <a href="#">Destinazioni</a>
+      <a routerLink="/miei-itinerari">I miei itinerari preferiti</a>
+      <a routerLink="/organizzatore" style="color: #ffd166;">Area organizzatore</a>
+    </nav>
+
+    <div class="sezioni-finali-nav">
+      <button class="btn">Prenota ora</button>
+      <div class="auth-box">
+        <a *ngIf="!isLoggato()" routerLink="/login" class="btn-accedi-testo">Accedi</a>
+
+        <div *ngIf="isLoggato()" class="user-logged-wrapper" (click)="toggleMenu()">
+          <button class="btn-omino">
+            <span>👤</span>
+          </button>
+          <span class="username-navbar">{{ ottieniUsername() }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout-main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <div class="menu-laterale" [class.attivo]="mostraMenu">
+    <div class="intestazione-menu">
+      <h3>Area riservata</h3>
+      <button class="pulsante-chiudi" (click)="toggleMenu()">×</button>
+    </div>
+    <div class="contenuto-menu">
+      <a routerLink="/profilo" (click)="toggleMenu()" class="voce-laterale">Il Mio Profilo</a>
+      <a routerLink="/prenotazioni" class="voce-laterale">Le mie prenotazioni</a>
+      <button (click)="apriModaleAmici()" class="voce-laterale">I miei amici</button>
+      <button (click)="logout()" class="voce-laterale logout-rosso">Disconnetti</button>
+    </div>
+  </div>
+
+  <div class="oscuramento-sfondo" *ngIf="mostraMenu" (click)="toggleMenu()"></div>
+
+  <div class="modale-overlay-amici" *ngIf="modaleAmiciAperta" (click)="chiudiModale()">
+    <div class="modale-content-amici" (click)="$event.stopPropagation()">
+
+      <ng-container *ngIf="vistaAttuale === 'listaAmici'">
+        <div class="modale-tabs-amici">
+          <button class="tab-link" [class.attivo]="schedaAttiva === 'amici'" (click)="cambiaScheda('amici')">
+            Amici ({{listaAmici.length}})
+          </button>
+          <button class="tab-link" [class.attivo]="schedaAttiva === 'richieste'" (click)="cambiaScheda('richieste')">
+            Ricevute ({{richiesteRicevute.length}})
+          </button>
+          <button class="tab-link" [class.attivo]="schedaAttiva === 'inviate'" (click)="cambiaScheda('inviate')">
+            Inviate ({{richiesteInviate.length}})
+          </button>
+          <button class="tab-link" [class.attivo]="schedaAttiva === 'cerca'" (click)="cambiaScheda('cerca')">
+            🔍 Trova Amici
+          </button>
+          <button class="btn-chiudi-amici" (click)="chiudiModale()">&times;</button>
+        </div>
+
+        <div class="modale-body-amici">
+          <div *ngIf="schedaAttiva === 'amici'">
+            <p *ngIf="listaAmici.length === 0" class="testo-vuoto">Non hai ancora aggiunto amici.</p>
+            <ul class="lista-amici">
+              <li *ngFor="let amico of listaAmici" class="amico-item">
+                <div class="amico-info">
+                  <span class="icona-amico">👤</span>
+                  <span class="nome-amico">
+                  {{ amico.richiedenteUsername === mioUsername ? amico.riceventeUsername : amico.richiedenteUsername }}
+                </span>
+                </div>
+                <button class="btn-itinerari" (click)="vediItinerari(amico)">Itinerari</button>
+              </li>
+            </ul>
+          </div>
+          <div *ngIf="schedaAttiva === 'richieste'">
+            <p *ngIf="richiesteRicevute.length === 0" class="testo-vuoto">Nessuna richiesta ricevuta in sospeso.</p>
+            <ul class="lista-amici">
+              <li *ngFor="let req of richiesteRicevute" class="amico-item">
+                <div class="amico-info">
+                  <span class="icona-richiesta">📩</span>
+                  <span class="nome-amico">{{ req.richiedenteUsername }}</span>
+                </div>
+                <div class="azioni-richiesta">
+                  <button class="btn-accetta" (click)="accettaRichiesta(req.id)">✓</button>
+                  <button class="btn-rifiuta" (click)="rifiutaRichiesta(req.id)">&times;</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div *ngIf="schedaAttiva === 'inviate'">
+            <p *ngIf="richiesteInviate.length === 0" class="testo-vuoto">Non hai richieste inviate in attesa.</p>
+            <ul class="lista-amici">
+              <li *ngFor="let req of richiesteInviate" class="amico-item">
+                <div class="amico-info">
+                  <span class="icona-richiesta">📤</span>
+                  <span class="nome-amico">{{ req.riceventeUsername }}</span>
+                </div>
+                <span class="badge-inviata" style="background-color: #f1f1f1; color: #666; border: 1px solid #ccc;">In attesa...</span>
+              </li>
+            </ul>
+          </div>
+          <div *ngIf="schedaAttiva === 'cerca'">
+            <div class="box-ricerca">
+              <input type="text" #inputUsername placeholder="Inserisci lo username..." (input)="usernameCercato = inputUsername.value" (keyup.enter)="cercaUtente()">
+              <button class="btn-itinerari" (click)="cercaUtente()">Cerca</button>
+            </div>
+            <p *ngIf="erroreRicerca" class="testo-errore">{{ erroreRicerca }}</p>
+            <div *ngIf="utentiTrovati.length > 0" class="risultato-ricerca-box" style="max-height: 250px; overflow-y: auto; margin-top: 15px;">
+              <ul class="lista-amici" style="padding: 0; margin: 0; list-style: none;">
+                <li *ngFor="let utente of utentiTrovati" class="amico-item" style="border-bottom: 1px solid #ddd; padding: 10px 0;">
+                  <div class="amico-info">
+                    <span class="icona-amico">👤</span>
+                    <div>
+                      <span class="nome-amico">{{ utente.username }}</span>
+                    </div>
+                  </div>
+                  <button class="btn-itinerari" (click)="inviaRichiestaAmicizia(utente.username)">Aggiungi</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="vistaAttuale === 'itinerariAmico'">
+        <div class="modale-header-amici">
+          <button class="btn-indietro" (click)="tornaIndietro()">&#8592; Indietro</button>
+          <button class="btn-chiudi-amici" (click)="chiudiModale()">&times;</button>
+        </div>
+        <div class="modale-body-amici">
+          <h3 class="titolo-amico">Itinerari dell'amico</h3>
+          <p class="testo-vuoto">Nessun itinerario pubblico.</p>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <footer>
+    <p>🌐 Progetto Enterprise 2025/2026</p>
+  </footer>
+</div>

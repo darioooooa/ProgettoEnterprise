@@ -34,11 +34,12 @@ public class ViaggioDTO {
 
     @NotNull(message = "La data di inizio è obbligatoria")
     @Future(message = "La data di inizio deve essere nel futuro")  //serve per far si che la data inizio non venga scelta prima della data corrente
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dataInizio;
 
     @NotNull(message = "La data di fine è obbligatoria")
     @Future(message = "La data di fine deve essere nel futuro")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dataFine;
 
     @NotNull
