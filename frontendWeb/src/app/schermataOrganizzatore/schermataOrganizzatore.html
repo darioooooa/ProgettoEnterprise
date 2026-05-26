@@ -1,43 +1,39 @@
-<header class="navbar-admin">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
-  <div class="logo">🌍 ENTERPRISE</div>
-  <nav>
-    <a routerLink="/" class="active">Dashboard</a>
-    <a href="#">Catalogo Viaggi</a>
-    <a href="#">Utenti</a>
-    <a href="#" style="color: #ef476f; margin-left: 30px;">Esci</a>
-  </nav>
-  <button class="btn-admin" routerLink="/crea-viaggio">+ Nuovo Viaggio</button>
-</header>
-
 <main class="admin-container">
 
-  <div class="admin-header">
-    <div>
-      <h1>Pannello Organizzatore</h1>
-      <p style="color: #546e7a;">Benvenuto nella gestione operativa dei tuoi pacchetti.</p>
-    </div>
-    <button class="btn-admin btn-outline">Scarica Report PDF</button>
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+    <button class="btn-admin" routerLink="/crea-viaggio">+ Nuovo Viaggio</button>
   </div>
-  <app-map></app-map>
+
+  <div class="admin-header">
+    <div class="admin-header-text">
+      <span class="eyebrow">Dashboard Operativa</span>
+      <h1>Pannello <span>Organizzatore</span></h1>
+      <p style="color: var(--text-secondary);">Benvenuto nella gestione operativa dei tuoi pacchetti.</p>
+    </div>
+    <button class="btn-ghost">Scarica Report PDF</button>
+  </div>
+
+  <div style="margin-bottom: 40px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <app-map (viaggioSelezionato)="vaiAiDettagli($event)"></app-map>
+  </div>
 
   <div class="stats-grid">
     <div class="stat-card">
+      <span class="stat-card-label">Viaggi Attivi</span>
       <h3>12</h3>
-      <p>Viaggi Attivi</p>
     </div>
-    <div class="stat-card" style="border-left-color: #ffd166;">
+    <div class="stat-card">
+      <span class="stat-card-label">Prenotazioni Totali</span>
       <h3>45</h3>
-      <p>Prenotazioni Totali</p>
     </div>
-    <div class="stat-card" style="border-left-color: #06d6a0;">
+    <div class="stat-card">
+      <span class="stat-card-label">Guadagno Stimato</span>
       <h3>€ 12.400</h3>
-      <p>Guadagno Stimato</p>
     </div>
   </div>
 
   <div class="management-section">
-    <div class="admin-header">
+    <div class="section-header">
       <h2>I tuoi Viaggi</h2>
     </div>
 
@@ -52,21 +48,21 @@
         </tr>
         </thead>
         <tbody>
-          <tr *ngIf="listaDeiViaggi.length === 0">
-            <td colspan="4" style="text-align: center; padding: 2rem; color: #546e7a;">
-              Nessun viaggio trovato in questa pagina.
-            </td>
-          </tr>
+        <tr *ngIf="listaDeiViaggi.length === 0">
+          <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            Nessun viaggio trovato in questa pagina.
+          </td>
+        </tr>
 
-          <tr *ngFor="let v of listaDeiViaggi">
-            <td><strong>{{ v.destinazione }}</strong></td>
-            <td>{{ v.prezzo }}€</td>
-            <td><span class="status status-active">Attivo</span></td>
-            <td style="text-align: center;">
-              <span class="action-icon edit-icon" (click)="modifica(v)">✏️</span>
-              <span class="action-icon delete-icon" (click)="elimina(v)">🗑️</span>
-            </td>
-          </tr>
+        <tr *ngFor="let v of listaDeiViaggi">
+          <td><strong>{{ v.destinazione }}</strong></td>
+          <td>{{ v.prezzo }}€</td>
+          <td><span class="badge badge-active">Attivo</span></td>
+          <td style="text-align: center;">
+            <span class="action-icon edit-icon" (click)="modifica(v)">✏️</span>
+            <span class="action-icon delete-icon" (click)="elimina(v)">🗑️</span>
+          </td>
+        </tr>
         </tbody>
       </table>
 
@@ -93,12 +89,14 @@
           </button>
         </div>
       </div>
-
     </div>
   </div>
 
   <div class="management-section" style="margin-top: 3rem;">
-    <h2>Ultime Prenotazioni Ricevute</h2>
+    <div class="section-header">
+      <h2>Ultime Prenotazioni Ricevute</h2>
+    </div>
+
     <div class="table-container">
       <table class="admin-table">
         <thead>
@@ -111,22 +109,33 @@
         </thead>
         <tbody>
         <tr>
-          <td>Mario Rossi</td>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar green">MR</div>
+              <div class="user-info">
+                <div class="name">Mario Rossi</div>
+              </div>
+            </div>
+          </td>
           <td>Bali, Indonesia</td>
           <td>20/04/2026</td>
-          <td>2</td>
+          <td><span class="badge badge-pending">2 persone</span></td>
         </tr>
         <tr>
-          <td>Giulia Bianchi</td>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar purple">GB</div>
+              <div class="user-info">
+                <div class="name">Giulia Bianchi</div>
+              </div>
+            </div>
+          </td>
           <td>Deserto del Sahara</td>
           <td>18/04/2026</td>
-          <td>1</td>
+          <td><span class="badge badge-pending">1 persona</span></td>
         </tr>
         </tbody>
       </table>
     </div>
   </div>
 </main>
-
-
-

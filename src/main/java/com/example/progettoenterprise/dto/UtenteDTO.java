@@ -28,6 +28,7 @@ public class UtenteDTO {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String nomeCompleto;
 
+    private String ruolo;
     //Niente password per motivi di sicurezza
     //Niente liste per evitare loop infiniti
 }

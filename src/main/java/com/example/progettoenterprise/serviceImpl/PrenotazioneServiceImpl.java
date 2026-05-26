@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -37,11 +38,11 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
 
-    private String formattaDataIcs(LocalDateTime data) {
+    private String formattaDataIcs(LocalDate data) {
         if (data == null) return "";
 
 
-        return data.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
+        return data.atStartOfDay().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
     }
 
 
@@ -55,7 +56,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
                 });
 
         // Controlla che la data di inizio del viaggio sia nel futuro
-        if (viaggio.getDataInizio().isBefore(LocalDateTime.now())) {
+        if (viaggio.getDataInizio().isBefore(LocalDate.now())) {
             log.warn("Tentativo di prenotazione per un viaggio già iniziato/concluso: ID {}", idViaggio);
             throw new IllegalStateException(messageLang.getMessage("prenotazione.viaggio.scaduto"));
         }

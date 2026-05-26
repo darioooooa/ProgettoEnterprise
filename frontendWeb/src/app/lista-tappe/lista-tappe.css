@@ -1,0 +1,399 @@
+/* ============================================================
+   RESET & VARIABILI (Stile Premium)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&display=swap');
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Palette raffinata */
+  --navy:           #0a1628;
+  --primary:        #1a56db;
+  --primary-light:  #3b82f6;
+  --primary-glow:   rgba(26, 86, 219, 0.35);
+  --gold:           #f59e0b;
+  --gold-light:     #fcd34d;
+
+  /* Superfici vetro */
+  --glass-white:    rgba(255, 255, 255, 0.72);
+  --glass-border:   rgba(255, 255, 255, 0.55);
+  --glass-shadow:   rgba(10, 22, 40, 0.12);
+
+  /* Testo */
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+
+  /* Arrotondamenti & Transizioni */
+  --radius-sm:  10px;
+  --radius-md:  18px;
+  --radius-lg:  28px;
+  --ease-out:   cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring:cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   SFONDO MONTAGNA E OVERLAY SCURO
+   ============================================================ */
+.sfondo-montagna {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  /* NOTA: Controlla che questo percorso sia corretto nel tuo progetto Angular */
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
+  background-attachment: fixed; /* Effetto parallasse: lo sfondo resta immobile allo scroll */
+}
+
+.overlay-scuro {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* Velo scuro per garantire leggibilità ottimale dei box chiari e dei testi */
+  background: linear-gradient(135deg, rgba(10, 22, 40, 0.75) 0%, rgba(26, 86, 219, 0.35) 100%);
+  z-index: 0;
+}
+
+/* ============================================================
+   IMPOSTAZIONI STRUTTURALI CONTENUTO
+   ============================================================ */
+.pagina-dettagli {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1; /* Forza tutto il contenuto a stare sopra al filtro scuro */
+}
+
+/* --- BOTTONE INDIETRO --- */
+.btn-indietro {
+  background: transparent;
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  padding: 10px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(5px);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease-spring);
+}
+
+.btn-indietro:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
+  transform: translateX(-5px);
+}
+
+/* ============================================================
+   HEADER VIAGGIO (Effetto Vetro Opaco)
+   ============================================================ */
+.header-viaggio {
+  background: var(--glass-white);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 20px 48px -12px rgba(10,22,40,0.15),
+    0 1px 0 rgba(255,255,255,0.85) inset;
+  margin-bottom: 50px;
+  animation: cardReveal 0.6s var(--ease-out) forwards;
+}
+
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.badge-destinazione {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.titolo-viaggio {
+  font-family: 'Playfair Display', serif;
+  color: var(--navy);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin: 0 0 16px 0;
+  line-height: 1.1;
+}
+
+.descrizione-principale {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 700px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.dati-chiave {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 20px;
+}
+
+.dato-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.dato-box .etichetta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.dato-box .valore {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-family: 'Playfair Display', serif;
+}
+
+/* ============================================================
+   SEZIONE TITOLO TAPPE
+   ============================================================ */
+.tappe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+  padding-bottom: 15px;
+}
+
+.tappe-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.badge-conteggio {
+  background: var(--glass-white);
+  border: 1px solid var(--glass-border);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px var(--glass-shadow);
+}
+
+/* ============================================================
+   GRIGLIA E CARD ATTIVITÀ
+   ============================================================ */
+.lista-tappe {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-attivita {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: 0 4px 15px -2px rgba(10, 22, 40, 0.08);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-out), background 0.2s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+}
+
+.card-attivita:hover {
+  background: rgba(255, 255, 255, 0.96);
+  transform: translateX(6px);
+  box-shadow: 0 12px 24px -8px rgba(26, 86, 219, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+/* Striscia verticale decorativa sinistra della card */
+.card-attivita::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-light));
+}
+
+.card-numero {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-right: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.card-corpo {
+  flex: 1;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.costo-attivita {
+  background: rgba(5, 150, 105, 0.1);
+  color: #047857;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.costo-gratis {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.card-descrizione {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  font-size: 0.95rem;
+}
+
+.card-footer {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.info-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  font-weight: 500;
+}
+
+/* ============================================================
+   STATO VUOTO & SPINNER LOADER
+   ============================================================ */
+.stato-vuoto {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--glass-white);
+  border-radius: var(--radius-lg);
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.icona-vuota {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+}
+
+.stato-vuoto h3 {
+  color: var(--navy);
+  margin-bottom: 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+}
+
+.stato-vuoto p {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* --- LOADER CONTAINER --- */
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 40vh;
+  color: #ffffff;
+}
+
+.loader-container h2 {
+  font-weight: 500;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   MEDIA QUERIES BREACPOINTS (Responsive)
+   ============================================================ */
+@media (max-width: 768px) {
+  .header-viaggio { padding: 30px 20px; }
+  .titolo-viaggio { font-size: 2.2rem; }
+  .card-attivita { flex-direction: column; }
+  .card-numero { margin-bottom: 15px; }
+  .dati-chiave { flex-direction: column; gap: 15px; }
+  .card-footer { flex-direction: column; align-items: flex-start; gap: 8px; }
+}

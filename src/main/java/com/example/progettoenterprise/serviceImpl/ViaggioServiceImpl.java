@@ -2,6 +2,7 @@ package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.CacheConfig;
 import com.example.progettoenterprise.config.i18n.MessageLang;
+import com.example.progettoenterprise.data.entities.AttivitaViaggio;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
@@ -12,6 +13,7 @@ import com.example.progettoenterprise.dto.ViaggioDTO;
 import com.example.progettoenterprise.dto.ViaggioMappaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,10 +50,10 @@ public class ViaggioServiceImpl implements ViaggioService {
                 });
         Viaggio viaggio = modelMapper.map(viaggioDTO, Viaggio.class);
         if (viaggioDTO.getDataInizio() != null) {
-            viaggio.setDataInizio(viaggioDTO.getDataInizio().atStartOfDay());
+            viaggio.setDataInizio(viaggioDTO.getDataInizio());
         }
         if (viaggioDTO.getDataFine() != null) {
-            viaggio.setDataFine(viaggioDTO.getDataFine().atStartOfDay());
+            viaggio.setDataFine(viaggioDTO.getDataFine());
         }
         //assegnare le tappe al viaggio
         if (viaggio.getTappe() != null) {
@@ -139,20 +141,49 @@ public class ViaggioServiceImpl implements ViaggioService {
         return viaggiPage.map(viaggio -> modelMapper.map(viaggio, ViaggioDTO.class));
     }
 
-    public List<ViaggioMappaDTO> getViaggiMappa() {
-        List<Viaggio> viaggi = viaggioRepository.findAll();
+    @Override
+    @Transactional(readOnly = true)
+    public List<ViaggioMappaDTO> getViaggiMappa(Long utenteId) {
 
-        // Mappiamo l'Entity nel DTO
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> {
+                    log.error("Impossibile caricare mappa: utente ID {} non trovato", utenteId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
+
+        List<Viaggio> viaggi;
+
+        if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)) {
+            viaggi = viaggioRepository.findByorganizzatoreId(utenteId);
+        } else {
+
+            viaggi = viaggioRepository.findAll();
+        }
+
+        // 3. Mappiamo nel DTO
         return viaggi.stream().map(viaggio -> {
             ViaggioMappaDTO dto = new ViaggioMappaDTO();
             dto.setId(viaggio.getId());
             dto.setTitolo(viaggio.getTitolo());
             dto.setLatitudine(viaggio.getLatitudine());
             dto.setLongitudine(viaggio.getLongitudine());
-            // dto.setUrlImmagine(viaggio.getUrlImmagine());
             return dto;
         }).collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ViaggioDTO getViaggioById(Long viaggioId, Long id) {
+        Viaggio viaggio = viaggioRepository.findByIdConTappe(viaggioId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageLang.getMessage("viaggio.notexist", id)));
+
+
+        return modelMapper.map(viaggio, ViaggioDTO.class);
+
+    }
+
+
     @Override
     @Transactional
     public ViaggioDTO modificaViaggio(Long id, ViaggioDTO viaggioDTO, Long organizzatoreId) {
@@ -168,9 +199,24 @@ public class ViaggioServiceImpl implements ViaggioService {
         viaggioEsistente.setTitolo(viaggioDTO.getTitolo());
         viaggioEsistente.setDescrizione(viaggioDTO.getDescrizione());
         viaggioEsistente.setDestinazione(viaggioDTO.getDestinazione());
+        viaggioEsistente.setCittaPartenza(viaggioDTO.getCittaPartenza ());
         viaggioEsistente.setPrezzo(viaggioDTO.getPrezzo());
-        viaggioEsistente.setDataInizio(viaggioDTO.getDataInizio().atStartOfDay());
-        viaggioEsistente.setDataFine(viaggioDTO.getDataFine().atStartOfDay());
+        viaggioEsistente.setDataInizio(viaggioDTO.getDataInizio());
+        viaggioEsistente.setDataFine(viaggioDTO.getDataFine());
+
+        if (viaggioDTO.getTappe() != null) {
+            viaggioEsistente.getTappe().clear();
+
+            List<AttivitaViaggio> nuoveTappe = viaggioDTO.getTappe().stream()
+                    .map(tappaDto -> {
+                        AttivitaViaggio tappa = modelMapper.map(tappaDto, AttivitaViaggio.class);
+                        tappa.setViaggio(viaggioEsistente);
+                        return tappa;
+                    }).collect(Collectors.toList());
+
+
+            viaggioEsistente.getTappe().addAll(nuoveTappe);
+        }
 
         Viaggio aggiornato = viaggioRepository.save(viaggioEsistente);
         return modelMapper.map(aggiornato, ViaggioDTO.class);

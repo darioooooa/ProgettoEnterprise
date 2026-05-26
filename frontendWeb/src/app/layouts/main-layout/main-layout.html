@@ -5,7 +5,7 @@
       <a routerLink="/home">Home</a>
       <a href="#">Destinazioni</a>
       <a routerLink="/miei-itinerari">I miei itinerari preferiti</a>
-      <a routerLink="/organizzatore" style="color: #ffd166;">Area organizzatore</a>
+      <a routerLink="/organizzatore" *ngIf="isOrganizzatore()" style="color: #ffd166;">Area organizzatore</a>
     </nav>
 
     <div class="sezioni-finali-nav">

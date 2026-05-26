@@ -84,103 +84,12 @@ body::after {
   to   { transform: translate(40px, 30px) scale(1.08); }
 }
 
-/* ============================================================
-   NAVBAR
-   ============================================================ */
-.navbar-admin {
-  background: rgba(10, 22, 40, 0.82);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  padding: 0 5%;
-  height: 68px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.05) inset;
-}
-
-.navbar-admin .logo {
-  font-family: 'Playfair Display', serif;
-  color: #fff;
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Pallino luminoso accanto al logo */
-.navbar-admin .logo::before {
-  content: '';
-  width: 8px; height: 8px;
-  background: var(--gold);
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--gold), 0 0 20px rgba(245,158,11,0.5);
-  animation: pulse 2.5s ease-in-out infinite;
-}
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50%       { transform: scale(1.4); opacity: 0.7; }
 }
 
-.navbar-admin nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.navbar-admin nav a {
-  color: rgba(255,255,255,0.65);
-  text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 500;
-  padding: 7px 14px;
-  border-radius: var(--radius-sm);
-  transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
-  letter-spacing: 0.2px;
-}
-
-.navbar-admin nav a:hover,
-.navbar-admin nav a.active {
-  color: #fff;
-  background: rgba(255,255,255,0.1);
-}
-
-/* Badge notifica */
-.navbar-admin nav a[data-badge]::after {
-  content: attr(data-badge);
-  background: var(--gold);
-  color: #000;
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 20px;
-  margin-left: 5px;
-  vertical-align: super;
-}
-
-/* Avatar utente nella navbar */
-.navbar-admin .nav-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-light), var(--gold));
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 0.8rem; color: #fff;
-  cursor: pointer;
-  margin-left: 10px;
-  border: 2px solid rgba(255,255,255,0.2);
-  transition: transform 0.2s var(--ease-spring), border-color 0.2s;
-}
-.navbar-admin .nav-avatar:hover {
-  transform: scale(1.1);
-  border-color: var(--gold);
-}
 
 /* ============================================================
    CONTAINER & HEADER
@@ -560,64 +469,44 @@ body::after {
    BOTTONI
    ============================================================ */
 .btn-admin {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%);
+  color: #ffffff;
   border: none;
   border-radius: 50px;
-  padding: 11px 26px;
+  padding: 12px 28px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 16px var(--primary-glow), 0 1px 0 rgba(255,255,255,0.15) inset;
-  transition:
-    filter    0.2s,
-    transform  0.2s var(--ease-spring),
-    box-shadow 0.2s;
-  letter-spacing: 0.2px;
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(26, 86, 219, 0.35);
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-
-/* Shine on hover */
-.btn-admin::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 60%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s;
-}
-.btn-admin:hover::after { left: 140%; }
 
 .btn-admin:hover {
-  filter: brightness(1.08);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px var(--primary-glow);
+  box-shadow: 0 8px 24px rgba(26, 86, 219, 0.45);
+  filter: brightness(1.08);
 }
 
-.btn-admin:active {
-  transform: translateY(0) scale(0.98);
-  filter: brightness(0.96);
-}
-
-/* Variante ghost */
 .btn-ghost {
   background: transparent;
-  color: var(--primary);
-  border: 1.5px solid rgba(26,86,219,0.3);
+  color: #1a56db;
+  border: 2px solid #1a56db;
   border-radius: 50px;
   padding: 10px 24px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease-spring);
+  transition: all 0.2s ease-in-out;
 }
+
 .btn-ghost:hover {
-  background: rgba(26,86,219,0.06);
-  border-color: var(--primary);
-  transform: translateY(-1px);
+  background: rgba(26, 86, 219, 0.08);
+  transform: translateY(-2px);
 }
 
 /* ============================================================

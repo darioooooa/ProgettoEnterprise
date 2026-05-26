@@ -10,4 +10,5 @@ export interface Viaggio {
   longitudine: number;
   latitudine: number;
   maxPartecipanti: number;
+  cittaPartenza: string;
 }

@@ -34,10 +34,13 @@ public class Viaggio {
 
     private String destinazione;
 
+    @Column(name="citta_partenza")
+    private String cittaPartenza;
+
     private Double prezzo;
     private Integer maxPartecipanti;
-    private LocalDateTime dataInizio;
-    private LocalDateTime dataFine;
+    private LocalDate dataInizio;
+    private LocalDate dataFine;
 
     private Double latitudine;
     private Double longitudine;

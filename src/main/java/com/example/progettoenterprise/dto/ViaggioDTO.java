@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -27,6 +28,9 @@ public class ViaggioDTO {
 
     @NotBlank(message = "La destinazione è obbligatoria")
     private String destinazione;
+
+    @NotBlank(message = "La città di partenza è obbligatoria") // Se volete renderlo obbligatorio
+    private String cittaPartenza;
 
     @NotNull(message = "Il prezzo è obbligatorio")
     @Min(value = 0, message = "Il prezzo non può essere negativo")
@@ -63,5 +67,7 @@ public class ViaggioDTO {
     private Long organizzatoreId;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String organizzatoreUsername;
+
+    private List<AttivitaViaggioDTO> tappe;
 }
 

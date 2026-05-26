@@ -14,7 +14,7 @@ import {MAPBOX_ACCESS_TOKEN} from '../map/map'; //serve per long e lat
 @Component({
   selector: 'app-crea-viaggio',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './crea-viaggio.html',
   styleUrl: './crea-viaggio.css',
 })
@@ -31,7 +31,8 @@ export class CreaViaggio {
     tappe: [],
     longitudine: 0.0,
     latitudine: 0.0,
-    maxPartecipanti: 10
+    maxPartecipanti: 10,
+    cittaPartenza: ''
   };
 
   constructor(
@@ -62,6 +63,27 @@ export class CreaViaggio {
     }
 
   }
+
+  aggiungiTappa() {
+
+    this.nuovoViaggio.tappe.push({
+      titolo: '',
+      descrizione: '',
+      orarioInizio: '',
+      orarioFine: '',
+      posizione: '',
+      costo: 0
+
+    });
+  }
+  rimuoviTappa(index: number) {
+
+    this.nuovoViaggio.tappe.splice(index, 1);
+  }
+  trackByTappa(index: number, item: any) {
+    return item; // Traccia l'istanza dell'oggetto tappa reale
+  }
+
   // Metodo per inviare i dati al controller Spring Boot
   onSubmit() {
     if (this.nuovoViaggio.latitudine === 0 && this.nuovoViaggio.longitudine === 0) {
@@ -80,4 +102,5 @@ export class CreaViaggio {
       }
     });
   }
+
 }

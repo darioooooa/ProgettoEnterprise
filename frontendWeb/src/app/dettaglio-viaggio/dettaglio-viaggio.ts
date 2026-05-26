@@ -17,7 +17,6 @@ import {PrenotazioneService} from '../service/prenotazioni.service';
     GalleriaComponent,
     ProgrammaComponent,
     CommunityComponent,
-    RouterLink
   ],
   templateUrl: './dettaglio-viaggio.html',
   styleUrl: './dettaglio-viaggio.css'

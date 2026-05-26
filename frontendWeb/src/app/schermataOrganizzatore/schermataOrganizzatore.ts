@@ -1,25 +1,28 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {RouterLink} from '@angular/router';
+import {RouterLink,Router} from '@angular/router';
 import {ViaggioService} from '../service/viaggio.service';
 import {AutenticazioneService} from '../service/autenticazione.service';
 import {MapComponent} from '../map/map';
 
-
 @Component({
-  selector: 'app-schermata-home',
+  selector: 'app-schermata-organizzatore',
   standalone: true,
   imports: [CommonModule, RouterLink, MapComponent],
   templateUrl: './schermataOrganizzatore.html',
   styleUrl: './schermataOrganizzatore.css'
 })
-export class SchermataOrganizzatoreComponent implements OnInit{
-  constructor(private viaggioService: ViaggioService,
-              private cdr: ChangeDetectorRef) {}
+export class SchermataOrganizzatoreComponent implements OnInit {
 
   listaDeiViaggi: any[] = [];
   paginaCorrente: number = 0;
   totalePagine: number = 0;
+
+  constructor(
+    private viaggioService: ViaggioService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.caricaViaggi();
@@ -31,7 +34,6 @@ export class SchermataOrganizzatoreComponent implements OnInit{
       next: (data) => {
         this.listaDeiViaggi = data.content;
         this.totalePagine = data.totalPages;
-        //serve per svegliare angular e ricaricare la pagina ogni volta che cambia la lista dei viaggi
         this.cdr.detectChanges();
         console.log('Viaggi caricati:', data);
       },
@@ -57,18 +59,21 @@ export class SchermataOrganizzatoreComponent implements OnInit{
     alert("Funzione modifica per: " + viaggio.destinazione);
   }
 
-  // Funzione per l'eliminazione
   elimina(viaggio: any) {
-    if(confirm("Sei sicuro di voler eliminare " + viaggio.destinazione + "?")) {
+    if (confirm("Sei sicuro di voler eliminare " + viaggio.destinazione + "?")) {
       console.log("Elimino il viaggio con ID:", viaggio.id);
 
 
       this.listaDeiViaggi = this.listaDeiViaggi.filter(v => v !== viaggio);
     }
   }
+
   apriModalCreazione() {
     alert("Qui si aprirebbe il form per il nuovo viaggio!");
   }
 
-
+  vaiAiDettagli(viaggioId: number) {
+    console.log("Navigo verso la pagina dettagli del viaggio ID:", viaggioId);
+    this.router.navigate(['/lista-tappe', viaggioId]);
+  }
 }

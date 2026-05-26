@@ -70,10 +70,21 @@ public class ViaggioController {
         return ResponseEntity.ok().build();
     }
     @GetMapping("/mappa-viaggi")
-    public ResponseEntity<List<ViaggioMappaDTO>> getViaggiPerMappa() {
-        List<ViaggioMappaDTO> viaggiMappa = viaggioService.getViaggiMappa();
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ViaggioMappaDTO>> getViaggiPerMappa(@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        List<ViaggioMappaDTO> viaggiMappa = viaggioService.getViaggiMappa(utenteLoggato.getId());
         return ResponseEntity.ok(viaggiMappa);
 
+    }
+    @GetMapping("/{viaggioId}")
+    @PreAuthorize("isAuthenticated()")
+    @CrossOrigin(origins = "http://localhost:4200")
+    public ResponseEntity<ViaggioDTO> getViaggioById(@PathVariable Long viaggioId,@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+        log.info("Richiesta dettagli completi per il viaggio ID: {}", viaggioId);
+
+        // Chiamiamo il service (ora andiamo a creare il metodo getViaggioById nel service)
+        return ResponseEntity.ok(viaggioService.getViaggioById(viaggioId, utenteLoggato.getId()));
     }
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")

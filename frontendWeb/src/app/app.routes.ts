@@ -9,12 +9,13 @@ import { SchermataUtente } from './schermata-utente/schermata-utente';
 import { SchermataPrenotazioni } from './schermata-prenotazioni/schermata-prenotazioni';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard';
 import { MieiItinerari } from './miei-itinerari/miei-itinerari';
+import { ListaTappe } from './lista-tappe/lista-tappe';
 import { DettaglioViaggio } from './dettaglio-viaggio/dettaglio-viaggio';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 
 export const routes: Routes = [
 
-  // Rotte con header e footer del main layout
+
   {
     path: '',
     component: MainLayoutComponent,
@@ -53,6 +54,11 @@ export const routes: Routes = [
         canActivate: [autenticazioneGuard]
       },
       {
+
+        path: 'lista-tappe/:id',
+        component: ListaTappe
+      },
+      {
         path: 'viaggi/:id',
         component: DettaglioViaggio,
         canActivate: [autenticazioneGuard]
@@ -60,7 +66,6 @@ export const routes: Routes = [
     ]
   },
 
-  // Rotte senza header e footer del main layout
   {
     path: 'login',
     component: Login
@@ -68,5 +73,10 @@ export const routes: Routes = [
   {
     path: 'registrazione',
     component: Registrazione
+  },
+
+  {
+    path: '**',
+    redirectTo: ''
   }
 ];

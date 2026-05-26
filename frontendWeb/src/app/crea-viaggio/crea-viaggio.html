@@ -1,15 +1,3 @@
-<header class="main-header">
-  <div class="container">
-    <div class="logo">🌍 ENTERPRISE</div>
-    <nav class="navigation">
-      <a routerLink="/">Home</a>
-      <a href="#">I Miei Viaggi</a>
-      <a routerLink="/organizzatore" class="active-link">Area Organizzatore</a>
-    </nav>
-    <button class="btn-action">Logout</button>
-  </div>
-</header>
-
 <main class="hero-section">
   <div class="background-overlay"></div>
 
@@ -17,9 +5,8 @@
     <div class="glass-form-container">
       <header class="form-header">
         <h1>Nuovo Progetto di Viaggio</h1>
-        <p>Inserisci i dettagli per la gestione e prenotazione </p>
+        <p>Inserisci i dettagli per la gestione e prenotazione</p>
       </header>
-
 
       <form class="booking-form" (ngSubmit)="onSubmit()">
 
@@ -34,6 +21,10 @@
         </div>
 
         <div class="form-row">
+          <div class="input-group">
+            <label for="partenza">Partenza</label>
+            <input type="text" id="citta_partenza" [(ngModel)]="nuovoViaggio.cittaPartenza" name="partenza" (blur)="cercaCoordinate()" required>
+          </div>
           <div class="input-group">
             <label for="destinazione">Destinazione</label>
             <input type="text" id="destinazione" [(ngModel)]="nuovoViaggio.destinazione" name="destinazione" (blur)="cercaCoordinate()" required>
@@ -54,33 +45,68 @@
             <input type="date" id="dataFine" [(ngModel)]="nuovoViaggio.dataFine" name="dataFine">
           </div>
         </div>
+
         <div class="form-row">
           <div class="input-group">
             <label for="maxPartecipanti">Posti disponibili (max partecipanti)</label>
-            <input
-              type="number"
-              id="maxPartecipanti"
-              [(ngModel)]="nuovoViaggio.maxPartecipanti"
-              name="maxPartecipanti"
-              placeholder="Es: 15"
-              min="1"
-              required>
+            <input type="number" id="maxPartecipanti" [(ngModel)]="nuovoViaggio.maxPartecipanti" name="maxPartecipanti" placeholder="Es: 15" min="1" required>
           </div>
           <div class="input-group" style="visibility: hidden;"></div>
         </div>
+
         <fieldset class="itinerary-section">
           <legend>Tappe del Viaggio</legend>
-          <ul class="tappe-list">
-            <li *ngFor="let tappa of nuovoViaggio.tappe; let i = index">
-              <span class="tappa-index">{{ i + 1 }}</span>
-              <span class="tappa-name">{{ tappa.titolo }}</span>
-            </li>
-          </ul>
-          <button type="button" class="btn-add-tappa">Aggiungi Tappa</button>
+
+          <p *ngIf="nuovoViaggio.tappe.length === 0" style="color: rgba(255,255,255,0.6); margin-bottom: 15px;">
+            Nessuna tappa aggiunta. Clicca il bottone qui sotto per iniziare!
+          </p>
+
+          <div *ngFor="let tappa of nuovoViaggio.tappe; let i = index; trackBy: trackByTappa"
+               style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 20px;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <h4 style="color: #90caf9; margin: 0;">📍 Tappa {{ i + 1 }}</h4>
+              <button type="button" (click)="rimuoviTappa(i)" style="background: transparent; color: #ff6b6b; border: 1px solid #ff6b6b; padding: 5px 10px; border-radius: 8px; cursor: pointer; transition: 0.3s;">
+                ❌ Rimuovi
+              </button>
+            </div>
+
+            <div class="input-group">
+              <label>Titolo Tappa</label>
+              <input type="text" [(ngModel)]="tappa.titolo" name="titoloTappa{{i}}" placeholder="Es. Visita al museo" required>
+            </div>
+
+            <div class="form-row">
+              <div class="input-group">
+                <label>Costo (€)</label>
+                <input type="number" [(ngModel)]="tappa.costo" name="costoTappa{{i}}">
+              </div>
+              <div class="input-group">
+                <label>Posizione</label>
+                <input type="text" [(ngModel)]="tappa.posizione" name="posizioneTappa{{i}}">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="input-group">
+                <label>Orario Inizio</label>
+                <input type="datetime-local" [(ngModel)]="tappa.orarioInizio" name="inizioTappa{{i}}" required>
+              </div>
+              <div class="input-group">
+                <label>Orario Fine</label>
+                <input type="datetime-local" [(ngModel)]="tappa.orarioFine" name="fineTappa{{i}}">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Descrizione Tappa</label>
+              <textarea [(ngModel)]="tappa.descrizione" name="descTappa{{i}}" placeholder="Cosa faremo in questa tappa?"></textarea>
+            </div>
+
+          </div>
+          <button type="button" (click)="aggiungiTappa()" class="btn-add-tappa">+ Aggiungi Nuova Tappa</button>
+
         </fieldset>
-
-
-
         <button type="submit" class="btn-submit">Pubblica Attività</button>
       </form>
     </div>

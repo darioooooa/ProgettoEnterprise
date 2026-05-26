@@ -9,10 +9,12 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
 public interface ViaggioRepository extends JpaRepository<Viaggio,Long>, JpaSpecificationExecutor<Viaggio> {
+    List<Viaggio> findByorganizzatoreId(Long organizzatoreId);
 
     // Metodi per le recensioni
 
@@ -45,5 +47,8 @@ public interface ViaggioRepository extends JpaRepository<Viaggio,Long>, JpaSpeci
             "v.numeroRecensioni = v.numeroRecensioni - 1 " +
             "WHERE v.id = :viaggioId")
     void ricalcolaMediaPerEliminazione(@Param("viaggioId") Long viaggioId, @Param("votoSottratto") int votoSottratto);
+
+    @Query("SELECT v FROM Viaggio v LEFT JOIN FETCH v.tappe WHERE v.id = :id")
+    Optional<Viaggio> findByIdConTappe(@Param("id") Long id);
 
 }

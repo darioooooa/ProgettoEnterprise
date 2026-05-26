@@ -218,4 +218,8 @@ export class MainLayoutComponent implements OnInit {
     this.amicoSelezionato = null;
     this.cdr.detectChanges();
   }
+  isOrganizzatore(): boolean {
+    const ruolo = this.servAuth.ottieniRuolo();
+    return ruolo === 'ROLE_ORGANIZZATORE' || ruolo === 'ORGANIZZATORE';
+  }
 }
