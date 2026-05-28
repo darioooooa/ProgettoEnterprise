@@ -3,14 +3,21 @@
     <h1 class="titolo-glass">I MIEI ITINERARI</h1>
     <p class="sottotitolo-glass">Gestisci le tue avventure e i dettagli delle prenotazioni</p>
 
+    <button class="btn-crea-nuovo" (click)="apriModaleCreazione()">+ Crea Nuovo Itinerario</button>
+
     <div class="lista-itinerari-glass">
       <div class="card-glass" *ngFor="let it of itinerari">
 
         <div class="card-top">
-          <div>
+          <div class="info-sinistra">
             <span class="id-tag">#ITN-{{ it.idItinerario }}</span>
-            <span class="badge">{{ it.visibilita }}</span>
+            <span class="badge badge-cliccabile" (click)="cambiaVisibilita(it)" title="Clicca per cambiare visibilità">
+              {{ it.visibilita }} ✏️
+            </span>
           </div>
+          <button class="btn-elimina-itinerario" (click)="eliminaItinerario(it.idItinerario)" title="Elimina intero itinerario">
+            🗑️
+          </button>
         </div>
 
         <div class="card-main">
@@ -20,8 +27,33 @@
 
         <div class="viaggi-contenuti">
           <ul *ngIf="it.viaggiContenuti?.length > 0; else vuoto">
-            <li *ngFor="let v of it.viaggiContenuti">
-              <strong>{{ v.titolo }}</strong> <span class="destinazione">- {{ v.destinazione }}</span>
+            <li *ngFor="let v of it.viaggiContenuti" class="riga-viaggio">
+              <div class="testo-viaggio">
+                <strong>{{ v.titolo }}</strong> <span class="destinazione">- {{ v.destinazione }}</span>
+              </div>
+
+              <div class="azioni-viaggio">
+                <button class="btn-azione-viaggio" (click)="toggleMenuSposta(it.idItinerario, v.id)" title="Sposta in un altro itinerario">
+                  🔄
+                </button>
+
+                <button class="btn-rimuovi-viaggio" (click)="rimuoviViaggio(it.idItinerario, v.id)" title="Rimuovi questo viaggio">
+                  ❌
+                </button>
+
+                <div class="tendina-sposta" *ngIf="menuSpostaAperto[it.idItinerario + '-' + v.id]">
+                  <p>Sposta in:</p>
+                  <div class="opzioni-itinerari">
+                    <ng-container *ngFor="let destinazioneIt of itinerari">
+                      <button *ngIf="destinazioneIt.idItinerario !== it.idItinerario"
+                              (click)="eseguiSpostamento(it.idItinerario, destinazioneIt.idItinerario, v.id)">
+                        {{ destinazioneIt.nome }}
+                      </button>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+
             </li>
           </ul>
           <ng-template #vuoto><p class="testo-vuoto">Nessun viaggio aggiunto.</p></ng-template>
@@ -31,5 +63,29 @@
     </div>
 
     <button class="btn-indietro" routerLink="/">← Torna alla Home</button>
+  </div>
+
+  <div class="modal-overlay" *ngIf="mostraModaleCreazione" (click)="chiudiModaleCreazione()">
+    <div class="modal-glass" (click)="$event.stopPropagation()">
+      <h2>Nuovo Itinerario</h2>
+
+      <div class="form-group">
+        <label>Nome dell'itinerario</label>
+        <input type="text" [(ngModel)]="nuovoNome" placeholder="Es. Viaggio estivo 2026...">
+      </div>
+
+      <div class="form-group">
+        <label>Visibilità</label>
+        <select [(ngModel)]="nuovaVisibilita">
+          <option value="PRIVATA">Privata (Solo per me)</option>
+          <option value="PUBBLICA">Pubblica (Visibile a tutti)</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-annulla" (click)="chiudiModaleCreazione()">Annulla</button>
+        <button class="btn-salva" (click)="salvaNuovoItinerario()">Crea</button>
+      </div>
+    </div>
   </div>
 </div>

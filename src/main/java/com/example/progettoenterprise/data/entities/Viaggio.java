@@ -39,6 +39,9 @@ public class Viaggio {
 
     private Double prezzo;
     private Integer maxPartecipanti;
+    @Column(name="partecipanti_attuali", nullable = false)
+    private Integer partecipantiAttuali = 0;
+
     private LocalDate dataInizio;
     private LocalDate dataFine;
 

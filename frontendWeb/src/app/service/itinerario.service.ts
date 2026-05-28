@@ -48,4 +48,8 @@ export class ItinerarioService {
   rimuoviViaggio(idLista: number, idViaggio: number): Observable<any> {
     return this.http.delete<any>(`${this.API_URL}/${idLista}/viaggi/${idViaggio}`);
   }
+
+  spostaViaggio(idSorgente: number, idDestinazione: number, idViaggio: number) {
+    return this.http.post(`http://localhost:8080/api/v1/itinerari-preferiti/${idSorgente}/sposta-in/${idDestinazione}/viaggi/${idViaggio}`, {});
+  }
 }

@@ -28,7 +28,6 @@ export class SchermataHomeComponent implements OnInit {
   paginaCorrente = 0;
   totalePagine = 0;
 
-
   openItineraryMenuId: number | null = null;
   mieiItinerari: any[] = [];
   nomeNuovoItinerario: string = ''; // Variabile per l'input del nuovo itinerario
@@ -91,7 +90,6 @@ export class SchermataHomeComponent implements OnInit {
     this.zone.run(() => {
       this.viaggioService.getViaggi(this.paginaCorrente, filtriPuliti).subscribe({
         next: (risposta) => {
-          //console.log("Ecco cosa contiene un singolo viaggio:", risposta.content[0]);
           this.viaggiTrovati = risposta.content ? [...risposta.content] : [];
           this.totalePagine = risposta.totalPages || 0;
           this.openItineraryMenuId = null;
@@ -102,9 +100,21 @@ export class SchermataHomeComponent implements OnInit {
     });
   }
 
-  paginaPrecedente() { if (this.paginaCorrente > 0) { this.paginaCorrente--; this.eseguiRicerca(); window.scrollTo({ top: 500, behavior: 'smooth' }); } }
-  paginaSuccessiva() { if (this.paginaCorrente < this.totalePagine - 1) { this.paginaCorrente++; this.eseguiRicerca(); window.scrollTo({ top: 500, behavior: 'smooth' }); } }
+  paginaPrecedente() {
+    if (this.paginaCorrente > 0) {
+      this.paginaCorrente--;
+      this.eseguiRicerca();
+      window.scrollTo({ top: 500, behavior: 'smooth' });
+    }
+  }
 
+  paginaSuccessiva() {
+    if (this.paginaCorrente < this.totalePagine - 1) {
+      this.paginaCorrente++;
+      this.eseguiRicerca();
+      window.scrollTo({ top: 500, behavior: 'smooth' });
+    }
+  }
 
   toggleItineraryMenu(viaggioId: number, event: Event) {
     event.stopPropagation();
@@ -154,6 +164,7 @@ export class SchermataHomeComponent implements OnInit {
       }
     });
   }
+
   richiediNomeNuovoItinerario(viaggioId: number) {
     const nome = window.prompt("Come vuoi chiamare il nuovo itinerario?");
 
@@ -173,6 +184,7 @@ export class SchermataHomeComponent implements OnInit {
       });
     }
   }
+
   apriModaleItinerario() {
     this.nomeNuovoItinerario = '';
     this.modaleItinerarioAperta = true;
@@ -182,10 +194,8 @@ export class SchermataHomeComponent implements OnInit {
     this.modaleItinerarioAperta = false;
   }
 
-  // Aggiungi questa variabile nella classe
   isSalvataggioInCorso = false;
 
-// Aggiorna il metodo salvaNuovoItinerario
   salvaNuovoItinerario() {
     if (!this.nomeNuovoItinerario.trim() || this.isSalvataggioInCorso) return;
 
@@ -201,8 +211,6 @@ export class SchermataHomeComponent implements OnInit {
         this.chiudiModaleItinerario();
 
         alert("Itinerario creato con successo!");
-
-
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -211,5 +219,13 @@ export class SchermataHomeComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // --- FUNZIONE PER IL CALCOLO DEI POSTI RIMANENTI ---
+  calcolaPostiRimanenti(viaggio: any): number {
+    if (!viaggio.maxPartecipanti) return 999;
+
+    const iscritti = viaggio.partecipantiAttuali || 0;
+    return viaggio.maxPartecipanti - iscritti;
   }
 }

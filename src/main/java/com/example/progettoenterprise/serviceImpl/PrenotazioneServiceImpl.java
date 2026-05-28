@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,16 +39,13 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
     private String formattaDataIcs(LocalDate data) {
         if (data == null) return "";
-
-
         return data.atStartOfDay().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
     }
-
 
     @Override
     @Transactional
     public PrenotazioneDTO creaPrenotazione(Long idViaggio, Long idUtente, Integer numeroPersone) {
-        Viaggio viaggio= viaggioRepository.findById(idViaggio)
+        Viaggio viaggio = viaggioRepository.findById(idViaggio)
                 .orElseThrow(() -> {
                     log.error("Impossibile creare la prenotazione: viaggio ID {} non trovato", idViaggio);
                     return new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", idViaggio));
@@ -59,13 +57,30 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             throw new IllegalStateException(messageLang.getMessage("prenotazione.viaggio.scaduto"));
         }
 
-        // TODO: vedere parte relativa ai posti massimi del viaggio
 
+        List<Prenotazione> prenotazioniSovrapposte = prenotazioneRepository.findPrenotazioniSovrapposte(
+                idUtente, viaggio.getDataInizio(), viaggio.getDataFine());
+
+        if (!prenotazioniSovrapposte.isEmpty()) {
+            log.warn("Prenotazione bloccata: l'utente {} ha già un viaggio in quelle date", idUtente);
+            throw new IllegalStateException("Non puoi prenotare questo viaggio perché le date si sovrappongono con un'altra tua prenotazione. Cancella prima l'altro viaggio.");
+        }
+        // --------------------------------------------------------
+
+        // --- CONTROLLO E AGGIORNAMENTO POSTI ---
+        if (viaggio.getPartecipantiAttuali() + numeroPersone > viaggio.getMaxPartecipanti()) {
+            log.warn("Tentativo di prenotazione fallito per posti esauriti: Viaggio ID {}", idViaggio);
+            throw new IllegalStateException("Non ci sono abbastanza posti disponibili per questo viaggio.");
+        }
+
+        viaggio.setPartecipantiAttuali(viaggio.getPartecipantiAttuali() + numeroPersone);
+        viaggioRepository.save(viaggio);
         Utente utenteRichiedente = utenteRepository.findById(idUtente)
                 .orElseThrow(() -> {
                     log.error("Impossibile creare la prenotazione: utente ID {} non trovato", idUtente);
                     return new EntityNotFoundException(messageLang.getMessage("utente.notexist", idUtente));
                 });
+
         Prenotazione nuovaPrenotazione = new Prenotazione();
         nuovaPrenotazione.setViaggio(viaggio);
         nuovaPrenotazione.setViaggiatore(utenteRichiedente);
@@ -79,46 +94,53 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     @Override
     @Transactional
     public void cancellaPrenotazione(Long idPrenotazione, Long idUtente) {
-            Prenotazione prenotazione= prenotazioneRepository.findById(idPrenotazione)
+        Prenotazione prenotazione = prenotazioneRepository.findById(idPrenotazione)
                 .orElseThrow(() -> {
                     log.error("Impossibile cancellare la prenotazione: prenotazione ID {} non trovata", idPrenotazione);
                     return new EntityNotFoundException(messageLang.getMessage("prenotazione.notexist", idPrenotazione));
                 });
-            if(!prenotazione.getViaggiatore().getId().equals(idUtente)){
-                log.error("Accesso non autorizzato: l'utente {} ha provato a cancellare la prenotazione ID {}, appartenente all'utente {}",
-                        idUtente, idPrenotazione, prenotazione.getViaggiatore().getId());
-                throw new IllegalArgumentException(messageLang.getMessage("prenotazione.unauthorized"));
-            }
-            prenotazioneRepository.delete(prenotazione);
+
+        if (!prenotazione.getViaggiatore().getId().equals(idUtente)) {
+            log.error("Accesso non autorizzato: l'utente {} ha provato a cancellare la prenotazione ID {}, appartenente all'utente {}",
+                    idUtente, idPrenotazione, prenotazione.getViaggiatore().getId());
+            throw new IllegalArgumentException(messageLang.getMessage("prenotazione.unauthorized"));
+        }
+        if (prenotazione.getStato() == Prenotazione.StatoPrenotazione.CONFERMATA) {
+            log.warn("Tentativo di cancellazione bloccato: la prenotazione ID {} è già confermata", idPrenotazione);
+            throw new IllegalStateException("Non puoi annullare una prenotazione già confermata. Contatta l'organizzatore.");
+        }
+        Viaggio viaggio = prenotazione.getViaggio();
+        viaggio.setPartecipantiAttuali(viaggio.getPartecipantiAttuali() - prenotazione.getNumeroPersone());
+        viaggioRepository.save(viaggio);
 
 
+        prenotazioneRepository.delete(prenotazione);
     }
 
     @Override
     public PrenotazioneDTO getPrenotazioneById(Long id, Long utenteId) {
-       Prenotazione prenotazione= prenotazioneRepository.findById(id)
-               .orElseThrow(() -> {
-                   log.warn("Impossibile recuperare la prenotazione: prenotazione ID {} non trovata", id);
-                   return new EntityNotFoundException(messageLang.getMessage("prenotazione.notexist", id));
-               });
-       Utente utenteLoggato = utenteRepository.findById(utenteId)
-               .orElseThrow( () -> {
-                   log.error("Impossibile recuperare la prenotazione: utente ID {} non trovato", utenteId);
-                   return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
-               });
+        Prenotazione prenotazione = prenotazioneRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Impossibile recuperare la prenotazione: prenotazione ID {} non trovata", id);
+                    return new EntityNotFoundException(messageLang.getMessage("prenotazione.notexist", id));
+                });
 
-       boolean isAdmin = utenteLoggato.getRuolo().equals(Utente.Ruolo.ROLE_ADMIN);
-       boolean isOrganizzatoreViaggio = prenotazione.getViaggio().getOrganizzatore().getId().equals(utenteId);
-       boolean isProprietarioPrenotazione = prenotazione.getViaggiatore().getId().equals(utenteId);
+        Utente utenteLoggato = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> {
+                    log.error("Impossibile recuperare la prenotazione: utente ID {} non trovato", utenteId);
+                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
+                });
 
-       if (!isAdmin && !isOrganizzatoreViaggio && !isProprietarioPrenotazione) {
-           log.error("Accesso non autorizzato: l'utente {} ha provato a recuperare la prenotazione ID {}", utenteId, id);
-           throw new IllegalArgumentException(messageLang.getMessage("prenotazione.unauthorized"));
-       }
+        boolean isAdmin = utenteLoggato.getRuolo().equals(Utente.Ruolo.ROLE_ADMIN);
+        boolean isOrganizzatoreViaggio = prenotazione.getViaggio().getOrganizzatore().getId().equals(utenteId);
+        boolean isProprietarioPrenotazione = prenotazione.getViaggiatore().getId().equals(utenteId);
 
-       return modelMapper.map(prenotazione, PrenotazioneDTO.class);
+        if (!isAdmin && !isOrganizzatoreViaggio && !isProprietarioPrenotazione) {
+            log.error("Accesso non autorizzato: l'utente {} ha provato a recuperare la prenotazione ID {}", utenteId, id);
+            throw new IllegalArgumentException(messageLang.getMessage("prenotazione.unauthorized"));
+        }
 
-
+        return modelMapper.map(prenotazione, PrenotazioneDTO.class);
     }
 
     @Override
@@ -133,12 +155,12 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         java.time.LocalDateTime dataInizio = viaggio.getDataInizio().atStartOfDay();
         java.time.LocalDateTime dataFine = viaggio.getDataFine().atTime(java.time.LocalTime.MAX);
 
-
-        //formatto per lo stringBuilder
+        // formatto per lo stringBuilder
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
         String dataInizioStr = dataInizio.format(formatter);
         String dataFineStr = dataFine.format(formatter);
         String dataCreazioneStr = java.time.LocalDateTime.now().format(formatter);
+
         StringBuilder ics = new StringBuilder();
         ics.append("BEGIN:VCALENDAR\n")
                 .append("VERSION:2.0\n")
@@ -178,7 +200,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             prenotazioneFilter.setOrganizzatoreProprietarioId(utente.getId());
         }
         // Se è l'admin, può vedere tutto
-        else{
+        else {
             log.debug("Ruolo ADMIN rilevato: forzatura filtro su tutte le prenotazioni");
         }
 
@@ -194,6 +216,4 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
         return prenotazionePage.map(p -> modelMapper.map(p, PrenotazioneDTO.class));
     }
-
-
 }

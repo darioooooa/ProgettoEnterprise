@@ -1,4 +1,3 @@
-
 .sfondo-globale {
   min-height: 100vh;
   background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
@@ -36,6 +35,24 @@
   margin-bottom: 30px;
 }
 
+.btn-crea-nuovo {
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid #2ecc71;
+  color: #2ecc71;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.btn-crea-nuovo:hover {
+  background: #2ecc71;
+  color: #1e2738;
+}
 
 .lista-itinerari-glass {
   display: flex;
@@ -66,10 +83,15 @@
 .card-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 10px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.info-sinistra {
+  display: flex;
+  align-items: center;
 }
 
 .id-tag {
@@ -83,6 +105,31 @@
   border-radius: 20px;
   color: #e2e8f0;
   letter-spacing: 1px;
+}
+
+.badge-cliccabile {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.badge-cliccabile:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.03);
+}
+
+.btn-elimina-itinerario {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s, transform 0.2s;
+  padding: 0;
+}
+
+.btn-elimina-itinerario:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .card-main h2 {
@@ -108,10 +155,97 @@
   margin: 0;
 }
 
-.viaggi-contenuti li {
-  font-size: 0.95rem;
+.riga-viaggio {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 8px;
+  border-radius: 8px;
   margin-bottom: 5px;
+}
+
+.testo-viaggio {
+  font-size: 0.95rem;
   color: #e2e8f0;
+}
+
+.azioni-viaggio {
+  display: flex;
+  gap: 8px;
+  position: relative;
+  align-items: center;
+}
+
+.btn-azione-viaggio {
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+  padding: 5px;
+}
+
+.btn-azione-viaggio:hover {
+  opacity: 1;
+}
+
+.btn-rimuovi-viaggio {
+  background: transparent;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+  padding: 5px;
+}
+
+.btn-rimuovi-viaggio:hover {
+  opacity: 1;
+  color: #ff4d4d;
+}
+
+.tendina-sposta {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: #1e2738;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+  width: 180px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.tendina-sposta p {
+  margin: 0 0 5px 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.opzioni-itinerari {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.opzioni-itinerari button {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: white;
+  padding: 6px;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.opzioni-itinerari button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffd166;
 }
 
 .destinazione {
@@ -139,4 +273,110 @@
 .btn-indietro:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: white;
+}
+
+/* --- FINESTRA DI CREAZIONE (MODALE) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-glass {
+  background: rgba(30, 39, 56, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  color: white;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+}
+
+.modal-glass h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #ffd166;
+}
+
+.form-group select option {
+  background: #1e2738;
+  color: white;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.btn-annulla {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  flex: 1;
+  transition: 0.3s;
+}
+
+.btn-annulla:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-salva {
+  background: #ffd166;
+  border: none;
+  color: #1e2738;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+  transition: 0.3s;
+}
+
+.btn-salva:hover {
+  background: #ffc133;
 }

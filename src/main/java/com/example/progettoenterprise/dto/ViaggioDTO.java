@@ -26,6 +26,9 @@ public class ViaggioDTO {
     @Min(value = 1, message = "Il viaggio deve avere almeno 1 partecipante")
     private Integer maxPartecipanti;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer partecipantiAttuali;
+
     @NotBlank(message = "La destinazione è obbligatoria")
     private String destinazione;
 

@@ -101,6 +101,12 @@ public class GlobalExceptionHandler {
         log.error("ERRORE NON GESTITO: ", e); // Logga l'intera eccezione per il debug
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, request, messageLang.getMessage("server.internal.error"));
     }
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErroreDTO handleIllegalState(WebRequest request, IllegalStateException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, request, e.getMessage());
+    }
+
 
     private ErroreDTO buildErrorResponse(HttpStatus status, WebRequest request, String messaggio) {
         // Estrae l'uri dalla richiesta

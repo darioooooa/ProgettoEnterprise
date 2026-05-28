@@ -6,4 +6,7 @@ export interface Prenotazione {
   viaggiatoreUsername: string;
   viaggioId: number;
   viaggioTitolo: string;
+  viaggioDataInizio?: string;
+  viaggioDataFine?: string;
+  stato: string;
 }

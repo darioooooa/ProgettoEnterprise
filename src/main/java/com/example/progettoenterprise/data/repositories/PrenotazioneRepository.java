@@ -29,5 +29,14 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione,Long>
             @Param("end") LocalDateTime end,
             @Param("stato") Prenotazione.StatoPrenotazione stato
     );
+
+    @Query("SELECT p FROM Prenotazione p WHERE p.viaggiatore.id = :utenteId " +
+            "AND p.viaggio.dataInizio <= :dataFine " +
+            "AND p.viaggio.dataFine >= :dataInizio")
+    List<Prenotazione> findPrenotazioniSovrapposte(
+            @org.springframework.data.repository.query.Param("utenteId") Long utenteId,
+            @org.springframework.data.repository.query.Param("dataInizio") java.time.LocalDate dataInizio,
+            @org.springframework.data.repository.query.Param("dataFine") java.time.LocalDate dataFine
+    );
     }
 

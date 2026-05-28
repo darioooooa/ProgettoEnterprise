@@ -2,6 +2,8 @@ package com.example.progettoenterprise.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import jakarta.validation.constraints.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -27,4 +29,12 @@ public class PrenotazioneDTO {
     private Long viaggioId;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String viaggioTitolo;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private LocalDate viaggioDataInizio;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private LocalDate viaggioDataFine;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String stato;
 }

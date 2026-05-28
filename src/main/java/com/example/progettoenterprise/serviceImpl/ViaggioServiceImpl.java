@@ -72,6 +72,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         viaggio.setOrganizzatore(organizzatore);
         viaggio.setMediaRecensioni(0.0);
         viaggio.setNumeroRecensioni(0);
+        viaggio.setPartecipantiAttuali(0);
         Viaggio salvato = viaggioRepository.save(viaggio);
         return modelMapper.map(salvato, ViaggioDTO.class);
     }
@@ -125,6 +126,9 @@ public class ViaggioServiceImpl implements ViaggioService {
         // Se è un organizzatore, si forza il filtro per solo i suoi viaggi
         if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)){
             viaggioFilter.setOrganizzatoreId(utenteId);
+        }
+        else if (utente.getRuolo().equals(Utente.Ruolo.ROLE_VIAGGIATORE)) {
+            viaggioFilter.setMostraSoloDisponibili(true);
         }
 
         // Paginazione della ricerca

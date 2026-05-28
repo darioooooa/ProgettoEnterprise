@@ -17,6 +17,7 @@ public class ViaggioSpecification {
         private Double prezzoMin;
         private Double prezzoMax;
         private Integer maxPartecipanti;
+        private Boolean mostraSoloDisponibili;
         @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime dataInizioMin;
         @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
@@ -50,6 +51,7 @@ public class ViaggioSpecification {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("maxPartecipanti"), viaggioFilter.getMaxPartecipanti()));
             }
 
+
             // Filtra per data
             if (viaggioFilter.getDataInizioMin() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("dataInizio"), viaggioFilter.getDataInizioMin()));
@@ -75,6 +77,11 @@ public class ViaggioSpecification {
             // Filtra per organizzatore
             if (viaggioFilter.getOrganizzatoreId() != null) {
                 predicates.add(cb.equal(root.get("organizzatore").get("id"), viaggioFilter.getOrganizzatoreId()));
+            }
+
+            if (Boolean.TRUE.equals(viaggioFilter.getMostraSoloDisponibili())) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("dataInizio"), java.time.LocalDate.now()));
+                predicates.add(cb.lessThan(root.get("partecipantiAttuali"), root.get("maxPartecipanti")));
             }
 
             // Ordinamento per data di inizio più recente

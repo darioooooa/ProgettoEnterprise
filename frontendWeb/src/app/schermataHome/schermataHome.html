@@ -38,6 +38,11 @@
         <p>📍 {{ viaggio.destinazione }}</p>
         <p><strong>{{ viaggio.prezzo }}€ / persona</strong></p>
         <p>Partenza: {{ viaggio.dataInizio | date:'dd/MM/yyyy' }}</p>
+
+        <p class="scarsita-posti" *ngIf="calcolaPostiRimanenti(viaggio) > 0 && calcolaPostiRimanenti(viaggio) <= 3">
+          ⚠️ Solo {{ calcolaPostiRimanenti(viaggio) }} {{ calcolaPostiRimanenti(viaggio) === 1 ? 'posto rimanente' : 'posti rimanenti' }}!
+        </p>
+
       </div>
 
       <div class="itinerary-dropdown" *ngIf="openItineraryMenuId === viaggio.id" (click)="$event.stopPropagation()">

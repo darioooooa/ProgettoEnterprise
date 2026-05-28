@@ -23,6 +23,7 @@
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
 }
 
+/* --- HEADER --- */
 .intestazione-sezione {
   text-align: center;
   margin-bottom: 45px;
@@ -42,21 +43,28 @@
   font-size: 0.95rem;
 }
 
-/* --- CARDS LISTA --- */
+/* --- LISTA CARDS --- */
 .lista-cards {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
+/* --- CARD --- */
 .card-prenotazione {
+  position: relative;
+  overflow: hidden;
+
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 25px 35px;
+
+  padding: 35px;
   border-radius: 20px;
+
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   transition: all 0.3s ease;
 }
 
@@ -66,7 +74,52 @@
   border-color: rgba(144, 202, 249, 0.3);
 }
 
-/* --- DETTAGLI --- */
+/* --- ALERT PARTENZA --- */
+.area-notifica-imminente {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  z-index: 2;
+}
+
+.badge-imminente {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+
+  color: #ffd54f;
+
+  padding: 10px 18px;
+  border-radius: 999px;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.badge-imminente strong {
+  color: white;
+}
+
+.icona-alert {
+  font-size: 1rem;
+}
+
+/* ALERT OGGI */
+.badge-imminente.oggi {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+  color: #ff8a80;
+}
+
+/* --- DETTAGLI VIAGGIO --- */
 .sopra-titolo {
   display: flex;
   align-items: center;
@@ -89,9 +142,18 @@
   letter-spacing: 1px;
 }
 
-/* Colori stati */
-.confermata { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
-.attesa { background: rgba(241, 196, 15, 0.2); color: #f1c40f; border: 1px solid #f1c40f; }
+/* --- COLORI STATI --- */
+.confermata {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
+}
+
+.attesa {
+  background: rgba(241, 196, 15, 0.2);
+  color: #f1c40f;
+  border: 1px solid #f1c40f;
+}
 
 .info-viaggio h3 {
   font-family: 'Montserrat', sans-serif;
@@ -104,7 +166,13 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* --- PREZZO --- */
+.passeggeri,
+.data-partenza,
+.data-ritorno {
+  margin-top: 8px;
+}
+
+/* --- STATO PAGAMENTO --- */
 .prezzo-sezione {
   text-align: right;
 }
@@ -123,6 +191,22 @@
   color: #fff;
 }
 
+/* --- STATO VUOTO --- */
+.messaggio-vuoto {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.btn-esplora {
+  margin-top: 20px;
+  background: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
 /* --- BOTTONE RITORNO --- */
 .azioni-finali {
   margin-top: 40px;
@@ -133,8 +217,10 @@
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
+
   padding: 12px 40px;
   border-radius: 40px;
+
   cursor: pointer;
   transition: 0.3s;
 }
