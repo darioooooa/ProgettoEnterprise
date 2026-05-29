@@ -17,8 +17,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@DiscriminatorValue("ROLE_ORGANIZZATORE")
 public class Organizzatore extends Utente{
 
     @OneToMany(mappedBy = "organizzatore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Viaggio> viaggiCreati;
+
 }

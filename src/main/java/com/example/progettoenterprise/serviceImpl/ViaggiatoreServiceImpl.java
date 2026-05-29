@@ -4,6 +4,7 @@ import com.example.progettoenterprise.config.CacheConfig;
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.RichiestaPromozione;
 import com.example.progettoenterprise.data.entities.Viaggiatore;
+import com.example.progettoenterprise.data.repositories.OrganizzatoreRepository;
 import com.example.progettoenterprise.data.repositories.RichiestaPromozioneRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggiatoreRepository;
@@ -17,10 +18,13 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +39,8 @@ public class ViaggiatoreServiceImpl implements ViaggiatoreService {
     private final UtenteRepository utenteRepository;
     private final RichiestaPromozioneRepository richiestaRepository;
     private final Keycloak keycloak;
+    private final OrganizzatoreRepository organizzatoreRepository;
+    private final RichiestaPromozioneRepository richiestaPromozioneRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -72,68 +78,54 @@ public class ViaggiatoreServiceImpl implements ViaggiatoreService {
                 .collect(Collectors.toList());
     }
 
+
     @Override
     @Transactional
-    public RichiestaPromozioneDTO creaRichiestaPromozione(Long viaggiatoreId, RichiestaPromozioneDTO dto){
-        // Controlla se email e username sono già in uso
-        if (utenteRepository.findByUsername(dto.getUsernameRichiesto()).isPresent()){
-            log.warn("Errore nella creazione di un nuovo utente: lo username {} è già presente", dto.getUsernameRichiesto());
-            throw new IllegalArgumentException(messageLang.getMessage("utente.username.exist", dto.getUsernameRichiesto()));
+    public RichiestaPromozioneDTO creaRichiestaPromozione(Long viaggiatoreId, RichiestaPromozioneDTO dto) {
+
+        Viaggiatore utenteAttuale = viaggiatoreRepository.findById(viaggiatoreId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
+        if (richiestaPromozioneRepository.existsByViaggiatoreIdAndStato(viaggiatoreId, RichiestaPromozione.StatoRichiesta.IN_ATTESA)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Hai già una richiesta in fase di valutazione.");
         }
-        if (utenteRepository.findByEmail(dto.getEmailProfessionale()).isPresent()){
-            log.warn("Errore nella creazione di un nuovo utente: l'email {} è già presente", dto.getEmailProfessionale());
-            throw new IllegalArgumentException(messageLang.getMessage("utente.email.exist", dto.getEmailProfessionale()));
+        if (richiestaPromozioneRepository.existsByViaggiatoreIdAndStato(viaggiatoreId, RichiestaPromozione.StatoRichiesta.APPROVATA)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Sei già un organizzatore approvato!");
         }
 
-        // Controlla se ci sono richieste IN_ATTESA con stesso username o email
-        boolean usernameRichiestoGiaInUso = richiestaRepository.existsByUsernameRichiestoAndStato(
-                dto.getUsernameRichiesto(),
-                RichiestaPromozione.StatoRichiesta.IN_ATTESA
-        );
-        if (usernameRichiestoGiaInUso){
-            log.warn("Errore nella creazione: lo username {} è già bloccato da una richiesta in attesa", dto.getUsernameRichiesto());
-            throw new IllegalArgumentException(messageLang.getMessage("utente.username.exist", dto.getUsernameRichiesto()));
+        if (richiestaPromozioneRepository.existsByUsernameRichiestoAndStatoNot(dto.getUsernameRichiesto(), RichiestaPromozione.StatoRichiesta.RIFIUTATA)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Questo username è attualmente richiesto da un'altra candidatura in corso.");
         }
-        boolean emailRichiestaGiaInUso = richiestaRepository.existsByEmailProfessionaleAndStato(
-                dto.getEmailProfessionale(),
-                RichiestaPromozione.StatoRichiesta.IN_ATTESA
-        );
-        if (emailRichiestaGiaInUso) {
-            log.warn("Errore nella creazione: l'email {} è già bloccata da una richiesta in attesa", dto.getEmailProfessionale());
-            throw new IllegalArgumentException(messageLang.getMessage("utente.email.exist", dto.getEmailProfessionale()));
+        if (!utenteAttuale.getUsername().equals(dto.getUsernameRichiesto()) &&
+                utenteRepository.existsByUsername(dto.getUsernameRichiesto())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Questo username è già in uso da un altro utente. Scegline un altro.");
         }
 
-        // Cerca lo username in keycloak
-        List<UserRepresentation> keycloakUsers = keycloak.realm("enterprise-realm").users().search(dto.getUsernameRichiesto(), true);
-        if(!keycloakUsers.isEmpty()){
-            log.warn("Errore nella creazione di un nuovo utente su keyloak: lo username {} è già presente", dto.getUsernameRichiesto());
-            throw new IllegalArgumentException(messageLang.getMessage("utente.username.exist", dto.getUsernameRichiesto()));
+        if (richiestaPromozioneRepository.existsByEmailProfessionaleAndStatoNot(dto.getEmailProfessionale(), RichiestaPromozione.StatoRichiesta.RIFIUTATA)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Questa email è in fase di valutazione in un'altra richiesta.");
         }
-        // Cerca l'email nel keycloak
-        List<UserRepresentation> keycloakEmails = keycloak.realm("enterprise-realm").users().searchByEmail(dto.getEmailProfessionale(), true);
-        if (!keycloakEmails.isEmpty()){
-            log.warn("Errore nella creazione di un nuovo utente su keyloak: l'email {} è già presente", dto.getEmailProfessionale());
-            throw new IllegalArgumentException(messageLang.getMessage("utente.email.exist", dto.getEmailProfessionale()));
+        if (!utenteAttuale.getEmail().equals(dto.getEmailProfessionale()) &&
+                utenteRepository.existsByEmail(dto.getEmailProfessionale())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Questa email è già associata ad un altro account.");
         }
-
-        // Salva la richiesta
-        Viaggiatore viaggiatore = viaggiatoreRepository.findById(viaggiatoreId)
-                .orElseThrow(() -> {
-                    log.error("Impossibile creare la richiesta: l'utente con id {} non esiste", viaggiatoreId);
-                    return new EntityNotFoundException(messageLang.getMessage("utente.notexist", viaggiatoreId));
-                });
 
         RichiestaPromozione nuovaRichiesta = new RichiestaPromozione();
-        nuovaRichiesta.setViaggiatore(viaggiatore);
-        nuovaRichiesta.setBiografiaProfessionale(dto.getBiografiaProfessionale());
-        nuovaRichiesta.setDocumentiLink(dto.getDocumentiLink());
-        nuovaRichiesta.setMotivazione(dto.getMotivazione());
+        nuovaRichiesta.setViaggiatore(utenteAttuale);
         nuovaRichiesta.setUsernameRichiesto(dto.getUsernameRichiesto());
         nuovaRichiesta.setEmailProfessionale(dto.getEmailProfessionale());
+        nuovaRichiesta.setMotivazione(dto.getMotivazione());
+        nuovaRichiesta.setBiografiaProfessionale(dto.getBiografiaProfessionale());
+        nuovaRichiesta.setDocumentiLink(dto.getDocumentiLink());
         nuovaRichiesta.setStato(RichiestaPromozione.StatoRichiesta.IN_ATTESA);
+        nuovaRichiesta.setDataRichiesta(LocalDateTime.now());
 
-        RichiestaPromozione salvata = richiestaRepository.save(nuovaRichiesta);
+        RichiestaPromozione salvata = richiestaPromozioneRepository.save(nuovaRichiesta);
+
         return modelMapper.map(salvata, RichiestaPromozioneDTO.class);
     }
 
+    public RichiestaPromozione trovaRichiestaPendente(Long viaggiatoreId) {
+        return richiestaPromozioneRepository.findByViaggiatoreIdAndStato(viaggiatoreId, RichiestaPromozione.StatoRichiesta.IN_ATTESA)
+                .orElse(null);
+    }
 }

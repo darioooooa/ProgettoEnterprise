@@ -21,6 +21,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
 @EntityListeners(AuditingEntityListener.class)
+@DiscriminatorColumn(name = "ruolo", discriminatorType = DiscriminatorType.STRING)
 public abstract class Utente {
 
     @Id
@@ -47,7 +48,7 @@ public abstract class Utente {
     private String cognome;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, insertable = false, updatable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) // Permette di escludere il ruolo dalla risposta JSON del client
     private Ruolo ruolo;
 

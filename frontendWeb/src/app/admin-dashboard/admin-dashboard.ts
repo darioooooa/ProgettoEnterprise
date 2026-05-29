@@ -69,7 +69,7 @@ export class AdminDashboardComponent implements OnInit {
 
   approva(id: number) {
     if (isPlatformBrowser(this.platformId)) {
-      const adminIdString = localStorage.getItem('adminId');
+      const adminIdString = localStorage.getItem('id');
 
       if (!adminIdString) {
         alert('Errore: ID amministratore non trovato. Effettua nuovamente il login.');
@@ -95,7 +95,7 @@ export class AdminDashboardComponent implements OnInit {
 
   rifiuta(id: number) {
     if (isPlatformBrowser(this.platformId)) {
-      const adminIdString = localStorage.getItem('adminId');
+      const adminIdString = localStorage.getItem('id');
 
       if (!adminIdString) {
         alert('Errore: ID amministratore non trovato. Effettua nuovamente il login.');

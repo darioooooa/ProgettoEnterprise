@@ -36,6 +36,9 @@
       <a routerLink="/profilo" (click)="toggleMenu()" class="voce-laterale">Il Mio Profilo</a>
       <a routerLink="/prenotazioni" class="voce-laterale">Le mie prenotazioni</a>
       <button (click)="apriModaleAmici()" class="voce-laterale">I miei amici</button>
+      <a routerLink="/diventa-organizzatore" *ngIf="isViaggiatore()" (click)="toggleMenu()" class="voce-laterale" style="color: #10b981; font-weight: bold;">
+        Diventa Organizzatore
+      </a>
       <button (click)="logout()" class="voce-laterale logout-rosso">Disconnetti</button>
     </div>
   </div>

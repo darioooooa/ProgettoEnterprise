@@ -12,6 +12,7 @@ import { MieiItinerari } from './miei-itinerari/miei-itinerari';
 import { ListaTappe } from './lista-tappe/lista-tappe';
 import { DettaglioViaggio } from './dettaglio-viaggio/dettaglio-viaggio';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
+import { DiventaOrganizzatoreComponent} from './diventa-organizzatore/diventa-organizzatore';
 
 export const routes: Routes = [
 
@@ -62,6 +63,11 @@ export const routes: Routes = [
         path: 'viaggi/:id',
         component: DettaglioViaggio,
         canActivate: [autenticazioneGuard]
+      },
+      {
+        path: 'diventa-organizzatore',
+        component: DiventaOrganizzatoreComponent
+
       }
     ]
   },

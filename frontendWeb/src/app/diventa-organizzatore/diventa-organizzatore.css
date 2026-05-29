@@ -1,0 +1,119 @@
+/* 1. Lo sfondo della pagina intera */
+.page-background {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Centra il riquadro orizzontalmente */
+  align-items: flex-start; /* Lo tiene allineato verso l'alto */
+  padding-top: 80px;
+  padding-bottom: 80px;
+  /* Sfumatura blu profonda. (Se in crea-viaggio hai un'immagine globale, questa verrà coperta) */
+  background: linear-gradient(135deg, #1b3854, #2980b9, #2c3e50);
+}
+
+/* 2. Il Riquadro Centrale in Vetro (LARGO 850px) */
+.container-richiesta {
+  width: 100%;
+  max-width: 850px; /* <--- Questo lo rende largo quanto Crea Viaggio */
+  padding: 50px;
+  background: rgba(255, 255, 255, 0.15); /* L'effetto "Vetro" */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 3. Titoli e Sottotitoli */
+.titolo {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 42px; /* Grande e d'impatto */
+  font-weight: bold;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sottotitolo {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* 4. I Gruppi di Input */
+.form-group {
+  margin-bottom: 30px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 2px; /* Spazio tra le lettere come in Crea Viaggio */
+  margin-bottom: 12px;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 5. Aree di testo e Input semitrasparenti */
+.form-group textarea,
+.form-group input {
+  width: 100%;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 16px;
+  color: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.form-group textarea::placeholder,
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.form-group textarea:focus,
+.form-group input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* 6. Il Bottone Enterprise a Pillola */
+.btn-invia {
+  width: 100%;
+  padding: 18px;
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.btn-invia:hover {
+  background-color: #ffffff;
+  color: #1b3854; /* Diventa scuro quando ci passi sopra */
+}
+
+/* 7. Alert in caso di errore */
+.alert-error {
+  background-color: #ff4d4f;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+

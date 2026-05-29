@@ -13,4 +13,6 @@ public interface OrganizzatoreRepository extends JpaRepository<Organizzatore,Lon
     Optional<Organizzatore> findByUsername(String username);
 
     Optional<Organizzatore> findByEmail(String email);
+
+    boolean existsById(Long id);
 }

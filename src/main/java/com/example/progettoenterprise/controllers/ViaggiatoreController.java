@@ -1,5 +1,6 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.entities.RichiestaPromozione;
 import com.example.progettoenterprise.data.service.ViaggiatoreService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import com.example.progettoenterprise.dto.ViaggiatoreDTO;
@@ -48,6 +49,11 @@ public class ViaggiatoreController {
         log.info("Richiesta di invio di una nuova richiesta di promozione per l'utente ID: {}", utenteLoggato.getId());
         RichiestaPromozioneDTO nuovaRichiesta = viaggiatoreService.creaRichiestaPromozione(utenteLoggato.getId(), richiesta);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuovaRichiesta);
+    }
+
+    @GetMapping("/{id}/richiesta-pendente")
+    public ResponseEntity<?> getRichiesta(@PathVariable Long id) {
+        return ResponseEntity.ok(viaggiatoreService.trovaRichiestaPendente(id));
     }
 
 

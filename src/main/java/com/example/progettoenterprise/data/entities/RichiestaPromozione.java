@@ -61,12 +61,12 @@ public class RichiestaPromozione {
     }
 
     @NotBlank
-    @Column(name = "username_richiesto", unique = true, nullable = false)
+    @Column(name = "username_richiesto", nullable = false)
     private String usernameRichiesto;
 
     @NotBlank
     @Email
-    @Column(name = "email_professionale", unique = true, nullable = false)
+    @Column(name = "email_professionale", nullable = false)
     private String emailProfessionale;
 
 

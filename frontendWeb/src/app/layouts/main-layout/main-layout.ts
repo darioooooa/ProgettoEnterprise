@@ -222,4 +222,7 @@ export class MainLayoutComponent implements OnInit {
     const ruolo = this.servAuth.ottieniRuolo();
     return ruolo === 'ROLE_ORGANIZZATORE' || ruolo === 'ORGANIZZATORE';
   }
+  isViaggiatore():boolean{
+    return this.servAuth.ottieniRuolo() === 'ROLE_VIAGGIATORE';
+  }
 }

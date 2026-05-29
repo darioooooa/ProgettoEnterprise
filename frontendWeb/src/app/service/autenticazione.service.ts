@@ -161,4 +161,13 @@ export class AutenticazioneService {
   ottieniDatiUtenteDalDatabase(username: string): Observable<any> {
     return this.http.get<any>(`${this.backendUrl}/viaggiatori/cerca?query=${username}`);
   }
-}
+
+  inviaRichiestaPromozione(viaggiatoreId: number, datiRichiesta: any): Observable<any> {
+    const url = `${this.backendUrl}/viaggiatori/richieste-promozione`;
+
+    const token = this.ottieniToken();
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.post(url, datiRichiesta, { headers, responseType: 'text' });
+  }}

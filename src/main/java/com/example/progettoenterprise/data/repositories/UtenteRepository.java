@@ -15,4 +15,6 @@ public interface UtenteRepository extends JpaRepository<Utente,Long>, JpaSpecifi
     @Cacheable(value = CacheConfig.CACHE_UTENTI_AUTH, key = "#email", unless = "#result == null")
     Optional<Utente> findByEmail(String email);
     Optional<Utente> findByUsername(String username);
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }

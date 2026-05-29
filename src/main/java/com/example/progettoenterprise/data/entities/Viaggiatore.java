@@ -13,6 +13,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true) // serve ad includere i campi di Utente
 @NoArgsConstructor
 @AllArgsConstructor
+@DiscriminatorValue("ROLE_VIAGGIATORE")
 public class Viaggiatore extends Utente {
 
     @OneToMany(mappedBy = "viaggiatore", cascade = CascadeType.ALL, orphanRemoval = true)

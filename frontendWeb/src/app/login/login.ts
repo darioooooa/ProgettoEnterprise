@@ -40,13 +40,37 @@ export class Login {
       next: (risposta) => {
         console.log('Login effettuato con successo', risposta);
 
-        const ruolo = this.servizioAuth.ottieniRuolo();
+        // CHIAMIAMO IL DATABASE PER OTTENERE L'ID REALE
+        this.servizioAuth.ottieniDatiUtenteDalDatabase(this.datiAccesso.username).subscribe({
+          next: (datiDb) => {
+            // A seconda di come risponde il backend (lista o oggetto singolo), estraiamo l'utente
+            const utente = Array.isArray(datiDb) ? datiDb[0] : datiDb;
 
-        if (ruolo === 'ROLE_ADMIN') {
-          this.navigatore.navigate(['/admin-dashboard']);
-        } else {
-          this.navigatore.navigate(['/home']);
-        }
+            if (utente && utente.id) {
+              // SALVIAMO L'ID NEL LOCALSTORAGE!
+              localStorage.setItem('id', utente.id.toString());
+              console.log("ID del database salvato con successo:", utente.id);
+            }
+
+            //  FACCIAMO IL REINDIRIZZAMENTO
+            const ruolo = this.servizioAuth.ottieniRuolo();
+            if (ruolo === 'ROLE_ADMIN') {
+              this.navigatore.navigate(['/admin-dashboard']);
+            } else {
+              this.navigatore.navigate(['/home']);
+            }
+          },
+          error: (err) => {
+            console.error("Errore nel recupero dell'ID dal DB. L'utente potrebbe non essere sincronizzato.", err);
+            // Reindirizziamo comunque per non bloccare l'app
+            const ruolo = this.servizioAuth.ottieniRuolo();
+            if (ruolo === 'ROLE_ADMIN') {
+              this.navigatore.navigate(['/admin-dashboard']);
+            } else {
+              this.navigatore.navigate(['/home']);
+            }
+          }
+        });
       },
       error: (errore) => {
         console.error('Errore durante il login:', errore);
