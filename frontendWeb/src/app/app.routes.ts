@@ -39,7 +39,13 @@ export const routes: Routes = [
       },
       {
         path: 'profilo',
-        component: SchermataUtente
+        component: SchermataUtente,
+        canActivate: [autenticazioneGuard]
+      },
+      {
+        path: 'profilo/:id',
+        component: SchermataUtente,
+        canActivate: [autenticazioneGuard]
       },
       {
         path: 'prenotazioni',

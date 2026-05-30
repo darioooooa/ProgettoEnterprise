@@ -21,4 +21,5 @@ public interface ViaggioService {
 
     @Nullable ViaggioDTO getViaggioById(Long viaggioId, Long id);
     ViaggioDTO getViaggioById(Long id);
+    List<ViaggioDTO> getViaggiByOrganizzatore(Long organizzatoreId);
 }

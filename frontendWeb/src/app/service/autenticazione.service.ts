@@ -1,6 +1,6 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, tap, throwError } from 'rxjs';
+import { Observable, tap, throwError, switchMap, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
@@ -66,6 +66,27 @@ export class AutenticazioneService {
 
           localStorage.setItem('ruolo', ruoloPrincipale);
         }
+      }),
+
+      switchMap(rispostaKeycloak => {
+        if (rispostaKeycloak && rispostaKeycloak.access_token) {
+          const token = rispostaKeycloak.access_token;
+
+          // Impostazione dell'header manualmente visto che l'interceptor potrebbe non essere ancora pronto durante il login
+          const authHeaders = new HttpHeaders({
+            'Authorization': `Bearer ${token}`
+          });
+
+          return this.http.get<any>(`${this.backendUrl}/utenti/me`, { headers: authHeaders }).pipe(
+            tap(utenteDatabase => {
+              if (utenteDatabase && utenteDatabase.id) {
+                localStorage.setItem('userId', utenteDatabase.id.toString());
+              }
+            }),
+            map(() => rispostaKeycloak)
+          );
+        }
+        return throwError(() => new Error("Impossibile recuperare il token di accesso"));
       })
     );
   }
@@ -149,6 +170,13 @@ export class AutenticazioneService {
   ottieniRuolo(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('ruolo');
+    }
+    return null;
+  }
+
+  ottieniId(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('userId');
     }
     return null;
   }

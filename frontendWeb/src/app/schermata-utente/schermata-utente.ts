@@ -1,33 +1,130 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AutenticazioneService } from '../service/autenticazione.service';
+import { ViaggioService } from '../service/viaggio.service';
+import { UtenteService } from '../service/utente.service';
 
 @Component({
   selector: 'app-schermata-utente',
   standalone: true,
-  imports: [CommonModule,RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './schermata-utente.html',
   styleUrl: './schermata-utente.css'
 })
-export class SchermataUtente {
+export class SchermataUtente implements OnInit {
+  isMioProfilo: boolean = true;
+  caricamento: boolean = false;
 
+  nome: string | null = '';
+  cognome: string | null = '';
+  username: string | null = '';
+  email: string | null = '';
+  ruolo: string | null = '';
+
+  viaggiOrganizzati: any[] = [];
 
   constructor(
-    private servizioAutenticazione: AutenticazioneService,
-    @Inject(PLATFORM_ID) private idPiattaforma: Object
+    private route: ActivatedRoute,
+    private authService: AutenticazioneService,
+    private utenteService: UtenteService,
+    private viaggioService: ViaggioService,
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
-  ottieniNome(): string | null{
-    return this.servizioAutenticazione.ottieniNome();
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.route.paramMap.subscribe(params => {
+        const idDaUrl = params.get('id');
+        this.viaggiOrganizzati = []; // Reset
+        this.caricamento = true;
+
+        if (!idDaUrl) {
+          // Profilo personale
+          this.isMioProfilo = true;
+          this.nome = this.authService.ottieniNome();
+          this.cognome = this.authService.ottieniCognome();
+          this.username = this.authService.ottieniUsername();
+          this.email = this.authService.ottieniEmail();
+          this.ruolo = this.authService.ottieniRuolo();
+
+          if (this.ruolo === 'ROLE_ORGANIZZATORE') {
+            const mioIdDallAuth = this.authService.ottieniId();
+            if (mioIdDallAuth) {
+              this.viaggioService.getViaggiByOrganizzatore(Number(mioIdDallAuth)).subscribe({
+                next: (viaggi) => {
+                  this.viaggiOrganizzati = viaggi;
+                  this.caricamento = false;
+                  this.cdr.detectChanges();
+                },
+                error: (err) => {
+                  console.error("Errore nei tuoi viaggi:", err);
+                  this.caricamento = false;
+                  this.cdr.detectChanges();
+                }
+              });
+            } else {
+              this.caricamento = false;
+              this.cdr.detectChanges();
+            }
+          } else {
+            this.caricamento = false;
+            this.cdr.detectChanges();
+          }
+        } else {
+          // Profilo pubblico dell'utente selezionato
+          this.isMioProfilo = false;
+          this.caricaProfiloPubblico(Number(idDaUrl));
+        }
+      });
+    }
   }
-  ottieniCognome(): string | null{
-    return this.servizioAutenticazione.ottieniCognome();
+
+  caricaProfiloPubblico(id: number) {
+    this.utenteService.getProfiloById(id).subscribe({
+      next: (databaseUser) => {
+        this.nome = databaseUser.nome;
+        this.cognome = databaseUser.cognome;
+        this.username = databaseUser.username;
+        this.email = databaseUser.email;
+        this.ruolo = databaseUser.ruolo;
+
+        if (this.ruolo === 'ROLE_ORGANIZZATORE') {
+          this.viaggioService.getViaggiByOrganizzatore(id).subscribe({
+            next: (viaggi) => {
+              this.viaggiOrganizzati = viaggi;
+              this.caricamento = false;
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              console.error("Errore viaggi pubblico:", err);
+              this.caricamento = false;
+              this.cdr.detectChanges();
+            }
+          });
+        } else {
+          this.caricamento = false;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.error("Errore caricamento profilo tramite ID:", err);
+        this.caricamento = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
-  ottieniEmail(): string | null{
-    return this.servizioAutenticazione.ottieniEmail();
-  }
-  ottieniUsername(): string | null{
-    return this.servizioAutenticazione.ottieniUsername();
+
+  isFuturo(dataInizioStr: string | null): boolean {
+    if (!dataInizioStr) return false;
+
+    const dataViaggio = new Date(dataInizioStr);
+    const oggi = new Date();
+
+    oggi.setHours(0, 0, 0, 0);
+    dataViaggio.setHours(0, 0, 0, 0);
+
+    return dataViaggio > oggi;
   }
 }

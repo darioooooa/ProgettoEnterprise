@@ -142,6 +142,44 @@
   transform: scale(1.05);
 }
 
+/* --- ANIMAZIONE SULLE SCHEDE DEI VIAGGI --- */
+.scheda-viaggio {
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease !important;
+}
+
+.scheda-viaggio:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  transform: translateY(-5px);
+  border-color: rgba(144, 202, 249, 0.3) !important;
+}
+
+.badge-recensione {
+  color: #ffca28;
+}
+
+/* --- ANIMAZIONE SPINNER DI CARICAMENTO --- */
+.contenitore-caricamento {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-vetro {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-top-color: #90caf9;
+  border-radius: 50%;
+  animation: rotazioneSpinner 0.8s linear infinite;
+}
+
+@keyframes rotazioneSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* --- RESPONSIVE --- */
 @media (max-width: 600px) {
   .griglia-informazioni {

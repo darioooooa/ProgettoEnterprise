@@ -24,6 +24,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -75,6 +77,12 @@ public class RecensioneServiceImpl implements RecensioneService {
                     log.error("Impossibile inserire recensione: viaggio ID {} non trovato", viaggioId);
                     return new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId));
                 });
+
+        // Si può recensire il viaggio solo se già iniziato
+        if (viaggio.getDataInizio() == null || viaggio.getDataInizio().isAfter(LocalDate.now())) {
+            log.warn("Tentativo di recensione prima dell'inizio del viaggio id: {}", viaggioId);
+            throw new IllegalArgumentException(messageLang.getMessage("recensione.not_yet_started"));
+        }
 
         Recensione recensione = new Recensione();
         recensione.setUtente(autore);

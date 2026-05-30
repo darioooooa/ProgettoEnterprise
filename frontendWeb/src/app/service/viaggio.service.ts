@@ -28,6 +28,11 @@ export class ViaggioService {
 
     return this.http.get<any>(this.API_URL, { params } );
   }
+
+  getViaggiByOrganizzatore(organizzatoreId: number): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/organizzatore/${organizzatoreId}`);
+  }
+
   getViaggiPerMappa(): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/mappa-viaggi`);
   }

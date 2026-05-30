@@ -109,7 +109,8 @@ public class ViaggioServiceImpl implements ViaggioService {
                 "destinazione", viaggio.getDestinazione() != null ? viaggio.getDestinazione() : "",
                 "mediaRecensioni", viaggio.getMediaRecensioni(),
                 "numeroRecensioni", viaggio.getNumeroRecensioni(),
-                "organizzatoreUsername", viaggio.getOrganizzatore() != null ? viaggio.getOrganizzatore().getUsername() : ""
+                "organizzatoreUsername", viaggio.getOrganizzatore() != null ? viaggio.getOrganizzatore().getUsername() : "",
+                "organizzatoreId", viaggio.getOrganizzatore() != null ? viaggio.getOrganizzatore().getId() : 0L
         );
     }
 
@@ -157,7 +158,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         List<Viaggio> viaggi;
 
         if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)) {
-            viaggi = viaggioRepository.findByorganizzatoreId(utenteId);
+            viaggi = viaggioRepository.findByOrganizzatoreId(utenteId);
         } else {
 
             viaggi = viaggioRepository.findAll();
@@ -243,6 +244,17 @@ public class ViaggioServiceImpl implements ViaggioService {
         }
 
         return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ViaggioDTO> getViaggiByOrganizzatore(Long organizzatoreId) {
+        List<Viaggio> viaggi = viaggioRepository.findByOrganizzatoreId(organizzatoreId);
+        log.info("Trovati {} viaggi per l'organizzatore id: {}", viaggi.size(), organizzatoreId);
+
+        return viaggi.stream()
+                .map(viaggio -> modelMapper.map(viaggio, ViaggioDTO.class))
+                .collect(Collectors.toList());
     }
 
 }

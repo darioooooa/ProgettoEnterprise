@@ -96,4 +96,11 @@ public class ViaggioController {
 
         return ResponseEntity.ok(viaggioDTO);
     }
+
+    @GetMapping("/organizzatore/{organizzatoreId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ViaggioDTO>> getViaggiByOrganizzatore(@PathVariable Long organizzatoreId, @AuthenticationPrincipal UtenteLoggato utente) {
+        log.info("Richiesta dei viaggi da parte dell'utente con id {}, per l'organizzatore con id {}", utente.getId(), organizzatoreId);
+        return ResponseEntity.ok(viaggioService.getViaggiByOrganizzatore(organizzatoreId));
+    }
 }

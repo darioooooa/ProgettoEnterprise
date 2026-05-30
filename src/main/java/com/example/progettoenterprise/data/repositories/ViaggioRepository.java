@@ -7,14 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
 
 
 @Repository
 public interface ViaggioRepository extends JpaRepository<Viaggio,Long>, JpaSpecificationExecutor<Viaggio> {
-    List<Viaggio> findByorganizzatoreId(Long organizzatoreId);
+    List<Viaggio> findByOrganizzatoreId(Long organizzatoreId);
 
     // Metodi per le recensioni
 

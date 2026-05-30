@@ -1,9 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import { ViaggioService } from '../service/viaggio.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
-import { RouterLink } from '@angular/router';
 import { GalleriaComponent } from './components/galleria/galleria';
 import { ProgrammaComponent } from './components/programma/programma';
 import { CommunityComponent } from './components/community/community';
@@ -17,6 +16,7 @@ import {PrenotazioneService} from '../service/prenotazioni.service';
     GalleriaComponent,
     ProgrammaComponent,
     CommunityComponent,
+    RouterLink,
   ],
   templateUrl: './dettaglio-viaggio.html',
   styleUrl: './dettaglio-viaggio.css'
