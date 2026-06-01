@@ -13,6 +13,8 @@ import { ListaTappe } from './lista-tappe/lista-tappe';
 import { DettaglioViaggio } from './dettaglio-viaggio/dettaglio-viaggio';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 import { DiventaOrganizzatoreComponent} from './diventa-organizzatore/diventa-organizzatore';
+import{ InboxOrganizzatore} from './inbox-organizzatore/inbox-organizzatore';
+import {ChatComponent} from './dettaglio-viaggio/components/chat/chat';
 
 export const routes: Routes = [
 
@@ -32,6 +34,9 @@ export const routes: Routes = [
       {
         path: 'organizzatore',
         component: SchermataOrganizzatoreComponent
+      },
+      { path: 'inbox-organizzatore',
+        component: InboxOrganizzatore
       },
       {
         path: 'crea-viaggio',
@@ -90,5 +95,14 @@ export const routes: Routes = [
   {
     path: '**',
     redirectTo: ''
+  },
+  {
+    path: 'inbox-organizzatore',
+    component: InboxOrganizzatore,
+  },
+  {
+    path:'chat',
+    component: ChatComponent
+
   }
 ];

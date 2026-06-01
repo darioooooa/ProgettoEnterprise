@@ -1,0 +1,72 @@
+<div class="inbox-container">
+
+  <div class="inbox-sidebar">
+    <div class="sidebar-header">
+      <h2>📬 Messaggi Ricevuti</h2>
+    </div>
+
+    <div class="sidebar-list">
+      <div *ngIf="stanze.length === 0" class="inbox-vuota">
+        Nessun messaggio ricevuto finora per i tuoi viaggi.
+      </div>
+
+      <div *ngFor="let stanza of stanze"
+           class="inbox-card"
+           [class.active]="stanzaSelezionata?.id === stanza.id"
+           (click)="selezionaChat(stanza)">
+        <div class="card-avatar">
+          {{ stanza.viaggiatoreUsername.substring(0, 2).toUpperCase() }}
+        </div>
+        <div class="card-info">
+          <span class="user-name">&#64;{{ stanza.viaggiatoreUsername }}</span>
+          <span class="trip-title">{{ stanza.titoloViaggio }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="inbox-chat-area">
+
+    <ng-container *ngIf="stanzaSelezionata; else nessunaselezione">
+      <div class="chat-header-top">
+        <div class="header-user-info">
+          <h3>Chat con &#64;{{ stanzaSelezionata.viaggiatoreUsername }}</h3>
+          <p>Viaggio: <strong>{{ stanzaSelezionata.titoloViaggio }}</strong></p>
+        </div>
+      </div>
+
+      <div class="chat-body-messages" #scrollInboxChat>
+        <div *ngFor="let msg of messaggiChat"
+             [class.mio-msg]="msg.mittenteUsername === mioUsername"
+             [class.altro-msg]="msg.mittenteUsername !== mioUsername"
+             class="msg-row">
+
+          <div class="msg-bubble">
+            <p class="msg-text">{{ msg.testo }}</p>
+            <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-footer-input-area">
+        <input type="text"
+               [(ngModel)]="nuovoMessaggioTesto"
+               (keyup.enter)="inviaMessaggio()"
+               placeholder="Scrivi la tua risposta..." />
+        <button type="button" (click)="inviaMessaggio()" [disabled]="!nuovoMessaggioTesto.trim()">
+          Rispondi 🚀
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-template #nessunaselezione>
+      <div class="no-chat-selected">
+        <div class="placeholder-icon">📥</div>
+        <h3>Seleziona una conversazione</h3>
+        <p>Clicca su una chat a sinistra per esaminare le richieste in tempo reale.</p>
+      </div>
+    </ng-template>
+
+  </div>
+
+</div>

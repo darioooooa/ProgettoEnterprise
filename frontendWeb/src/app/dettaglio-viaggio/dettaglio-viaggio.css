@@ -883,6 +883,32 @@ input[type="number"]::-webkit-outer-spin-button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 5;
+}/* --- STILE ESCLUSIVO PER IL BOTTONE TORNA ALLE PRENOTAZIONI --- */
+#btn-torna-prenotazioni {
+  /* Forziamo il bottone a stare su una riga isolata in alto, senza rompere il titolo */
+  display: block !important;
+  width: fit-content !important;
+  margin-bottom: 25px !important;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+
+  /* Reset e pulizia dello stile ereditato */
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+  font-size: 0.85rem !important;
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+
+/* Effetto hover isolato */
+#btn-torna-prenotazioni:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #90caf9 !important;
+  border-color: rgba(144, 202, 249, 0.3) !important;
+  transform: translateX(-2px) !important;
 }
 
 .btn-visibilita-badge:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); }

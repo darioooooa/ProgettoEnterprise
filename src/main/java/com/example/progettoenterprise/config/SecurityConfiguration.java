@@ -45,7 +45,11 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger
                         .requestMatchers("/api/v1/auth/register").permitAll()
-                        // Endpoint accessibili solo dagli utenti autenticati (richiede il JWT)
+
+                        //  Lascia passare la richiesta HTTP iniziale (Handshake) per il WebSocket
+                        .requestMatchers("/ws/**").permitAll()
+
+                        // Endpoint accessibili solo dagli utenti autenticati
                         .anyRequest().authenticated()
                 )
                 // Spring fa da resource server

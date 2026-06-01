@@ -6,6 +6,7 @@
 
       <header class="form-header" style="display: flex; justify-content: space-between; align-items: flex-start; wrap: wrap; gap: 15px;">
         <div>
+          <button id="btn-torna-prenotazioni" routerLink="/prenotazioni" class="tab-link"> ⬅ Torna alle prenotazioni</button>
           <h1>Esplora la destinazione</h1>
           <p>📍 {{ statistiche?.destinazione || 'Dettagli Itinerario di Viaggio' }}</p>
         </div>
@@ -53,8 +54,9 @@
 
       <nav class="itinerary-nav-tabs">
         <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'galleria'" (click)="tabAttivo = 'galleria'">🖼️ Galleria</button>
-        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
         <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'community'" (click)="tabAttivo = 'community'">💬 Community</button>
+        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
+        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'chat' " (click)="tabAttivo = 'chat'">🗯️Chat</button>
       </nav>
 
       <app-galleria  *ngIf="tabAttivo === 'galleria'"
@@ -73,6 +75,11 @@
                      [isMioViaggio]="isMioViaggio()"
                      (richiestaRefreshPadre)="onSincronizzaRichiesta()">
       </app-community>
+
+      <app-chat *ngIf="tabAttivo === 'chat'"
+                [viaggioId]="viaggioId"
+                [mioUsername]="mioUsername">
+      </app-chat>
 
     </div>
   </section>

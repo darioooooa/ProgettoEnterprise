@@ -34,8 +34,10 @@ export class AuthInterceptor implements HttpInterceptor {
 
   // Metodo per clonare la richiesta in modo pulito
   private aggiungiToken(request: HttpRequest<any>, token: string | null): HttpRequest<any> {
-    // Aggiunge il token solo se esiste e se si sta chiamando il backend
-    if (token && request.url.includes('localhost:8080')) {
+
+    const isRottaBackend = request.url.includes('localhost:8080') || request.url.startsWith('/api/');
+
+    if (token && isRottaBackend) {
       return request.clone({
         setHeaders: { Authorization: `Bearer ${token}` }
       });

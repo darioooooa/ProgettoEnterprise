@@ -4,9 +4,11 @@ import {ActivatedRoute, RouterLink} from '@angular/router';
 import { ViaggioService } from '../service/viaggio.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { GalleriaComponent } from './components/galleria/galleria';
+import {ChatComponent} from './components/chat/chat';
 import { ProgrammaComponent } from './components/programma/programma';
 import { CommunityComponent } from './components/community/community';
 import {PrenotazioneService} from '../service/prenotazioni.service';
+
 
 @Component({
   selector: 'app-dettaglio-viaggio',
@@ -17,6 +19,7 @@ import {PrenotazioneService} from '../service/prenotazioni.service';
     ProgrammaComponent,
     CommunityComponent,
     RouterLink,
+    ChatComponent
   ],
   templateUrl: './dettaglio-viaggio.html',
   styleUrl: './dettaglio-viaggio.css'
@@ -28,7 +31,7 @@ export class DettaglioViaggio implements OnInit {
   mioUsername: string = '';
 
   // Stato del tab attivo
-  tabAttivo: 'galleria' | 'programma' | 'community' = 'programma';
+  tabAttivo: 'chat'|'galleria' | 'programma' | 'community' = 'programma'  ;
 
   constructor(
     private route: ActivatedRoute,
