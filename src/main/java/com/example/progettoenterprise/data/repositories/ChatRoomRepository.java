@@ -11,7 +11,7 @@ import java.util.List;
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     // Cerca la stanza usando gli ID degli oggetti correlati
-    Optional<ChatRoom> findByViaggioIdAndViaggiatoreUsername(Long viaggioId, String viaggiatoreUsername);
+    Optional<ChatRoom> findByViaggioIdAndViaggiatoreUsernameIgnoreCase(Long viaggioId, String viaggiatoreUsername);
 
     // mostra le chat attive per organizzatore
     List<ChatRoom> findByOrganizzatoreId(Long organizzatoreId);
@@ -19,5 +19,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     //mostra le chat attive per viaggiatore
     List<ChatRoom> findByViaggiatoreId(Long viaggiatoreId);
 
-    List<ChatRoom> findByViaggioOrganizzatoreUsername(String username);
+    List<ChatRoom> findByViaggioOrganizzatoreUsernameIgnoreCase(String username);
 }

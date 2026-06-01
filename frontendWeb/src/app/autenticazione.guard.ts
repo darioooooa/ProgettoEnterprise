@@ -7,7 +7,7 @@ import { AutenticazioneService } from './service//autenticazione.service';
 export const autenticazioneGuard: CanActivateFn = (route, state) => {
   const servAuth = inject(AutenticazioneService);
   const router = inject(Router);
-  const platformId = inject(PLATFORM_ID); // 🚀 Inietta l'ID della piattaforma
+  const platformId = inject(PLATFORM_ID);
 
   if (!isPlatformBrowser(platformId)) {
     return true;

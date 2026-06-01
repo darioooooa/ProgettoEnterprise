@@ -30,7 +30,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Transactional
     public ChatRoom ottieniOCreaStanza(Long viaggioId, String viaggiatoreUsername) {
         //controllo sw stanza già presente
-        return chatRoomRepository.findByViaggioIdAndViaggiatoreUsername(viaggioId, viaggiatoreUsername)
+        return chatRoomRepository.findByViaggioIdAndViaggiatoreUsernameIgnoreCase(viaggioId, viaggiatoreUsername)
                 .orElseGet(() -> {
 
                     Viaggio viaggio = viaggioRepository.findById(viaggioId)
@@ -73,7 +73,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     public List<ChatRoomDTO> ottieniStanzePerOrganizzatore(String organizzatoreUsername) {
-        return chatRoomRepository.findByViaggioOrganizzatoreUsername(organizzatoreUsername).stream()
+        return chatRoomRepository.findByViaggioOrganizzatoreUsernameIgnoreCase(organizzatoreUsername).stream()
                 .map(stanza -> ChatRoomDTO.builder()
                         .id(stanza.getId())
                         .viaggioId(stanza.getViaggio().getId())
