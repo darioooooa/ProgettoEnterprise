@@ -6,6 +6,7 @@ import com.example.progettoenterprise.data.repositories.RichiestaPromozioneRepos
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.service.AdminService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
+import com.example.progettoenterprise.dto.UtenteDTO;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
@@ -15,6 +16,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -32,6 +34,7 @@ public class AdminServiceImpl implements AdminService {
     private final OrganizzatoreRepository organizzatoreRepository;
     private final Keycloak keycloak;
     private final EmailServiceImpl emailService;
+    private final ModelMapper modelMapper;
 
     private static final String REALM_NAME = "enterprise-realm";
 
@@ -176,6 +179,27 @@ public class AdminServiceImpl implements AdminService {
         utenteRepository.save(utente);
 
         emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
+    }
+
+    @Override
+    public List<UtenteDTO> getUtentiBannati() {
+
+        return utenteRepository.findByIsAttivoFalse()
+                .stream()
+                .map(utente -> modelMapper.map(utente, UtenteDTO.class))
+                .toList();
+    }
+
+    @Transactional
+    @Override
+    public void sbannaUtente(Long userId) {
+        Utente utente = utenteRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Utente non trovato"));
+        utente.setAttivo(true);
+        utente.setMotivoSospensione(null);
+        utenteRepository.save(utente);
+
+        log.info("L'utente ID {} ({}) è stato riattivato con successo.", utente.getId(), utente.getUsername());
     }
 }
 

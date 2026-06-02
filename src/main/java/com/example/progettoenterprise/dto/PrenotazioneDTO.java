@@ -36,5 +36,8 @@ public class PrenotazioneDTO {
     private LocalDate viaggioDataFine;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String viaggioDestinazione;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String stato;
 }

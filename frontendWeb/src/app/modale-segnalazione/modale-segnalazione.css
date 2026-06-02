@@ -1,0 +1,135 @@
+.modale-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modale-content {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: comparsa 0.3s ease-out;
+}
+
+@keyframes comparsa {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modale-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modale-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.btn-chiudi {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.btn-chiudi:hover {
+  color: #212529;
+}
+
+.modale-body {
+  padding: 20px;
+}
+
+.testo-info {
+  font-size: 0.95rem;
+  color: #6c757d;
+  margin-top: 0;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.etichetta {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.input-campo {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.textarea-campo {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.modale-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.btn-annulla {
+  background-color: #e9ecef;
+  color: #495057;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.btn-annulla:hover {
+  background-color: #ced4da;
+}
+
+.btn-invia {
+  background-color: #e63946;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.btn-invia:hover:not(:disabled) {
+  background-color: #d62828;
+}
+
+.btn-invia:disabled {
+  background-color: #f8d7da;
+  color: #dc3545;
+  cursor: not-allowed;
+}

@@ -17,26 +17,8 @@
     <app-map (viaggioSelezionato)="vaiAiDettagli($event)"></app-map>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <span class="stat-card-label">Viaggi Attivi</span>
-      <h3>12</h3>
-    </div>
-    <div class="stat-card">
-      <span class="stat-card-label">Prenotazioni Totali</span>
-      <h3>45</h3>
-    </div>
-    <div class="stat-card">
-      <span class="stat-card-label">Guadagno Stimato</span>
-      <h3>€ 12.400</h3>
-    </div>
-  </div>
-
   <div class="management-section">
-    <div class="section-header">
-      <h2>I tuoi Viaggi</h2>
-    </div>
-
+    <div class="section-header"><h2>I tuoi Viaggi</h2></div>
     <div class="table-container">
       <table class="admin-table">
         <thead>
@@ -49,11 +31,8 @@
         </thead>
         <tbody>
         <tr *ngIf="listaDeiViaggi.length === 0">
-          <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-            Nessun viaggio trovato in questa pagina.
-          </td>
+          <td colspan="4" style="text-align: center; padding: 2rem;">Nessun viaggio trovato.</td>
         </tr>
-
         <tr *ngFor="let v of listaDeiViaggi">
           <td><strong>{{ v.destinazione }}</strong></td>
           <td>{{ v.prezzo }}€</td>
@@ -65,38 +44,11 @@
         </tr>
         </tbody>
       </table>
-
-      <div class="pagination-bar" *ngIf="totalePagine > 0">
-        <div class="pagination-info">
-          Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
-        </div>
-
-        <div class="pagination-buttons">
-          <button
-            class="btn-pagination"
-            (click)="paginaPrecedente()"
-            [disabled]="paginaCorrente === 0"
-            [class.disabled]="paginaCorrente === 0">
-            &larr; Precedente
-          </button>
-
-          <button
-            class="btn-pagination"
-            (click)="paginaSuccessiva()"
-            [disabled]="paginaCorrente === totalePagine - 1"
-            [class.disabled]="paginaCorrente === totalePagine - 1">
-            Successiva &rarr;
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 
   <div class="management-section" style="margin-top: 3rem;">
-    <div class="section-header">
-      <h2>Ultime Prenotazioni Ricevute</h2>
-    </div>
-
+    <div class="section-header"><h2>Ultime Prenotazioni Ricevute</h2></div>
     <div class="table-container">
       <table class="admin-table">
         <thead>
@@ -105,37 +57,44 @@
           <th>Viaggio</th>
           <th>Data</th>
           <th>Persone</th>
+          <th>Azioni</th>
         </tr>
         </thead>
         <tbody>
-        <tr>
-          <td>
-            <div class="user-cell">
-              <div class="user-avatar green">MR</div>
-              <div class="user-info">
-                <div class="name">Mario Rossi</div>
-              </div>
-            </div>
-          </td>
-          <td>Bali, Indonesia</td>
-          <td>20/04/2026</td>
-          <td><span class="badge badge-pending">2 persone</span></td>
+        <tr *ngIf="ultimePrenotazioni.length === 0">
+          <td colspan="5" style="text-align: center; padding: 2rem;">Non hai ancora ricevuto prenotazioni.</td>
         </tr>
-        <tr>
+
+        <tr *ngFor="let prenota of ultimePrenotazioni">
           <td>
             <div class="user-cell">
-              <div class="user-avatar purple">GB</div>
+              <div class="user-avatar" [ngClass]="getColoreAvatar(prenota.viaggiatoreUsername)">
+                {{ getIniziali(prenota.viaggiatoreUsername) }}
+              </div>
               <div class="user-info">
-                <div class="name">Giulia Bianchi</div>
+                <div class="name">{{ prenota.viaggiatoreUsername || 'Utente' }}</div>
               </div>
             </div>
           </td>
-          <td>Deserto del Sahara</td>
-          <td>18/04/2026</td>
-          <td><span class="badge badge-pending">1 persona</span></td>
+          <td>{{ prenota.viaggioDestinazione }}</td>
+          <td>{{ prenota.dataPrenotazione | date:'dd/MM/yyyy' }}</td>
+          <td><span class="badge badge-pending">{{ prenota.numeroPersone }}</span></td>
+          <td>
+            <button class="btn-segnala-small" (click)="apriSegnalazioneViaggiatore(prenota.viaggiatoreId, prenota.viaggiatoreUsername)">
+              🚩 Segnala
+            </button>
+          </td>
         </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <app-modale-segnalazione
+    *ngIf="mostraSegnalazione"
+    [visibile]="mostraSegnalazione"
+    [tipoEntita]="'UTENTE'"
+    [idRiferimento]="idDaSegnalare"
+    (chiudiModale)="mostraSegnalazione = false">
+  </app-modale-segnalazione>
 </main>

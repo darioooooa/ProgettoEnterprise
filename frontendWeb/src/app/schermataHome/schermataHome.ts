@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, NgZone, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { AmiciziaService } from '../service/amicizia.service';
@@ -20,7 +20,8 @@ export class SchermataHomeComponent implements OnInit {
   filtriViaggio = {
     destinazione: '',
     dataInizioMin: '',
-    maxPartecipanti: ''
+    maxPartecipanti: '',
+    prezzoMax: ''
   };
   viaggiTrovati: any[] = [];
   haCercato = false;
@@ -40,13 +41,16 @@ export class SchermataHomeComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private viaggioService: ViaggioService,
     private zone: NgZone,
-    private itinerarioService: ItinerarioService
+    private itinerarioService: ItinerarioService,
+    private navigatore: Router
   ) {
     console.log('Schermata Home inizializzata!');
   }
 
   ngOnInit() {
+
     this.mioUsername = this.servAuth.ottieniUsername() || 'Utente';
+
     if (this.isLoggato()) {
       this.caricaItinerariUtente();
     }
@@ -86,7 +90,7 @@ export class SchermataHomeComponent implements OnInit {
     if (this.filtriViaggio.destinazione) filtriPuliti.destinazione = this.filtriViaggio.destinazione;
     if (this.filtriViaggio.dataInizioMin) filtriPuliti.dataInizioMin = this.filtriViaggio.dataInizioMin + 'T00:00:00';
     if (this.filtriViaggio.maxPartecipanti) filtriPuliti.maxPartecipanti = this.filtriViaggio.maxPartecipanti;
-
+    if (this.filtriViaggio.prezzoMax) filtriPuliti.prezzoMax = this.filtriViaggio.prezzoMax;
     this.zone.run(() => {
       this.viaggioService.getViaggi(this.paginaCorrente, filtriPuliti).subscribe({
         next: (risposta) => {

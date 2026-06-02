@@ -25,4 +25,11 @@ export class AdminService {
     const payload = { noteAdmin: note };
     return this.http.post(`${this.apiUrl}/${id}/rifiuta?adminIdCorrente=${adminId}`, payload, { responseType: 'text' });
   }
+  getUtentiBannati(): Observable<any[]> {
+    return this.http.get<any[]>('http://localhost:8080/api/admin/richieste/utenti-bannati');
+  }
+
+  sbannaUtente(idUtente: number): Observable<any> {
+    return this.http.put(`http://localhost:8080/api/admin/richieste/utenti/${idUtente}/riattiva`, {});
+  }
 }

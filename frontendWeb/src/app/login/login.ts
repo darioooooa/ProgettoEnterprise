@@ -1,8 +1,8 @@
-import {ChangeDetectorRef, Component} from '@angular/core';
-import {Router, RouterLink} from '@angular/router';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { AutenticazioneService } from '../service/autenticazione.service';
-import {FormsModule} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
@@ -29,67 +29,66 @@ export class Login {
     private cdr: ChangeDetectorRef
   ) {}
 
-
   eseguiAccesso() {
     console.log('Tentativo di accesso per:', this.datiAccesso.username);
-
-    // Reset dell'errore precedente
     this.messaggioErrore = '';
 
     this.servizioAuth.effettuaAccesso(this.datiAccesso).subscribe({
-      next: (risposta) => {
-        console.log('Login effettuato con successo', risposta);
-
-        // CHIAMIAMO IL DATABASE PER OTTENERE L'ID REALE
-        this.servizioAuth.ottieniDatiUtenteDalDatabase(this.datiAccesso.username).subscribe({
-          next: (datiDb) => {
-            // A seconda di come risponde il backend (lista o oggetto singolo), estraiamo l'utente
-            const utente = Array.isArray(datiDb) ? datiDb[0] : datiDb;
-
-            if (utente && utente.id) {
-              // SALVIAMO L'ID NEL LOCALSTORAGE!
-              localStorage.setItem('id', utente.id.toString());
-              console.log("ID del database salvato con successo:", utente.id);
-            }
-
-            //  FACCIAMO IL REINDIRIZZAMENTO
-            const ruolo = this.servizioAuth.ottieniRuolo();
-            if (ruolo === 'ROLE_ADMIN') {
-              this.navigatore.navigate(['/admin-dashboard']);
-            } else {
-              this.navigatore.navigate(['/home']);
-            }
-          },
-          error: (err) => {
-            console.error("Errore nel recupero dell'ID dal DB. L'utente potrebbe non essere sincronizzato.", err);
-            // Reindirizziamo comunque per non bloccare l'app
-            const ruolo = this.servizioAuth.ottieniRuolo();
-            if (ruolo === 'ROLE_ADMIN') {
-              this.navigatore.navigate(['/admin-dashboard']);
-            } else {
-              this.navigatore.navigate(['/home']);
-            }
-          }
-        });
+      next: () => {
+        console.log('Login effettuato con successo');
+        this.sincronizzaUtenteEReindirizza();
       },
       error: (errore) => {
-        console.error('Errore durante il login:', errore);
-
-        const erroreCorpo = errore.error;
-        const erroreStringa = JSON.stringify(errore);
-
-        if (
-          (erroreCorpo?.error === 'invalid_grant' && erroreCorpo?.error_description === 'Account is not fully set up') ||
-          erroreStringa.includes('Account is not fully set up')
-        ) {
-          this.messaggioErrore = 'Il tuo account non è ancora attivo! Controlla la tua casella di posta e clicca sul link di conferma per attivarlo.';
-        } else {
-          this.messaggioErrore = 'Credenziali non valide, riprova!';
-        }
-
-        // Forza angular ad aggiornare la schermata visivamente
-        this.cdr.detectChanges();
+        this.gestisciErrore(errore);
       }
     });
+  }
+
+  private sincronizzaUtenteEReindirizza() {
+    this.servizioAuth.ottieniDatiUtenteDalDatabase(this.datiAccesso.username).subscribe({
+      next: (datiDb) => {
+        const utente = Array.isArray(datiDb) ? datiDb[0] : datiDb;
+        if (utente?.id) {
+          localStorage.setItem('userId', utente.id.toString());
+        }
+        this.indirizzaUtentePerRuolo();
+      },
+      error: (err) => {
+        console.error("Errore sincronizzazione ID:", err);
+        this.indirizzaUtentePerRuolo();
+      }
+    });
+  }
+
+  private indirizzaUtentePerRuolo() {
+    const ruolo = this.servizioAuth.ottieniRuolo();
+
+    switch (ruolo) {
+
+      case 'ROLE_ADMIN':
+        this.navigatore.navigate(['/admin-dashboard']);
+        break;
+
+      case 'ROLE_ORGANIZZATORE':
+        this.navigatore.navigate(['/organizzatore']);
+        break;
+
+      case 'ROLE_VIAGGIATORE':
+      default:
+        this.navigatore.navigate(['/home']);
+        break;
+    }
+  }
+  private gestisciErrore(errore: any) {
+    console.error('Errore durante il login:', errore);
+    const erroreStringa = JSON.stringify(errore);
+
+    if (erroreStringa.includes('Account is not fully set up')) {
+      this.messaggioErrore = 'Il tuo account non è ancora attivo! Controlla la tua casella di posta.';
+    } else {
+      this.messaggioErrore = 'Credenziali non valide, riprova!';
+    }
+
+    this.cdr.detectChanges();
   }
 }

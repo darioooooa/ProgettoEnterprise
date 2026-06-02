@@ -1,0 +1,37 @@
+<div class="modale-overlay" *ngIf="visibile" (click)="annulla()">
+  <div class="modale-content" (click)="$event.stopPropagation()">
+
+    <div class="modale-header">
+      <h3>Invia Segnalazione</h3>
+      <button class="btn-chiudi" (click)="annulla()">&times;</button>
+    </div>
+
+    <div class="modale-body">
+      <p class="testo-info">
+        Aiutaci a mantenere la piattaforma sicura. Seleziona il motivo per cui stai segnalando questo elemento.
+      </p>
+
+      <label class="etichetta">Motivo della segnalazione *</label>
+      <select [(ngModel)]="motivoSelezionato" class="input-campo">
+        <option value="" disabled selected>-- Seleziona un motivo --</option>
+        <option value="SPAM">Spam o Truffa</option>
+        <option value="COMPORTAMENTO_SCORRETTO">Comportamento Scorretto / Non Pagante</option>
+        <option value="FALSO">Contenuto Falso / Inappropriato</option>
+        <option value="ALTRO">Altro</option>
+      </select>
+
+      <label class="etichetta">Dettagli aggiuntivi (opzionale)</label>
+      <textarea [(ngModel)]="descrizione"
+                placeholder="Scrivi qui i dettagli per aiutare gli amministratori..."
+                class="input-campo textarea-campo"></textarea>
+    </div>
+
+    <div class="modale-footer">
+      <button class="btn-annulla" (click)="annulla()">Annulla</button>
+      <button class="btn-invia" (click)="invia()" [disabled]="!motivoSelezionato || invioInCorso">
+        {{ invioInCorso ? 'Invio in corso...' : 'Invia Segnalazione' }}
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -7,6 +7,15 @@
     <div class="search-bar">
       <input type="text" placeholder="Località (es. Bali, Indonesia)" [(ngModel)]="filtriViaggio.destinazione">
       <input type="date" [(ngModel)]="filtriViaggio.dataInizioMin">
+      <div class="price-wrapper">
+        <label>Prezzo Max</label>
+        <input type="range" min="0" max="5000" step="50" [(ngModel)]="filtriViaggio.prezzoMax" class="price-slider">
+
+        <div class="price-display">
+          <input type="number" [(ngModel)]="filtriViaggio.prezzoMax">
+          <span>€</span>
+        </div>
+      </div>
       <select [(ngModel)]="filtriViaggio.maxPartecipanti">
         <option value="">Qualsiasi numero di persone</option>
         <option value="1">1 Persona</option>

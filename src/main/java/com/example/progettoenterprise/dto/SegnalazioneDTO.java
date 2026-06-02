@@ -30,6 +30,15 @@ public class SegnalazioneDTO {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long segnalatoreId;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String segnalatoreUsername;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String riferimentoNome;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String adminUsername;
+
     private String tipo;
     private Long idRiferimento;
     private String motivo;

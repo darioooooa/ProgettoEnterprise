@@ -7,90 +7,161 @@
       <button class="btn-logout" (click)="logout()">Logout</button>
     </div>
   </nav>
+
   <div class="content-wrapper">
     <div class="glass-form-container dashboard-container">
-      <header class="form-header">
-        <h1>Dashboard Amministratore</h1>
-        <p>Gestisci le richieste di promozione a Organizzatore</p>
-      </header>
 
-      <div class="view-toggle">
-        <button [class.active]="vistaAttuale === 'PENDENTI'" (click)="cambiaVista('PENDENTI')">
-          Richieste Pendenti
+      <div class="main-tabs">
+        <button [class.active]="sezionePrincipale === 'PROMOZIONI'" (click)="cambiaSezionePrincipale('PROMOZIONI')">
+          🛡️ Gestione Promozioni
         </button>
-        <button [class.active]="vistaAttuale === 'STORICO'" (click)="cambiaVista('STORICO')">
-          Storico Valutazioni
+        <button [class.active]="sezionePrincipale === 'SEGNALAZIONI'" (click)="cambiaSezionePrincipale('SEGNALAZIONI')">
+          🚨 Gestione Segnalazioni
+        </button>
+        <button [class.active]="sezionePrincipale === 'UTENTI_BANNATI'" (click)="cambiaSezionePrincipale('UTENTI_BANNATI')">
+          🚫 Gestione Ban
         </button>
       </div>
 
-      <div class="table-responsive">
-        <table class="glass-table" *ngIf="richiesteFiltrate.length > 0">
-          <thead>
-          <tr>
-            <th>UTENTE</th>
-            <th>DATA</th>
-            <th>DETTAGLI CANDIDATURA</th>
-            <th>AZIONI</th>
-          </tr>
-          </thead>
-          <tbody>
+      <ng-container *ngIf="sezionePrincipale === 'PROMOZIONI'">
+        <header class="form-header">
+          <h1>Richieste di Promozione</h1>
+        </header>
 
-          <tr *ngFor="let richiesta of richiesteFiltrate">
-
-            <td class="user-info">
-              <span class="username">{{ richiesta.usernameViaggiatore }}</span>
-              <span class="email">{{ richiesta.emailViaggiatore }}</span>
-            </td>
-
-            <td>{{ richiesta.dataRichiesta | date:'dd/MM/yyyy HH:mm' }}</td>
-
-            <td class="motivazione-text">
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                <p style="margin: 0;"><strong>Motivazione:</strong> {{ richiesta.motivazione }}</p>
-
-                <p style="margin: 0; font-size: 0.9em; opacity: 0.9;" *ngIf="richiesta.biografiaProfessionale">
-                  <strong>Biografia:</strong> {{ richiesta.biografiaProfessionale }}
-                </p>
-
-                <div *ngIf="richiesta.documentiLink">
-                  <a [href]="richiesta.documentiLink" target="_blank" style="color: #90caf9; text-decoration: none; font-weight: bold;">
-                    📄 Visualizza Documenti
-                  </a>
-                </div>
-              </div>
-            </td>
-
-            <td class="actions-cell">
-
-              <ng-container *ngIf="richiesta.stato === 'IN_ATTESA'">
-                <button class="btn-approve" (click)="approva(richiesta.id)">Approva</button>
-                <button class="btn-reject" (click)="rifiuta(richiesta.id)">Rifiuta</button>
-              </ng-container>
-
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;" *ngIf="richiesta.stato === 'APPROVATA'">
-                <span class="badge badge-approved">✅ Accettata</span>
-                <small style="opacity: 0.7; font-size: 0.8em;" *ngIf="richiesta.adminId">
-                  da Admin #{{ richiesta.adminId }}
-                </small>
-              </div>
-
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;" *ngIf="richiesta.stato === 'RIFIUTATA'">
-                <span class="badge badge-rejected">❌ Rifiutata</span>
-                <small style="opacity: 0.7; font-size: 0.8em;" *ngIf="richiesta.adminId">
-                  da Admin #{{ richiesta.adminId }}
-                </small>
-              </div>
-
-            </td>
-
-          </tr>
-          </tbody>
-        </table>
-
-        <div *ngIf="richiesteFiltrate.length === 0" style="padding: 20px; text-align: center;">
-          {{ vistaAttuale === 'PENDENTI' ? 'Non ci sono richieste pendenti al momento.' : 'Nessuna richiesta presente nello storico.' }}
+        <div class="view-toggle">
+          <button [class.active]="vistaAttualePromozioni === 'PENDENTI'" (click)="cambiaVistaPromozioni('PENDENTI')">Richieste Pendenti</button>
+          <button [class.active]="vistaAttualePromozioni === 'STORICO'" (click)="cambiaVistaPromozioni('STORICO')">Storico Valutazioni</button>
         </div>
-      </div>
+
+        <div class="table-responsive">
+          <table class="glass-table" *ngIf="richiesteFiltrate.length > 0">
+            <thead>
+            <tr>
+              <th>UTENTE</th>
+              <th>DATA</th>
+              <th>DETTAGLI CANDIDATURA</th>
+              <th>AZIONI</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let richiesta of richiesteFiltrate">
+              <td class="user-info">
+                <span class="username">{{ richiesta.usernameViaggiatore }}</span>
+                <span class="email">{{ richiesta.emailViaggiatore }}</span>
+              </td>
+              <td>{{ richiesta.dataRichiesta | date:'dd/MM/yyyy' }}</td>
+              <td class="motivazione-text">
+                <p><strong>Motivazione:</strong> {{ richiesta.motivazione }}</p>
+              </td>
+              <td class="actions-cell">
+                <ng-container *ngIf="richiesta.stato === 'IN_ATTESA'">
+                  <button class="btn-approve" (click)="approva(richiesta.id)">Approva</button>
+                  <button class="btn-reject" (click)="rifiuta(richiesta.id)">Rifiuta</button>
+                </ng-container>
+                <span class="badge badge-approved" *ngIf="richiesta.stato === 'APPROVATA'">✅ Accettata</span>
+                <span class="badge badge-rejected" *ngIf="richiesta.stato === 'RIFIUTATA'">❌ Rifiutata</span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <div *ngIf="richiesteFiltrate.length === 0" style="padding: 20px; text-align: center;">Nessuna richiesta trovata.</div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="sezionePrincipale === 'SEGNALAZIONI'">
+        <header class="form-header">
+          <h1>Centro Segnalazioni</h1>
+        </header>
+
+        <div class="view-toggle" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <div>
+            <button [class.active]="vistaAttualeSegnalazioni === 'DA_GESTIRE'" (click)="cambiaVistaSegnalazioni('DA_GESTIRE')">Da Gestire</button>
+            <button [class.active]="vistaAttualeSegnalazioni === 'ARCHIVIO'" (click)="cambiaVistaSegnalazioni('ARCHIVIO')">Archivio</button>
+          </div>
+          <div>
+            <select [(ngModel)]="filtroTipo" style="padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); outline: none;">
+              <option value="" style="color: black;">Tutte le Categorie</option>
+              <option value="UTENTE" style="color: black;">Utenti</option>
+              <option value="VIAGGIO" style="color: black;">Viaggi</option>
+              <option value="ITINERARIO" style="color: black;">Itinerari</option>
+              <option value="RECENSIONE" style="color: black;">Recensioni</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="glass-table" *ngIf="!caricamentoSegnalazioni && segnalazioniFiltrate.length > 0">
+            <thead>
+            <tr>
+              <th>ID & TIPO</th>
+              <th>MOTIVO / DETTAGLI</th>
+              <th>STATO</th>
+              <th>AZIONI</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let seg of segnalazioniFiltrate">
+              <td class="user-info">
+                <span class="username">#{{ seg.id }} - {{ seg.tipo }}</span>
+                <span class="email">Segnalatore: {{ seg.segnalatoreUsername || 'ID ' + seg.segnalatoreId }}</span>
+              </td>
+              <td class="motivazione-text">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <span class="badge-motivo">{{ seg.motivo }}</span>
+                  <p style="margin: 5px 0; font-size: 0.85em;">{{ seg.descrizione || 'Nessuna descrizione aggiuntiva' }}</p>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-aperta" *ngIf="seg.stato === 'APERTA'">⚠️ Aperta</span>
+                <span class="badge badge-incarico" *ngIf="seg.stato === 'IN_LAVORAZIONE'">⏳ In Lavorazione</span>
+                <span class="badge badge-approved" *ngIf="seg.stato === 'CHIUSA'">✅ Risolta</span>
+                <span class="badge badge-rejected" *ngIf="seg.stato === 'RIFIUTATA'">❌ Rifiutata</span>
+              </td>
+              <td class="actions-cell">
+                <button *ngIf="seg.stato === 'APERTA'" class="btn-take" (click)="prendiInCarico(seg.id)">🙋 Prendi in carico</button>
+                <ng-container *ngIf="seg.stato === 'IN_LAVORAZIONE'">
+                  <button class="btn-approve" (click)="risolviSegnalazione(seg.id)">Risolvi</button>
+                  <button class="btn-reject" (click)="rifiutaSegnalazione(seg.id)">Rifiuta</button>
+                </ng-container>
+                <small style="opacity: 0.7; font-size: 0.8em;" *ngIf="seg.stato === 'CHIUSA' || seg.stato === 'RIFIUTATA'">
+                  Gestita da {{ seg.adminUsername || '#' + seg.adminId }}
+                </small>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="sezionePrincipale === 'UTENTI_BANNATI'">
+        <header class="form-header">
+          <h1>Gestione Sospensioni</h1>
+        </header>
+        <div class="table-responsive">
+          <table class="glass-table" *ngIf="utentiBannati.length > 0">
+            <thead>
+            <tr>
+              <th>ID</th>
+              <th>USERNAME</th>
+              <th>EMAIL</th>
+              <th>AZIONI</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let utente of utentiBannati">
+              <td>#{{ utente.id }}</td>
+              <td>{{ utente.username }}</td>
+              <td>{{ utente.email }}</td>
+              <td>
+                <button class="btn-approve" (click)="sbannaUtente(utente.id)">✅ Riattiva</button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <div *ngIf="utentiBannati.length === 0" style="padding: 20px; text-align: center;">Nessun utente bannato.</div>
+        </div>
+      </ng-container>
+
     </div>
   </div>
 </main>

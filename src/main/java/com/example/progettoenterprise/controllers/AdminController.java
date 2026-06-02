@@ -1,7 +1,9 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.service.AdminService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
+import com.example.progettoenterprise.dto.UtenteDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,5 +51,18 @@ public class AdminController {
 
         adminService.banUtente(userId);
         return ResponseEntity.ok("Utente bannato con successo");
+    }
+
+    @GetMapping("/utenti-bannati")
+    public ResponseEntity<List<UtenteDTO>> getUtentiBannati() {
+        log.info("Richiesta lista utenti bannati");
+        return ResponseEntity.ok(adminService.getUtentiBannati());
+    }
+
+    @PutMapping("/utenti/{id}/riattiva")
+    public ResponseEntity<Void> riattivaUtente(@PathVariable Long id) {
+        log.info("L'amministratore ha richiesto la riattivazione dell'utente ID: {}", id);
+        adminService.sbannaUtente(id);
+        return ResponseEntity.ok().build();
     }
 }

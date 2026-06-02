@@ -8,6 +8,7 @@ import {ChatComponent} from './components/chat/chat';
 import { ProgrammaComponent } from './components/programma/programma';
 import { CommunityComponent } from './components/community/community';
 import {PrenotazioneService} from '../service/prenotazioni.service';
+import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 
 
 @Component({
@@ -19,7 +20,8 @@ import {PrenotazioneService} from '../service/prenotazioni.service';
     ProgrammaComponent,
     CommunityComponent,
     RouterLink,
-    ChatComponent
+    ChatComponent,
+    ModaleSegnalazione
   ],
   templateUrl: './dettaglio-viaggio.html',
   styleUrl: './dettaglio-viaggio.css'
@@ -103,4 +105,14 @@ export class DettaglioViaggio implements OnInit {
 
 
 }
+  mostraSegnalazione = false;
+  tipoDaSegnalare = '';
+  idDaSegnalare = 0;
+
+  apriSegnalazioneOrg(idOrg: number, event: Event) {
+    event.stopPropagation();
+    this.tipoDaSegnalare = 'UTENTE';
+    this.idDaSegnalare = idOrg;
+    this.mostraSegnalazione = true;
+  }
 }

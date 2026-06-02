@@ -348,3 +348,75 @@ body {
   font-size: 0.8rem;
   font-weight: 600;
 }
+
+/* --- STILE FILTRO PREZZO --- */
+.price-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  font-weight: 400;
+  font-size: 0.95rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0 15px;
+}
+
+.price-slider {
+  -webkit-appearance: none;
+  width: 120px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.price-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+
+.price-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Contenitore scuro per il numero e l'euro */
+.price-display {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+
+/* Forziamo il campo testuale a non prendere il padding gigante della barra di ricerca */
+.search-bar .price-display input[type="number"] {
+  background: transparent;
+  border: none;
+  color: white;
+  width: 50px;
+  outline: none;
+  font-weight: 600;
+  text-align: right;
+  padding: 0;
+  margin-right: 5px;
+}
+
+/* Magia oscura per far sparire le freccette del numero su Chrome, Safari, Edge e Firefox */
+.search-bar .price-display input[type="number"]::-webkit-inner-spin-button,
+.search-bar .price-display input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.search-bar .price-display input[type="number"] {
+  -moz-appearance: textfield;
+}

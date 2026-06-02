@@ -1011,3 +1011,42 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: 0.75rem;
   }
 }
+
+.btn-segnala-org {
+  background: rgba(239, 83, 80, 0.15); /* Rosso scuro quasi trasparente */
+  border: 1px solid rgba(239, 83, 80, 0.4);
+  border-radius: 20px; /* Forma a pillola */
+  padding: 8px 16px;
+  color: #ffcdd2; /* Testo rosso chiaro */
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Spazio tra bandierina e testo */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 15px; /* Lo distanzia dalla freccina di destra */
+  white-space: nowrap; /* Evita che il testo vada a capo rimpicciolendosi */
+}
+
+.btn-segnala-org:hover {
+  background: rgba(239, 83, 80, 0.3);
+  border-color: rgba(239, 83, 80, 0.6);
+  color: #ffffff;
+  transform: translateY(-2px); /* Si alza leggermente quando ci passi sopra */
+  box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
+}
+
+/* Regola per gli schermi piccoli (cellulari) per evitare che il bottone schiacci il nome */
+@media (max-width: 600px) {
+  .organizzatore-card-link {
+    flex-wrap: wrap; /* Permette agli elementi di andare a capo */
+  }
+  .btn-segnala-org {
+    width: 100%;
+    justify-content: center;
+    margin-right: 0;
+    margin-top: 10px;
+  }
+}
