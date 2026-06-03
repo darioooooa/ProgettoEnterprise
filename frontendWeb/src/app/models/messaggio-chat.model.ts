@@ -4,4 +4,5 @@ export interface MessaggioChatDTO {
   mittenteUsername: string;
   testo: string;
   dataInvio?: string | Date;
+  mittenteId?: number;
 }

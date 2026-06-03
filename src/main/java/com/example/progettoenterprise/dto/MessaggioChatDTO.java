@@ -14,4 +14,5 @@ public class MessaggioChatDTO {
     private String mittenteUsername;
     private String testo;
     private LocalDateTime dataInvio;
+    private Long mittenteId;
 }

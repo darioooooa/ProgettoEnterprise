@@ -2,6 +2,7 @@ package com.example.progettoenterprise.controllers;
 
 import com.example.progettoenterprise.data.entities.ChatRoom;
 import com.example.progettoenterprise.data.entities.MessaggioChat;
+import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.service.ChatRoomService;
 import com.example.progettoenterprise.dto.ChatRoomDTO;
 import com.example.progettoenterprise.dto.MessaggioChatDTO;
@@ -23,6 +24,7 @@ public class ChatRoomController {
 
     private final ChatRoomService chatService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UtenteRepository utenteRepository;
 
     @GetMapping("/api/chat/stanza")
     public ResponseEntity<Long> ottieniOCreaStanza(
@@ -73,6 +75,8 @@ public class ChatRoomController {
 
         messaggioDTO.setId(messaggioSalvato.getId());
         messaggioDTO.setDataInvio(messaggioSalvato.getDataInvio());
+        utenteRepository.findByUsername(messaggioDTO.getMittenteUsername())
+                .ifPresent(utente -> messaggioDTO.setMittenteId(utente.getId()));
 
         messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, messaggioDTO);
     }

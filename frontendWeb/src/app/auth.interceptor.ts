@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, take, switchMap } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { AutenticazioneService } from './service/autenticazione.service';
 
 // Si mette in mezzo tra angular e il server
@@ -11,7 +12,8 @@ export class AuthInterceptor implements HttpInterceptor {
   private staAggiornandoToken = false;
   private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
-  constructor(private authService: AutenticazioneService) {}
+  constructor(private authService: AutenticazioneService,
+              private router: Router) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Aggiunge il token iniziale alla richiesta
@@ -24,6 +26,11 @@ export class AuthInterceptor implements HttpInterceptor {
         // Se il token è scaduto
         if (errore.status === 401 && !request.url.includes('protocol/openid-connect/token')) {
           return this.gestisciErrore401(request, next);
+        }
+        if (errore.status === 403 && errore.error?.errore?.includes('sospeso')) {
+          alert("⚠️ IL TUO ACCOUNT È STATO SOSPESO.\nSarai disconnesso immediatamente.");
+          this.authService.esci();
+          this.router.navigate(['/login']);
         }
 
         // Se è un altro errore (ad esempio 403 Forbidden, 404 Not Found) lo fa passare

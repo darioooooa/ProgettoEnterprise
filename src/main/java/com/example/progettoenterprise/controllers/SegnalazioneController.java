@@ -55,10 +55,11 @@ public class SegnalazioneController {
     @PutMapping("/{id}/risolvi")
     public ResponseEntity<SegnalazioneDTO> risolviSegnalazione(
             @PathVariable Long id,
-            @RequestParam Long idAdmin) {
+            @RequestParam Long idAdmin,
+            @RequestParam(required = false, defaultValue = "false") boolean sospendiAutore) { // <-- Nuovo parametro
 
-        log.info("L'amministratore ID: {} sta risolvendo la segnalazione ID: {}", idAdmin, id);
-        SegnalazioneDTO risolta = segnalazioneService.risolviSegnalazione(id, idAdmin);
+        log.info("L'amministratore ID: {} sta risolvendo la segnalazione ID: {}. Sospensione autore: {}", idAdmin, id, sospendiAutore);
+        SegnalazioneDTO risolta = segnalazioneService.risolviSegnalazione(id, idAdmin, sospendiAutore);
         return ResponseEntity.ok(risolta);
     }
 

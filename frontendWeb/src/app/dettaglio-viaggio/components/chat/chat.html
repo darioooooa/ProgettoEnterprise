@@ -25,7 +25,16 @@
         <div class="msg-bubble">
           <span class="msg-author" *ngIf="msg.mittenteUsername !== mioUsername">&#64;{{ msg.mittenteUsername }}</span>
           <p class="msg-text">{{ msg.testo }}</p>
-          <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+          <div class="msg-meta">
+            <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+
+            <button *ngIf="msg.mittenteUsername !== mioUsername"
+                    class="btn-report-msg"
+                    (click)="apriSegnalazione(msg.id!)"
+                    title="Segnala messaggio">
+              🚩
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -39,9 +48,17 @@
         Invia 🚀
       </button>
     </div>
-  </div> <p *ngIf="!isLoggato()" class="testo-vuoto-vetro" style="margin-top: 20px;">
-  Devi effettuare il login per poter avviare una chat con l'organizzatore.
-</p>
+  </div>
 
+  <p *ngIf="!isLoggato()" class="testo-vuoto-vetro" style="margin-top: 20px;">
+    Devi effettuare il login per poter avviare una chat con l'organizzatore.
+  </p>
 </div>
 
+<app-modale-segnalazione
+  *ngIf="mostraSegnalazione"
+  [visibile]="mostraSegnalazione"
+  [tipoEntita]="'MESSAGGIO'"
+  [idRiferimento]="idDaSegnalare"
+  (chiudiModale)="mostraSegnalazione = false">
+</app-modale-segnalazione>

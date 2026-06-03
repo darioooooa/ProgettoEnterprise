@@ -36,7 +36,7 @@ public class AdminServiceImpl implements AdminService {
     private final EmailServiceImpl emailService;
     private final ModelMapper modelMapper;
 
-    private static final String REALM_NAME = "enterprise-realm";
+    private final String REALM_NAME = "enterprise-realm";
 
     @Override
     @Transactional
@@ -89,7 +89,6 @@ public class AdminServiceImpl implements AdminService {
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(passwordTemporanea);
-        // Credenziali temporanee. L'utente dovrà cambiare la password
         credential.setTemporary(true);
         keycloakUser.setCredentials(Collections.singletonList(credential));
 
@@ -106,17 +105,13 @@ public class AdminServiceImpl implements AdminService {
                 keycloak.realm(REALM_NAME).users().get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(orgRole));
 
                 try {
-                    // Forza l'invio dell'email di aggiornamento password
                     keycloak.realm(REALM_NAME).users().get(keycloakUserId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
                     log.info("Email di aggiornamento password inviata con successo all'organizzatore con email: {}", nuovaEmail);
                 }catch (Exception e){
                     log.error("Impossibile inviare l'email di aggiornamento password per l'utente id: {}", keycloakUserId, e);
                 }
-
-                // L'utente dovrà cambiare password, tramite il link inviato sull'email indicata
             }
         } else if (response.getStatus() == 409) {
-            // Email o username già esistenti su keycloak
             log.warn("Sincronizzazione fallita: l'utente {} esiste già su Keycloak", nuovoUsername);
             throw new IllegalArgumentException("Impossibile promuovere: L'utente " + nuovoUsername + " esiste già nel sistema di sicurezza.");
         } else {
@@ -183,7 +178,6 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public List<UtenteDTO> getUtentiBannati() {
-
         return utenteRepository.findByIsAttivoFalse()
                 .stream()
                 .map(utente -> modelMapper.map(utente, UtenteDTO.class))
@@ -195,11 +189,28 @@ public class AdminServiceImpl implements AdminService {
     public void sbannaUtente(Long userId) {
         Utente utente = utenteRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utente non trovato"));
+
         utente.setAttivo(true);
         utente.setMotivoSospensione(null);
         utenteRepository.save(utente);
+        riabilitaSuKeycloak(utente.getUsername());
 
         log.info("L'utente ID {} ({}) è stato riattivato con successo.", utente.getId(), utente.getUsername());
     }
-}
 
+    private void riabilitaSuKeycloak(String username) {
+        try {
+            List<UserRepresentation> users = keycloak.realm(REALM_NAME).users().search(username);
+
+            if (!users.isEmpty()) {
+                UserRepresentation kcUser = users.get(0);
+                kcUser.setEnabled(true);
+                keycloak.realm(REALM_NAME).users().get(kcUser.getId()).update(kcUser);
+
+                log.info("Utente {} riabilitato con successo su Keycloak.", username);
+            }
+        } catch (Exception e) {
+            log.error("Errore durante la riabilitazione su Keycloak dell'utente {}: {}", username, e.getMessage());
+        }
+    }
+}

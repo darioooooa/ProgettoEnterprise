@@ -43,7 +43,11 @@
 
           <div class="msg-bubble">
             <p class="msg-text">{{ msg.testo }}</p>
-            <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+            <div class="msg-meta">
+              <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+
+              <button class="btn-report-msg" *ngIf="msg.mittenteUsername !== mioUsername" (click)="apriSegnalazione(msg.id!)" title="Segnala messaggio">🚩</button>
+            </div>
           </div>
         </div>
       </div>
@@ -70,3 +74,11 @@
   </div>
 
 </div>
+
+<app-modale-segnalazione
+  *ngIf="mostraSegnalazione"
+  [visibile]="mostraSegnalazione"
+  [tipoEntita]="'MESSAGGIO'"
+  [idRiferimento]="idDaSegnalare"
+  (chiudiModale)="mostraSegnalazione = false">
+</app-modale-segnalazione>

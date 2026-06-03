@@ -60,6 +60,9 @@ export class AdminDashboard implements OnInit {
 
   utentiBannati: UtenteBannato[] = [];
 
+  mostraModaleMessaggio: boolean = false;
+  messaggioInLettura: string = '';
+
   constructor(
     private adminService: AdminService,
     private segnalazioneService: SegnalazioneService,
@@ -181,25 +184,34 @@ export class AdminDashboard implements OnInit {
     });
   }
 
-  risolviSegnalazione(id: number) {
+  risolviSegnalazione(id: number, sospendiAutore: boolean = false) {
     if (!this.adminIdLoggato) return;
-    if (confirm("Confermi risoluzione?")) {
-      this.segnalazioneService.risolviSegnalazione(id, this.adminIdLoggato).subscribe({
+
+    const messaggioConferma = sospendiAutore
+      ? "ATTENZIONE: Stai per applicare la sanzione più dura sull'elemento e sospendere definitivamente l'utente. Confermi?"
+      : "Confermi la risoluzione della segnalazione (con eventuale rimozione dell'elemento)?";
+
+    if (confirm(messaggioConferma)) {
+      this.segnalazioneService.risolviSegnalazione(id, this.adminIdLoggato, sospendiAutore).subscribe({
         next: () => {
-          alert('Risolta!');
+          alert('Segnalazione risolta con successo!');
           this.caricaSegnalazioni();
+
+          if (sospendiAutore) {
+            this.caricaUtentiBannati();
+          }
         },
-        error: (err) => alert('Errore.')
+        error: (err) => alert('Errore durante la risoluzione.')
       });
     }
   }
 
   rifiutaSegnalazione(id: number) {
     if (!this.adminIdLoggato) return;
-    if (confirm("Rifiutare la segnalazione?")) {
+    if (confirm("Rifiutare la segnalazione? L'elemento segnalato NON verrà eliminato.")) {
       this.segnalazioneService.rifiutaSegnalazione(id, this.adminIdLoggato).subscribe({
         next: () => {
-          alert('Rifiutata.');
+          alert('Segnalazione rifiutata.');
           this.caricaSegnalazioni();
         },
         error: (err) => alert('Errore.')
@@ -228,6 +240,16 @@ export class AdminDashboard implements OnInit {
         error: () => alert('Errore.')
       });
     }
+  }
+
+  apriModaleMessaggio(testo?: string) {
+    this.messaggioInLettura = testo || 'Testo non disponibile o contenuto già rimosso.';
+    this.mostraModaleMessaggio = true;
+  }
+
+  chiudiModaleMessaggio() {
+    this.mostraModaleMessaggio = false;
+    this.messaggioInLettura = '';
   }
 
   logout() {

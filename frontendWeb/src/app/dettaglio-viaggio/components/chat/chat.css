@@ -98,12 +98,30 @@
   word-break: break-word;
 }
 
+.msg-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
 .msg-time {
-  display: block;
   font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.35);
-  text-align: right;
-  margin-top: 4px;
+}
+
+.btn-report-msg {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.btn-report-msg:hover {
+  opacity: 1;
 }
 
 .chat-footer-viaggio {

@@ -45,6 +45,7 @@ public class KeycloakUserSyncFilter extends OncePerRequestFilter {
             String cognome = jwtAuth.getToken().getClaimAsString("family_name");
             Collection<GrantedAuthority> authorities = jwtAuth.getAuthorities();
 
+
             if (email == null || email.trim().isEmpty()) {
                 log.error("Email non trovata nel token di keycloak");
                 throw new IllegalArgumentException(messageLang.getMessage("auth.keycloak.email_not_found"));
@@ -60,6 +61,16 @@ public class KeycloakUserSyncFilter extends OncePerRequestFilter {
 
             if (utenteOpt.isPresent()) {
                 utenteDb = utenteOpt.get();
+                if (!utenteDb.isAttivo()) {
+                    log.warn("Accesso bloccato: l'utente {} è attualmente sospeso.", email);
+
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write("{\"errore\": \"Il tuo account è stato sospeso per violazione del regolamento.\"}");
+                    response.getWriter().flush();
+                    return;
+                }
             } else {
                 // Se non esiste, lo si crea
                 log.info("Nuovo utente da keycloak rilevato. Creazione nel database locale: {}", email);

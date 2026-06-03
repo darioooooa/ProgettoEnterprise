@@ -30,8 +30,8 @@ export class SegnalazioneService {
     return this.http.put(`${this.urlBase}/${idSegnalazione}/prendi-in-carico?idAdmin=${idAdmin}`, {});
   }
 
-  risolviSegnalazione(idSegnalazione: number, idAdmin: number): Observable<any> {
-    return this.http.put(`${this.urlBase}/${idSegnalazione}/risolvi?idAdmin=${idAdmin}`, {});
+  risolviSegnalazione(idSegnalazione: number, idAdmin: number, sospendiAutore: boolean = false): Observable<any> {
+    return this.http.put(`${this.urlBase}/${idSegnalazione}/risolvi?idAdmin=${idAdmin}&sospendiAutore=${sospendiAutore}`, {});
   }
 
   rifiutaSegnalazione(idSegnalazione: number, idAdmin: number): Observable<any> {

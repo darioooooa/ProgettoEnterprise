@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ViaggioService } from '../../../service/viaggio.service';
 import { AutenticazioneService } from '../../../service/autenticazione.service';
+import { ModaleSegnalazione } from '../../../modale-segnalazione/modale-segnalazione';
 
 @Component({
   selector: 'app-community',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModaleSegnalazione],
   templateUrl: './community.html',
   styleUrl: './community.css'
 })
@@ -34,6 +35,9 @@ export class CommunityComponent implements OnInit {
   tipoAvviso: 'successo' | 'errore' = 'errore';
 
   filtriRecensioni = { votoEsatto: '', votoMin: '', votoMax: '', parolaChiave: '', dataDa: '', dataA: '' };
+
+  mostraSegnalazione = false;
+  idDaSegnalare = 0;
 
   constructor(
     private viaggioService: ViaggioService,
@@ -158,7 +162,6 @@ export class CommunityComponent implements OnInit {
     }, 50);
   }
 
-
   avviaModificaRecensione(rec: any) {
     this.inModifica = true;
     this.idRecensioneInModifica = rec.id;
@@ -196,7 +199,6 @@ export class CommunityComponent implements OnInit {
     this.paginaRecensioni = 0;
     this.cdr.detectChanges();
   }
-
 
   cancellaRecensione(idRecensione: number) {
     if (this.idRecensioneDaEliminare !== idRecensione) {
@@ -248,4 +250,8 @@ export class CommunityComponent implements OnInit {
     });
   }
 
+  apriSegnalazione(id: number) {
+    this.idDaSegnalare = id;
+    this.mostraSegnalazione = true;
+  }
 }

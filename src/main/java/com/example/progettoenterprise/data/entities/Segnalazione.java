@@ -56,9 +56,8 @@ public class Segnalazione {
 
     public enum TipoEntita {
         UTENTE,
-        VIAGGIO,
-        RECENSIONE,
-        ITINERARIO
+        MESSAGGIO,
+        RECENSIONE
     }
 
     public enum StatoSegnalazione {

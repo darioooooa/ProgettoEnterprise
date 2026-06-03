@@ -112,6 +112,14 @@
                   (click)="cancellaRecensione(rec.id)">
             {{ idRecensioneDaEliminare === rec.id ? '⚠️ Clicca ancora per confermare!' : 'Elimina recensione' }}
           </button>
+
+          <button *ngIf="isLoggato() && rec.utenteUsername !== mioUsername"
+                  class="btn-elimina-rec"
+                  style="color: #f59e0b;"
+                  (click)="apriSegnalazione(rec.id)"
+                  title="Segnala recensione">
+            🚩 Segnala
+          </button>
         </div>
       </div>
     </ng-container>
@@ -123,3 +131,11 @@
     <button [disabled]="paginaRecensioni === totalePagineRecensioni - 1" (click)="cambiaPaginaRecensioni(1)">&rarr;</button>
   </div>
 </div>
+
+<app-modale-segnalazione
+  *ngIf="mostraSegnalazione"
+  [visibile]="mostraSegnalazione"
+  [tipoEntita]="'RECENSIONE'"
+  [idRiferimento]="idDaSegnalare"
+  (chiudiModale)="mostraSegnalazione = false">
+</app-modale-segnalazione>

@@ -82,8 +82,7 @@
             <select [(ngModel)]="filtroTipo" style="padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); outline: none;">
               <option value="" style="color: black;">Tutte le Categorie</option>
               <option value="UTENTE" style="color: black;">Utenti</option>
-              <option value="VIAGGIO" style="color: black;">Viaggi</option>
-              <option value="ITINERARIO" style="color: black;">Itinerari</option>
+              <option value="MESSAGGIO" style="color: black;">Messaggi</option>
               <option value="RECENSIONE" style="color: black;">Recensioni</option>
             </select>
           </div>
@@ -102,13 +101,19 @@
             <tbody>
             <tr *ngFor="let seg of segnalazioniFiltrate">
               <td class="user-info">
-                <span class="username">#{{ seg.id }} - {{ seg.tipo }}</span>
+                <span class="username">{{ seg.id }} - {{ seg.tipo }}</span>
                 <span class="email">Segnalatore: {{ seg.segnalatoreUsername || 'ID ' + seg.segnalatoreId }}</span>
               </td>
               <td class="motivazione-text">
-                <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
                   <span class="badge-motivo">{{ seg.motivo }}</span>
                   <p style="margin: 5px 0; font-size: 0.85em;">{{ seg.descrizione || 'Nessuna descrizione aggiuntiva' }}</p>
+
+                  <button *ngIf="seg.tipo === 'MESSAGGIO' || seg.tipo === 'RECENSIONE'"
+                          (click)="apriModaleMessaggio(seg.riferimentoNome)"
+                          style="background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85em; margin-top: 4px; transition: 0.3s;">
+                    📄 Leggi Contenuto
+                  </button>
                 </div>
               </td>
               <td>
@@ -119,12 +124,26 @@
               </td>
               <td class="actions-cell">
                 <button *ngIf="seg.stato === 'APERTA'" class="btn-take" (click)="prendiInCarico(seg.id)">🙋 Prendi in carico</button>
+
                 <ng-container *ngIf="seg.stato === 'IN_LAVORAZIONE'">
-                  <button class="btn-approve" (click)="risolviSegnalazione(seg.id)">Risolvi</button>
+                  <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 5px;">
+                    <button class="btn-approve" style="background-color: #f59e0b;" (click)="risolviSegnalazione(seg.id, false)">
+                      <span *ngIf="seg.tipo === 'MESSAGGIO'">🗑️ Elimina Msg</span>
+                      <span *ngIf="seg.tipo === 'RECENSIONE'">🗑️ Elimina Recensione</span>
+                      <span *ngIf="seg.tipo === 'UTENTE'">✅ Risolvi (Solo Avviso)</span>
+                    </button>
+
+                    <button class="btn-approve" style="background-color: #dc2626;" (click)="risolviSegnalazione(seg.id, true)">
+                      <span *ngIf="seg.tipo === 'UTENTE'">⛔ Banna Utente</span>
+                      <span *ngIf="seg.tipo !== 'UTENTE'">⛔ Elimina & Banna</span>
+                    </button>
+                  </div>
+
                   <button class="btn-reject" (click)="rifiutaSegnalazione(seg.id)">Rifiuta</button>
                 </ng-container>
+
                 <small style="opacity: 0.7; font-size: 0.8em;" *ngIf="seg.stato === 'CHIUSA' || seg.stato === 'RIFIUTATA'">
-                  Gestita da {{ seg.adminUsername || '#' + seg.adminId }}
+                  Gestita da {{ seg.adminUsername || 'ID ' + seg.adminId }}
                 </small>
               </td>
             </tr>
@@ -149,7 +168,7 @@
             </thead>
             <tbody>
             <tr *ngFor="let utente of utentiBannati">
-              <td>#{{ utente.id }}</td>
+              <td>{{ utente.id }}</td>
               <td>{{ utente.username }}</td>
               <td>{{ utente.email }}</td>
               <td>
@@ -165,3 +184,22 @@
     </div>
   </div>
 </main>
+
+<div class="modale-overlay" *ngIf="mostraModaleMessaggio" (click)="chiudiModaleMessaggio()" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+  <div class="modale-content" (click)="$event.stopPropagation()" style="background: white; color: black; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+      <h3 style="margin: 0; color: #333;">Dettagli Contenuto Segnalato</h3>
+      <button (click)="chiudiModaleMessaggio()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888;">&times;</button>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 20px; white-space: pre-wrap;">
+      <p style="margin: 0; font-style: italic; color: #444; line-height: 1.5;">{{ messaggioInLettura }}</p>
+    </div>
+
+    <div style="text-align: right;">
+      <button (click)="chiudiModaleMessaggio()" style="background: #e5e7eb; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Chiudi</button>
+    </div>
+
+  </div>
+</div>
