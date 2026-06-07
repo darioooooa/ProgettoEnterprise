@@ -2,7 +2,7 @@ import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink,Router} from '@angular/router';
 import {ViaggioService} from '../service/viaggio.service';
-import {AutenticazioneService} from '../service/autenticazione.service';
+
 import {MapComponent} from '../map/map';
 import { PrenotazioneService } from '../service/prenotazioni.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
@@ -25,7 +25,8 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     private prenotazioneService: PrenotazioneService,
     private cdr: ChangeDetectorRef,
     private router: Router
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     this.caricaViaggi();
@@ -72,13 +73,24 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     }
   }
 
-  apriModalCreazione() {
-    alert("Qui si aprirebbe il form per il nuovo viaggio!");
-  }
 
-  vaiAiDettagli(viaggioId: number) {
-    console.log("Navigo verso la pagina dettagli del viaggio ID:", viaggioId);
-    this.router.navigate(['/lista-tappe', viaggioId]);
+  vaiAiDettagli(datiDallaMappa: any) {
+    if (Array.isArray(datiDallaMappa)) {
+      console.log("📍 Marker multiplo cliccato! Numero viaggi:", datiDallaMappa.length);
+
+      // Estraiamo tutti gli ID per passarli alla pagina intermedia
+      const listaIds = datiDallaMappa.map(v => v.id || v.idViaggio);
+
+      this.router.navigate(['lista-viaggi-marker'], {
+        queryParams: {ids: listaIds.join(',')}
+      });
+    } else {
+      // Estraiamo l'ID dall'oggetto singolo
+      const viaggioId = datiDallaMappa.id || datiDallaMappa.idViaggio;
+      console.log("📍 Marker singolo cliccato! Navigo ai dettagli del viaggio ID:", viaggioId);
+
+      this.router.navigate(['/viaggi', viaggioId]);
+    }
   }
 
   caricaPrenotazioniRicevute() {

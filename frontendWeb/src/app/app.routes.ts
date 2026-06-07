@@ -9,10 +9,10 @@ import { SchermataUtente } from './schermata-utente/schermata-utente';
 import { SchermataPrenotazioni } from './schermata-prenotazioni/schermata-prenotazioni';
 import { AdminDashboard } from './admin-dashboard/admin-dashboard';
 import { MieiItinerari } from './miei-itinerari/miei-itinerari';
-import { ListaTappe } from './lista-tappe/lista-tappe';
 import { DettaglioViaggio } from './dettaglio-viaggio/dettaglio-viaggio';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 import { DiventaOrganizzatoreComponent} from './diventa-organizzatore/diventa-organizzatore';
+import {ListaViaggiMarker} from './lista-viaggi-marker/lista-viaggi-marker';
 import{ InboxOrganizzatore} from './inbox-organizzatore/inbox-organizzatore';
 import {ChatComponent} from './dettaglio-viaggio/components/chat/chat';
 
@@ -67,11 +67,6 @@ export const routes: Routes = [
         canActivate: [autenticazioneGuard]
       },
       {
-
-        path: 'lista-tappe/:id',
-        component: ListaTappe
-      },
-      {
         path: 'viaggi/:id',
         component: DettaglioViaggio,
         canActivate: [autenticazioneGuard]
@@ -80,6 +75,10 @@ export const routes: Routes = [
         path: 'diventa-organizzatore',
         component: DiventaOrganizzatoreComponent
 
+      },
+      {
+        path:'lista-viaggi-marker',
+        component:ListaViaggiMarker
       }
     ]
   },

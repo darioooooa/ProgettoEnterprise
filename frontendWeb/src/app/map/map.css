@@ -8,3 +8,48 @@
   width: 100%;
   height: 100%;
 }
+/* Forza il CSS ad entrare nei popup di Mapbox */
+::ng-deep .popup-cluster-title {
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+::ng-deep .popup-singolo-title {
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+/* Stile base per i bottoni dei popup */
+::ng-deep .btn-popup-admin {
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  transition: 0.2s;
+}
+
+/* Colore specifico per il cluster (Blu) */
+::ng-deep .btn-popup-cluster {
+  background: #1a56db;
+}
+::ng-deep .btn-popup-cluster:hover {
+  background: #1e40af;
+}
+
+/* Colore specifico per il singolo (Rosso) */
+::ng-deep .btn-popup-singolo {
+  background: #ef4444;
+}
+::ng-deep .btn-popup-singolo:hover {
+  background: #b91c1c;
+}

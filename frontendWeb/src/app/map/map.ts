@@ -20,7 +20,7 @@ export class MapComponent implements AfterViewInit {
   lng = 12.4922;
 
 
-  @Output() viaggioSelezionato = new EventEmitter<number>();
+  @Output() viaggioSelezionato = new EventEmitter<any>();
 
   private platformId = inject(PLATFORM_ID);
 
@@ -52,46 +52,105 @@ export class MapComponent implements AfterViewInit {
 
   caricaViaggiPerMappa() {
     this.viaggioService.getViaggiPerMappa().subscribe({
-      next: (viaggi) => {
-        viaggi.forEach((v: any) => {
-          this.aggiungiMarkerERelativoPopup(v);
-        });
+      next: (viaggi: any) => {
+        if (viaggi && viaggi.length > 0) {
+          this.aggiungiMarkerIntelligenti(viaggi);
+        }
+
       },
-      error: (err) => console.error("Errore nel caricamento dei marker sulla mappa:", err)
+      error: (err) => console.error("Errore nel caricamento dei viaggi sulla mappa:", err)
     });
   }
 
-  private aggiungiMarkerERelativoPopup(v: any): void {
-    //  Creiamo a mano il DIV del popup (Evita accumuli di eventi nel DOM di Mapbox)
-    const divPopup = document.createElement('div');
-    divPopup.innerHTML = `
-      <h3 style="margin-bottom: 8px; color: #0f172a; font-family: sans-serif; font-size: 1.1rem;">${v.titolo}</h3>
-      <button style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight: 600; font-family: sans-serif;">
-        Vedi dettagli
-      </button>
-    `;
+  private aggiungiMarkerIntelligenti(viaggi: any[]): void {
+    // VIAGGI CHE HANNO ESATTAMENTE LE STESSE COORDINATE
+    const mappaCoordinate = new Map<string, any[]>();
 
-    // Intercettiamo subito il click sul bottone legandolo matematicamente all'ID di questo viaggio (v.id)
-    const bottone = divPopup.querySelector('button');
-    if (bottone) {
-      bottone.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
+    viaggi.forEach(v => {
+      if (v.latitudine != null && v.longitudine != null) {
+        // chiave unica usando lat e lng
+        const lat = Number(v.latitudine).toFixed(4);
+        const lng = Number(v.longitudine).toFixed(4);
+        const chiave = `${lat}_${lng}`;
 
-        console.log("👉 ID Viaggio cliccato con certezza matematica dalla mappa:", v.id);
-
-        // Spara l'ID verso l'alto (al componente padre)
-        this.viaggioSelezionato.emit(v.id);
-      });
-    }
+        if (!mappaCoordinate.has(chiave)) {
+          mappaCoordinate.set(chiave, []);
+        }
+        mappaCoordinate.get(chiave)!.push(v);
+      }
+    });
 
 
-    const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(divPopup);
+    mappaCoordinate.forEach((listaViaggi, chiave) => {
+      // Estraiamo le coordinate
+      const lat = parseFloat(listaViaggi[0].latitudine);
+      const lng = parseFloat(listaViaggi[0].longitudine);
 
-    // Creiamo il Marker rosso e lo leghiamo alla mappa e al suo popup
-    new mapboxgl.Marker({ color: 'red' })
-      .setLngLat([v.longitudine, v.latitudine])
-      .setPopup(popup)
-      .addTo(this.map!);
+      const divPopup = document.createElement('div');
+
+
+      // se ci sono più viaggi nella stessa posizione
+      if (listaViaggi.length > 1) {
+        divPopup.innerHTML = `
+          <h3 style="margin-bottom: 8px; color: #0f172a; font-family: sans-serif; font-size: 1.1rem; text-align: center;">
+            🗺️ Ci sono ${listaViaggi.length} viaggi in questa posizione
+          </h3>
+          <button style="background:#1a56db; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight: 600; font-family: sans-serif;">
+            Visualizza i vari viaggi
+          </button>
+        `;
+
+        const bottone = divPopup.querySelector('button');
+        if (bottone) {
+          bottone.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            // manda l'array di viaggi
+            this.viaggioSelezionato.emit(listaViaggi);
+          });
+        }
+
+        const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(divPopup);
+
+
+        new mapboxgl.Marker({ color: '#1a56db' })
+          .setLngLat([lng, lat])
+          .setPopup(popup)
+          .addTo(this.map!);
+      }
+
+        // VIAGGIO SINGOLO
+
+      else {
+        const viaggioSingolo = listaViaggi[0];
+
+        divPopup.innerHTML = `
+          <h3 style="margin-bottom: 8px; color: #0f172a; font-family: sans-serif; font-size: 1.1rem; text-align: center;">
+            ${viaggioSingolo.titolo}
+          </h3>
+          <button style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight: 600; font-family: sans-serif;">
+            Vedi dettagli
+          </button>
+        `;
+
+        const bottone = divPopup.querySelector('button');
+        if (bottone) {
+          bottone.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            // manda SOLO IL SINGOLO VIAGGIO
+            this.viaggioSelezionato.emit(viaggioSingolo);
+          });
+        }
+
+        const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(divPopup);
+
+
+        new mapboxgl.Marker({ color: '#ef4444' })
+          .setLngLat([lng, lat])
+          .setPopup(popup)
+          .addTo(this.map!);
+      }
+    });
   }
 }

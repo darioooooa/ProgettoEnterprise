@@ -36,6 +36,9 @@ export class ViaggioService {
   getViaggiPerMappa(): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/mappa-viaggi`);
   }
+  getViaggioById(id: number): Observable<Viaggio> {
+    return this.http.get<Viaggio>(`${this.API_URL}/${id}`);
+  }
 
   getStatisticheRecensioni(viaggioId: number): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/${viaggioId}/statistiche`);
