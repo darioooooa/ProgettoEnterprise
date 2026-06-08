@@ -1,0 +1,35 @@
+<div class="lista-viaggi-container">
+
+  <div class="header-section">
+    <button class="btn-back" (click)="tornaIndietro()">&larr; Torna alla mappa</button>
+    <h1 class="page-title">Viaggi in questa posizione</h1>
+    <p class="page-subtitle">Abbiamo trovato diversi viaggi in questa esatta zona. Scegli quello che ti ispira di più!</p>
+  </div>
+
+
+
+  <div class="cards-grid">
+
+    <div class="viaggio-card" *ngFor="let viaggio of viaggi">
+      <div class="card-image-wrapper">
+        <img [src]="viaggio.immagineCopertina || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1000&auto=format&fit=crop'"
+             alt="Copertina del viaggio"
+             class="card-image">
+
+        <div class="card-badge" *ngIf="viaggio.prezzo">{{ viaggio.prezzo }}€</div>
+      </div>
+
+      <div class="card-content">
+        <h2 class="card-title">{{ viaggio.titolo || 'Nessun titolo trovato' }}</h2>
+        <p class="card-description">{{ viaggio.descrizione || 'Nessuna descrizione trovata' }}</p>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn-dettagli" (click)="vaiAiDettagli(viaggio.id)">
+          Scopri i dettagli
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
