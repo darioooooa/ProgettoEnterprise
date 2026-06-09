@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class SegnalazioneService {
 
-  private urlBase = 'http://localhost:8080/api/segnalazioni';
+  private urlBase = '/api/segnalazioni';
 
   constructor(private http: HttpClient) {}
 

@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class ItinerarioService {
 
-  private readonly API_URL = 'http://localhost:8080/api/v1/itinerari-preferiti';
+  private readonly API_URL = '/api/v1/itinerari-preferiti';
 
   constructor(private http: HttpClient) { }
 
@@ -50,6 +50,6 @@ export class ItinerarioService {
   }
 
   spostaViaggio(idSorgente: number, idDestinazione: number, idViaggio: number) {
-    return this.http.post(`http://localhost:8080/api/v1/itinerari-preferiti/${idSorgente}/sposta-in/${idDestinazione}/viaggi/${idViaggio}`, {});
+    return this.http.post(`/api/v1/itinerari-preferiti/${idSorgente}/sposta-in/${idDestinazione}/viaggi/${idViaggio}`, {});
   }
 }

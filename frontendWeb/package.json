@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "set NODE_TLS_REJECT_UNAUTHORIZED=0&&ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:frontendWeb": "node dist/frontendWeb/server/server.mjs"
+    "serve:ssr:frontendWeb": "set NODE_TLS_REJECT_UNAUTHORIZED=0&&node dist/frontendWeb/server/server.mjs"
   },
   "private": true,
   "packageManager": "npm@11.6.2",

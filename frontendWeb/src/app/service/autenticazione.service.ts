@@ -11,7 +11,7 @@ export class AutenticazioneService {
   // Endpoint di keycloak per prendere il token
   private readonly keycloakTokenUrl = 'http://localhost:8081/realms/enterprise-realm/protocol/openid-connect/token';
   // Endpoint per il backend
-  private readonly backendUrl = 'http://localhost:8080/api/v1';
+  private readonly backendUrl = '/api/v1';
 
   private clientId = 'enterprise-client';
 
@@ -193,9 +193,5 @@ export class AutenticazioneService {
   inviaRichiestaPromozione(viaggiatoreId: number, datiRichiesta: any): Observable<any> {
     const url = `${this.backendUrl}/viaggiatori/richieste-promozione`;
 
-    const token = this.ottieniToken();
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-    return this.http.post(url, datiRichiesta, { headers, responseType: 'text' });
+    return this.http.post(url, datiRichiesta, { responseType: 'text' });
   }}

@@ -42,7 +42,7 @@ export class AuthInterceptor implements HttpInterceptor {
   // Metodo per clonare la richiesta in modo pulito
   private aggiungiToken(request: HttpRequest<any>, token: string | null): HttpRequest<any> {
 
-    const isRottaBackend = request.url.includes('localhost:8080') || request.url.startsWith('/api/');
+    const isRottaBackend = request.url.includes('localhost:8443') || request.url.includes('localhost:8080') || request.url.startsWith('/api/');
 
     if (token && isRottaBackend) {
       return request.clone({

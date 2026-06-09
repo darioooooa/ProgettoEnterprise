@@ -7,7 +7,7 @@ import { Viaggio } from '../models/viaggio.model';
   providedIn: 'root'
 })
 export class ViaggioService {
-  private readonly API_URL = 'http://localhost:8080/api/v1/viaggi';
+  private readonly API_URL = '/api/v1/viaggi';
 
   constructor(private http: HttpClient) { }
 

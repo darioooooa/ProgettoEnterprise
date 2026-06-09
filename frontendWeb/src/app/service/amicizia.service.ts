@@ -8,7 +8,7 @@ import { isPlatformBrowser } from '@angular/common';
 })
 export class AmiciziaService {
 
-  private readonly baseUrl = 'http://localhost:8080/api/v1/amicizie';
+  private readonly baseUrl = '/api/v1/amicizie';
 
   constructor(private http: HttpClient) { }
 

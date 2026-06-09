@@ -8,7 +8,7 @@ import {RichiestaPromozione} from '../admin-dashboard/admin-dashboard';
 })
 export class AdminService {
 
-  private apiUrl = 'http://localhost:8080/api/admin/richieste';
+  private apiUrl = '/api/admin/richieste';
 
   constructor(private http: HttpClient) {}
 
@@ -26,10 +26,10 @@ export class AdminService {
     return this.http.post(`${this.apiUrl}/${id}/rifiuta?adminIdCorrente=${adminId}`, payload, { responseType: 'text' });
   }
   getUtentiBannati(): Observable<any[]> {
-    return this.http.get<any[]>('http://localhost:8080/api/admin/richieste/utenti-bannati');
+    return this.http.get<any[]>('/api/admin/richieste/utenti-bannati');
   }
 
   sbannaUtente(idUtente: number): Observable<any> {
-    return this.http.put(`http://localhost:8080/api/admin/richieste/utenti/${idUtente}/riattiva`, {});
+    return this.http.put(`/api/admin/richieste/utenti/${idUtente}/riattiva`, {});
   }
 }

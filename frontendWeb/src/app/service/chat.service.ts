@@ -10,7 +10,7 @@ import { AutenticazioneService } from './autenticazione.service';
 })
 export class ChatService {
 
-  private apiUrl = 'http://localhost:8080/api/chat';
+  private apiUrl = '/api/chat';
   private stompClient!: Client;
 
   // Canale interno ad Angular per trasmettere i messaggi in tempo reale ai componenti
@@ -41,7 +41,7 @@ export class ChatService {
   }
   ottieniStanzaPerOrganizzatore(organizzatoreUsername: string): Observable<any[]> {
 
-    return this.http.get<any[]>(`http://localhost:8080/api/chat/organizzatore`, {
+    return this.http.get<any[]>(`/api/chat/organizzatore`, {
       params: { organizzatoreUsername: organizzatoreUsername }
     });
   }
@@ -53,7 +53,7 @@ export class ChatService {
     const token = this.authService.ottieniToken();
 
     this.stompClient = new Client({
-      brokerURL: 'ws://localhost:8080/ws', //ws è il protocollo del WebSocket
+      brokerURL: 'ws://localhost:4200/ws', //ws è il protocollo del WebSocket
       connectHeaders: {
 
         'Authorization': token ? `Bearer ${token}` : ''
