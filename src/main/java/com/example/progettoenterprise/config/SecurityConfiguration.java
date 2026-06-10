@@ -45,6 +45,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger
                         .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/utenti/recupero-password").permitAll()
 
                         //  Lascia passare la richiesta HTTP iniziale (Handshake) per il WebSocket
                         .requestMatchers("/ws/**").permitAll()

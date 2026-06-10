@@ -7,7 +7,7 @@ import { GalleriaComponent } from './components/galleria/galleria';
 import {ChatComponent} from './components/chat/chat';
 import { ProgrammaComponent } from './components/programma/programma';
 import { CommunityComponent } from './components/community/community';
-import {PrenotazioneService} from '../service/prenotazioni.service';
+import {PrenotazioneService} from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 
 

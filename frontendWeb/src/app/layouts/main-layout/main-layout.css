@@ -312,3 +312,56 @@ footer {
   .navbar nav a { margin: 0 10px; font-size: 0.8rem; }
   .sezioni-finali-nav { width: 100%; justify-content: center; }
 }
+
+/* --- STILE MODALE DI CONFERMA --- */
+.modale-piccola {
+  max-width: 380px !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.action-buttons-row {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.btn-annulla {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 25px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.btn-annulla:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+.btn-conferma-rosso {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.btn-conferma-rosso:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}

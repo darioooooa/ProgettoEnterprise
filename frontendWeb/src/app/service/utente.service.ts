@@ -11,4 +11,8 @@ export class UtenteService {
   getProfiloById(id: number): Observable<any> {
     return this.http.get<any>(`${this.backendUrl}/${id}`);
   }
+
+  recuperaPassword(email: string): Observable<any> {
+    return this.http.post(`${this.backendUrl}/recupero-password?email=${encodeURIComponent(email)}`, {}, { responseType: 'text' });
+  }
 }

@@ -1,0 +1,92 @@
+<div class="dashboard-wrapper">
+
+  <header class="dashboard-header">
+    <h1>Le tue Statistiche 📊</h1>
+    <p>Monitora l'andamento dei tuoi viaggi, le opinioni dei clienti e i tuoi ricavi.</p>
+  </header>
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="icon-box icon-blue">✈️</div>
+      <div class="stat-info">
+        <h3>Viaggi Organizzati</h3>
+        <p class="stat-number">{{ totaleViaggi }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="icon-box icon-purple">💬</div>
+      <div class="stat-info">
+        <h3>Recensioni Totali</h3>
+        <p class="stat-number">{{ totaleRecensioni }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="icon-box icon-yellow">⭐</div>
+      <div class="stat-info">
+        <h3>Media Valutazioni</h3>
+        <p class="stat-number">
+          {{ mediaRecensioni }} <span class="testo-piccolo">/ 5</span>
+        </p>
+        <div class="stelle-container">
+          <span class="stella" *ngFor="let s of getStelleArray(mediaRecensioni)">★</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Guadagni (Interattiva) -->
+    <div class="stat-card highlight-card">
+      <div class="guadagni-header">
+        <div class="icon-box icon-green">💰</div>
+
+        <!-- Filtro Guadagni -->
+        <select class="filtro-select" [ngModel]="filtroGuadagni" (ngModelChange)="cambiaFiltro($event)">
+          <option value="SETTIMANA">Ultima Settimana</option>
+          <option value="MESE">Questo Mese</option>
+          <option value="ANNO">Quest'Anno</option>
+          <option value="TOTALE">Totale Storico</option>
+        </select>
+      </div>
+
+      <div class="stat-info guadagni-info">
+        <h3>Guadagni Stimati</h3>
+        <p class="stat-number text-green">{{ guadagnoMostrato | number:'1.2-2' }} €</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SEZIONE DETTAGLIO VIAGGI RECENTI -->
+  <div class="recent-trips-section">
+    <div class="section-header">
+      <h2>Ultimi Viaggi Conclusi</h2>
+      <button class="btn-outline">Vedi tutti</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+        <tr>
+          <th>Nome Viaggio</th>
+          <th>Data Partenza</th>
+          <th>Posti Venduti</th>
+          <th>Ricavo Netto</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let viaggio of viaggiRecenti">
+          <td class="trip-title"><strong>{{ viaggio.titolo }}</strong></td>
+          <td>{{ viaggio.data }}</td>
+          <td>
+            <span class="badge-posti">{{ viaggio.postiVenduti }} pax</span>
+          </td>
+          <td class="trip-revenue">+{{ viaggio.guadagno | number:'1.2-2' }} €</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

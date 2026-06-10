@@ -8,7 +8,6 @@
       <p>Accedi e prenota il tuo prossimo viaggio!</p>
     </div>
 
-
     <form (ngSubmit)="eseguiAccesso()" class="booking-form">
 
       <div *ngIf="messaggioErrore" class="errore-login">
@@ -27,9 +26,16 @@
         <input type="password" id="password" name="password"
                [(ngModel)]="datiAccesso.password" required
                placeholder="••••••••">
+
+        <div style="text-align: right; margin-top: 8px;">
+          <a (click)="apriModaleRecupero()" style="color: #e2e8f0; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
+            Hai dimenticato la password?
+          </a>
+        </div>
       </div>
 
       <button type="submit" class="btn-submit">Inizia l'Avventura</button>
+
       <div class="login-footer">
         <span>Non hai un account?</span>
         <button type="button" routerLink="/registrazione" class="btn-link-trasparente">
@@ -37,5 +43,31 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modale-overlay" *ngIf="modaleRecuperoAperta" (click)="chiudiModaleRecupero()">
+  <div class="glass-form-container modale-piccola" (click)="$event.stopPropagation()">
+
+    <div class="modale-header-azione">
+      <button class="btn-chiudi-x" (click)="chiudiModaleRecupero()">&times;</button>
+    </div>
+
+    <div class="form-header">
+      <h2>Recupera Password</h2>
+      <p>Inserisci l'indirizzo email associato al tuo account.</p>
+    </div>
+
+    <div class="input-group modale-input-spazio">
+      <input type="email" placeholder="La tua email..." [(ngModel)]="emailRecupero" class="input-vetro">
+    </div>
+
+    <div *ngIf="messaggioConferma" class="messaggio-successo-vetro">
+      ✅ Link inviato! Controlla la tua casella di posta.
+    </div>
+
+    <button type="button" class="btn-submit" (click)="inviaEmailRecupero()" [disabled]="!emailRecupero || messaggioConferma">
+      Invia Link di Recupero
+    </button>
   </div>
 </div>

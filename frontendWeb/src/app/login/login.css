@@ -143,3 +143,93 @@
   margin-bottom: 1rem;
   font-size: 0.85rem;
 }
+
+.modale-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65); /* Sfondo scuro per far risaltare la modale */
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+.modale-piccola {
+  max-width: 420px;
+  width: 90%;
+  padding: 40px 30px 30px; /* Più respiro interno */
+  position: relative;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); /* Ombra più profonda e morbida */
+}
+
+.modale-header-azione {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+}
+
+.btn-chiudi-x {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-chiudi-x:hover {
+  transform: scale(1.1) rotate(90deg);
+  color: #ff4757;
+}
+
+.modale-input-spazio {
+  margin-bottom: 25px;
+}
+
+/* Stile specifico per l'input dentro la modale per farlo sembrare di vetro */
+.input-vetro {
+  width: 100%;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box; /* Evita che l'input sbordi lateralmente */
+}
+
+.input-vetro::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.input-vetro:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.messaggio-successo-vetro {
+  background: rgba(46, 213, 115, 0.15);
+  border: 1px solid rgba(46, 213, 115, 0.4);
+  color: #2ed573;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

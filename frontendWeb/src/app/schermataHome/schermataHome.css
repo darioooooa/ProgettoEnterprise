@@ -13,7 +13,6 @@ body {
   overflow-x: hidden;
 }
 
-.hero,
 .modale-overlay-amici,
 .btn-omino {
   display: flex;
@@ -33,44 +32,62 @@ body {
   cursor: pointer;
 }
 
-.hero {
-  height: 100vh;
+.search-header-full,
+.search-header-compact {
   position: relative;
+  display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   text-align: center;
   color: #fff;
-  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center/cover;
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center 30%/cover;
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-.hero .overlay {
+.search-header-full {
+  height: 100vh;
+  margin-bottom: 0;
+}
+
+.search-header-compact {
+  height: 40vh;
+  min-height: 350px;
+  margin-bottom: 30px;
+}
+
+.search-header-full .overlay,
+.search-header-compact .overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(15, 52, 117, 0.7) 0%, rgba(42, 115, 179, 0.4) 100%);
   z-index: 1;
+  transition: background 0.6s ease;
 }
 
-.hero-content {
+.search-header-full .overlay {
+  background: linear-gradient(135deg, rgba(15, 52, 117, 0.7) 0%, rgba(42, 115, 179, 0.4) 100%);
+}
+
+.search-header-compact .overlay {
+  background: linear-gradient(135deg, rgba(15, 52, 117, 0.8) 0%, rgba(42, 115, 179, 0.6) 100%);
+}
+
+.search-container {
   position: relative;
   z-index: 2;
   width: 90%;
+  max-width: 1200px;
 }
 
-.hero h1 {
-  font-size: clamp(3.5rem, 12vw, 8.5rem);
-  font-weight: 900;
-  letter-spacing: 15px;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-.hero p {
-  font-size: 1.3rem;
-  font-weight: 300;
-  letter-spacing: 2px;
-  margin-top: 10px;
+.search-container h2 {
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 .search-bar {
@@ -81,7 +98,7 @@ body {
   border-radius: 50px;
   gap: 10px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  margin-top: 3rem;
+  margin-top: 1rem;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -335,6 +352,7 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3);
 }
+
 .scarsita-posti {
   display: inline-flex;
   align-items: center;
@@ -349,7 +367,6 @@ body {
   font-weight: 600;
 }
 
-/* --- STILE FILTRO PREZZO --- */
 .price-wrapper {
   display: flex;
   align-items: center;
@@ -389,7 +406,6 @@ body {
   transform: scale(1.2);
 }
 
-/* Contenitore scuro per il numero e l'euro */
 .price-display {
   display: flex;
   align-items: center;
@@ -398,7 +414,6 @@ body {
   padding: 5px 12px;
 }
 
-/* Forziamo il campo testuale a non prendere il padding gigante della barra di ricerca */
 .search-bar .price-display input[type="number"] {
   background: transparent;
   border: none;
@@ -411,12 +426,12 @@ body {
   margin-right: 5px;
 }
 
-/* Magia oscura per far sparire le freccette del numero su Chrome, Safari, Edge e Firefox */
 .search-bar .price-display input[type="number"]::-webkit-inner-spin-button,
 .search-bar .price-display input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
 .search-bar .price-display input[type="number"] {
   -moz-appearance: textfield;
 }

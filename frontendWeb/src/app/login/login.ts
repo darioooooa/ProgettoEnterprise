@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AutenticazioneService } from '../service/autenticazione.service';
+import { UtenteService } from '../service/utente.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -22,9 +23,13 @@ export class Login {
   };
 
   messaggioErrore: string = '';
+  modaleRecuperoAperta: boolean = false;
+  emailRecupero: string = '';
+  messaggioConferma: boolean = false;
 
   constructor(
     private servizioAuth: AutenticazioneService,
+    private utenteService: UtenteService, // <-- INIETTATO QUI
     private navigatore: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -64,21 +69,19 @@ export class Login {
     const ruolo = this.servizioAuth.ottieniRuolo();
 
     switch (ruolo) {
-
       case 'ROLE_ADMIN':
         this.navigatore.navigate(['/admin-dashboard']);
         break;
-
       case 'ROLE_ORGANIZZATORE':
         this.navigatore.navigate(['/organizzatore']);
         break;
-
       case 'ROLE_VIAGGIATORE':
       default:
         this.navigatore.navigate(['/home']);
         break;
     }
   }
+
   private gestisciErrore(errore: any) {
     console.error('Errore durante il login:', errore);
     const erroreStringa = JSON.stringify(errore);
@@ -90,5 +93,36 @@ export class Login {
     }
 
     this.cdr.detectChanges();
+  }
+
+  apriModaleRecupero() {
+    this.modaleRecuperoAperta = true;
+    this.emailRecupero = '';
+    this.messaggioConferma = false;
+    this.cdr.detectChanges();
+  }
+
+  chiudiModaleRecupero() {
+    this.modaleRecuperoAperta = false;
+    this.cdr.detectChanges();
+  }
+
+  inviaEmailRecupero() {
+    if (!this.emailRecupero) return;
+
+    this.utenteService.recuperaPassword(this.emailRecupero).subscribe({
+      next: (risposta) => {
+        this.messaggioConferma = true;
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.chiudiModaleRecupero();
+        }, 3000);
+      },
+      error: (errore) => {
+        console.error("Errore durante il recupero password", errore);
+        alert("Si è verificato un errore. Assicurati che l'email sia corretta e registrata.");
+        this.cdr.detectChanges();
+      }
+    });
   }
 }

@@ -4,7 +4,7 @@ import {RouterLink,Router} from '@angular/router';
 import {ViaggioService} from '../service/viaggio.service';
 
 import {MapComponent} from '../map/map';
-import { PrenotazioneService } from '../service/prenotazioni.service';
+import { PrenotazioneService } from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 
 @Component({

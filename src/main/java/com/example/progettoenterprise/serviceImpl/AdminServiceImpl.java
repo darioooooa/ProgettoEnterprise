@@ -169,6 +169,10 @@ public class AdminServiceImpl implements AdminService {
         Utente utente = utenteRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato"));
 
+        if (utente.getRuolo() == Utente.Ruolo.ROLE_ORGANIZZATORE) {
+            throw new IllegalArgumentException("Azione non consentita: non puoi bannare un account Organizzatore.");
+        }
+
         utente.setAttivo(false);
         utente.setMotivoSospensione("Violazione dei termini di servizio");
         utenteRepository.save(utente);

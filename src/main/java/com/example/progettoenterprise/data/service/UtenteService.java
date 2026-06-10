@@ -10,4 +10,6 @@ public interface UtenteService {
     UtenteDTO aggiornaProfilo(Long id, UtenteDTO utenteDto);
     void eliminaAccount(Long id);
     Page<UtenteDTO> ricercaUtenti(UtenteSpecification.UtenteFilter utenteFilter, int page);
+
+    void inviaEmailRecuperoPassword(String email);
 }

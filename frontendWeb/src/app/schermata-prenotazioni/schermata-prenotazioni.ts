@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angu
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Prenotazione } from '../models/prenotazioni.model';
-import { PrenotazioneService } from '../service/prenotazioni.service';
+import { PrenotazioneService } from '../service/prenotazione.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
 
 @Component({

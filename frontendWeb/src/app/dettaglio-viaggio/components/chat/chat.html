@@ -27,13 +27,6 @@
           <p class="msg-text">{{ msg.testo }}</p>
           <div class="msg-meta">
             <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
-
-            <button *ngIf="msg.mittenteUsername !== mioUsername"
-                    class="btn-report-msg"
-                    (click)="apriSegnalazione(msg.id!)"
-                    title="Segnala messaggio">
-              🚩
-            </button>
           </div>
         </div>
       </div>
@@ -54,11 +47,3 @@
     Devi effettuare il login per poter avviare una chat con l'organizzatore.
   </p>
 </div>
-
-<app-modale-segnalazione
-  *ngIf="mostraSegnalazione"
-  [visibile]="mostraSegnalazione"
-  [tipoEntita]="'MESSAGGIO'"
-  [idRiferimento]="idDaSegnalare"
-  (chiudiModale)="mostraSegnalazione = false">
-</app-modale-segnalazione>

@@ -88,6 +88,9 @@ public abstract class Utente {
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notifica> notifiche;
 
+    @Column(name = "ultimo_recupero_password")
+    private LocalDateTime ultimoRecuperoPassword;
+
 
 
 }

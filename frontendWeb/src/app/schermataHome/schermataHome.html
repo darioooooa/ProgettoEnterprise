@@ -1,8 +1,7 @@
-<section class="hero">
+<section [class.search-header-full]="!haCercato" [class.search-header-compact]="haCercato">
   <div class="overlay"></div>
-  <div class="hero-content">
-    <h1>TRAVEL</h1>
-    <p>Scopri le meraviglie naturali del mondo.</p>
+  <div class="search-container">
+    <h2>Trova la tua prossima destinazione</h2>
 
     <div class="search-bar">
       <input type="text" placeholder="Località (es. Bali, Indonesia)" [(ngModel)]="filtriViaggio.destinazione">

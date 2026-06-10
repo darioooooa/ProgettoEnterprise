@@ -225,4 +225,23 @@ export class MainLayoutComponent implements OnInit {
   isViaggiatore():boolean{
     return this.servAuth.ottieniRuolo() === 'ROLE_VIAGGIATORE';
   }
+
+
+  modaleLogoutAperta: boolean = false;
+
+  apriModaleLogout() {
+    this.mostraMenu = false; // Chiude il menu laterale
+    this.modaleLogoutAperta = true;
+    this.cdr.detectChanges();
+  }
+
+  annullaLogout() {
+    this.modaleLogoutAperta = false;
+    this.cdr.detectChanges();
+  }
+
+  eseguiLogout() {
+    this.modaleLogoutAperta = false;
+    this.servAuth.esci();
+  }
 }

@@ -51,6 +51,10 @@
         Il Mio Profilo
       </a>
 
+      <a *ngIf="isOrganizzatore()" routerLink="/statistiche-organizzatore" (click)="toggleMenu()" class="voce-laterale">
+        📊 Le mie Statistiche
+      </a>
+
       <a *ngIf="isViaggiatore()" routerLink="/prenotazioni" class="voce-laterale">
         Le mie prenotazioni
       </a>
@@ -68,7 +72,7 @@
         Diventa Organizzatore
       </a>
 
-      <button (click)="logout()" class="voce-laterale logout-rosso">
+      <button (click)="apriModaleLogout()" class="voce-laterale logout-rosso">
         Disconnetti
       </button>
     </div>
@@ -234,6 +238,23 @@
         </div>
       </ng-container>
 
+    </div>
+  </div>
+
+  <div class="modale-overlay-amici" *ngIf="modaleLogoutAperta" (click)="annullaLogout()">
+    <div class="modale-content-amici modale-piccola" (click)="$event.stopPropagation()">
+      <div class="modale-header-amici">
+        <h3>Disconnessione</h3>
+        <button class="btn-chiudi-amici" (click)="annullaLogout()">&times;</button>
+      </div>
+      <div class="modale-body-amici text-center">
+        <p style="margin-bottom: 25px; font-size: 1.1rem; color: #444;">Sei sicuro di voler uscire dal tuo account?</p>
+
+        <div class="action-buttons-row">
+          <button class="btn-annulla" (click)="annullaLogout()">Annulla</button>
+          <button class="btn-conferma-rosso" (click)="eseguiLogout()">Sì, esci</button>
+        </div>
+      </div>
     </div>
   </div>
 

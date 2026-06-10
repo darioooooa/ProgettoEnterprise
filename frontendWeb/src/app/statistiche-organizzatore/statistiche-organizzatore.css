@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Poppins:wght@300;400;600;700&display=swap');
+
+.dashboard-wrapper {
+  padding: 3rem 5%;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background-color: #f6f8fa;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  margin-bottom: 2.5rem;
+}
+
+.dashboard-header h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5rem;
+  color: #0d47a1;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* --- GRIGLIA STATISTICHE --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.8rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+}
+
+.highlight-card {
+  flex-direction: column;
+  background: linear-gradient(135deg, #ffffff 0%, #f1f8e9 100%);
+  border: 1px solid #c5e1a5;
+}
+
+.guadagni-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.icon-box {
+  width: 60px;
+  height: 60px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+}
+
+.icon-blue { background: #e3f2fd; color: #1e88e5; }
+.icon-purple { background: #f3e5f5; color: #8e24aa; }
+.icon-yellow { background: #fff8e1; color: #ffb300; }
+.icon-green { background: #e8f5e9; color: #43a047; }
+
+.stat-info h3 {
+  font-size: 0.95rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.3rem;
+}
+
+.stat-number {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1a237e;
+  margin: 0;
+}
+
+.testo-piccolo {
+  font-size: 1.2rem;
+  color: #999;
+}
+
+.stelle-container {
+  color: #ffca28;
+  font-size: 1.2rem;
+  margin-top: 5px;
+}
+
+.text-green {
+  color: #2e7d32;
+}
+
+.guadagni-info {
+  margin-top: 1rem;
+}
+
+.filtro-select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.filtro-select:focus {
+  border-color: #43a047;
+}
+
+/* --- TABELLA RECENTI --- */
+.recent-trips-section {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  color: #0d47a1;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid #0d47a1;
+  color: #0d47a1;
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-outline:hover {
+  background: #0d47a1;
+  color: white;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.modern-table th {
+  padding: 15px;
+  background: #f8f9fa;
+  color: #555;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #eee;
+}
+
+.modern-table td {
+  padding: 18px 15px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #444;
+  vertical-align: middle;
+}
+
+.modern-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.trip-title {
+  color: #1a237e;
+  font-size: 1.05rem;
+}
+
+.badge-posti {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.trip-revenue {
+  color: #2e7d32;
+  font-weight: 700;
+  font-size: 1.1rem;
+}

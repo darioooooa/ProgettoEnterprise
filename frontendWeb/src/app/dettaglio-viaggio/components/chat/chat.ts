@@ -3,15 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../../service/chat.service';
 import { AutenticazioneService } from '../../../service/autenticazione.service';
-import { SegnalazioneService } from '../../../service/segnalazione.service';
 import { MessaggioChatDTO } from '../../../models/messaggio-chat.model';
 import { Subscription } from 'rxjs';
-import { ModaleSegnalazione } from '../../../modale-segnalazione/modale-segnalazione';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModaleSegnalazione],
+  imports: [CommonModule, FormsModule],
   templateUrl: './chat.html',
   styleUrl: './chat.css'
 })
@@ -29,13 +27,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   messaggiChat: MessaggioChatDTO[] = [];
   private chatSubscription!: Subscription;
 
-  mostraSegnalazione = false;
-  idDaSegnalare = 0;
-
   constructor(
     private chatService: ChatService,
     private auth: AutenticazioneService,
-    private segnalazioneService: SegnalazioneService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -88,11 +82,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.inviaMessaggio(this.stanzaId, dto);
     this.nuovoMessaggioTesto = '';
-  }
-
-  apriSegnalazione(id: number) {
-    this.idDaSegnalare = id;
-    this.mostraSegnalazione = true;
   }
 
   private gestisciScrollChat() {

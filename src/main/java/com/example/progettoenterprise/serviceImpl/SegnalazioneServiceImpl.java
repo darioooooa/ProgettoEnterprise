@@ -2,6 +2,7 @@ package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.Segnalazione;
+import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.*;
 import com.example.progettoenterprise.data.repositories.specifications.SegnalazioneSpecification;
 import com.example.progettoenterprise.data.service.SegnalazioneService;
@@ -38,6 +39,7 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
     private final ViaggioRepository viaggioRepository;
 
     private final Keycloak keycloakAdminClient;
+    private final EmailServiceImpl emailService;
 
     @Override
     @Transactional
@@ -51,10 +53,8 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
         Segnalazione segnalazione = modelMapper.map(segnalazioneDTO, Segnalazione.class);
         segnalazione.setStato(Segnalazione.StatoSegnalazione.APERTA);
         segnalazione.setSegnalatoreId(idSegnalatore);
-
         Segnalazione salvata = segnalazioneRepository.save(segnalazione);
         log.info("Nuova segnalazione creata con ID: {}", salvata.getId());
-
         return convertiConNomi(salvata);
     }
 
@@ -63,7 +63,6 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
     public List<SegnalazioneDTO> cercaSegnalazioni(SegnalazioneSpecification.SegnalazioneFilter filtro, int pagina) {
         PageRequest richiestaPagina = PageRequest.of(pagina, DIMENSIONE_PAGINA, Sort.by("dataSegnalazione").ascending());
         Page<Segnalazione> paginaSegnalazioni = segnalazioneRepository.findAll(SegnalazioneSpecification.withFilter(filtro), richiestaPagina);
-
         if ((pagina < 0 || pagina >= paginaSegnalazioni.getTotalPages()) && paginaSegnalazioni.getTotalPages() > 0) {
             log.warn("Tentativo di accesso a una pagina non valida: {}", pagina);
             throw new IllegalArgumentException(messageLang.getMessage("segnalazione.invalid_page"));
@@ -83,7 +82,6 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
         segnalazione.setStato(Segnalazione.StatoSegnalazione.IN_LAVORAZIONE);
         segnalazione.setAdminId(idAdmin);
-
         Segnalazione salvata = segnalazioneRepository.save(segnalazione);
         return convertiConNomi(salvata);
     }
@@ -100,33 +98,47 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
         if (segnalazione.getTipo() != null && segnalazione.getIdRiferimento() != null) {
 
+            // CASO 1: SEGNALAZIONE DIRETTA AD UN UTENTE
             if (segnalazione.getTipo() == Segnalazione.TipoEntita.UTENTE) {
-                if (sospendiAutore) {
-                    utenteRepository.findById(segnalazione.getIdRiferimento()).ifPresent(utente -> {
+                utenteRepository.findById(segnalazione.getIdRiferimento()).ifPresent(utente -> {
+
+                    if (utente.getRuolo() == Utente.Ruolo.ROLE_ORGANIZZATORE) {
+                        throw new IllegalArgumentException("Impossibile sanzionare o bannare un Organizzatore tramite segnalazione.");
+                    }
+
+                    if (sospendiAutore) {
                         utente.setAttivo(false);
                         utente.setMotivoSospensione("Account sospeso a seguito di segnalazione diretta: " + segnalazione.getMotivo());
                         utenteRepository.save(utente);
                         disabilitaSuKeycloak(utente.getUsername());
-                        log.info("Utente ID {} sospeso con successo.", utente.getId());
-                    });
-                }
+                        emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
+                    } else {
+                        emailService.inviaEmailAvvertimento(utente.getEmail(), utente.getUsername(), "Il tuo comportamento generale è stato segnalato e valutato non conforme dai moderatori.");
+                    }
+                });
             }
+            // CASO 2: SEGNALAZIONE DI UN MESSAGGIO IN CHAT
             else if (segnalazione.getTipo() == Segnalazione.TipoEntita.MESSAGGIO) {
                 messaggioChatRepository.findById(segnalazione.getIdRiferimento()).ifPresent(msg -> {
                     String autoreUsername = msg.getMittenteUsername();
+                    String contenutoRimosso = msg.getTesto();
                     messaggioChatRepository.delete(msg);
-                    log.info("Messaggio rimosso a seguito della segnalazione.");
 
-                    if (sospendiAutore) {
-                        utenteRepository.findByUsername(autoreUsername).ifPresent(autore -> {
+                    utenteRepository.findByUsername(autoreUsername).ifPresent(autore -> {
+                        if (sospendiAutore && autore.getRuolo() != Utente.Ruolo.ROLE_ORGANIZZATORE) {
                             autore.setAttivo(false);
                             autore.setMotivoSospensione("Sospeso per invio di messaggi inappropriati/spam in chat.");
                             utenteRepository.save(autore);
                             disabilitaSuKeycloak(autore.getUsername());
-                        });
-                    }
+                            emailService.inviaEmailBan(autore.getEmail(), autore.getUsername());
+                        } else {
+                            emailService.inviaEmailAvvertimento(autore.getEmail(), autore.getUsername(), "Messaggio in chat: \"" + contenutoRimosso + "\"");
+
+                        }
+                    });
                 });
             }
+            // CASO 3: SEGNALAZIONE DI UNA RECENSIONE
             else if (segnalazione.getTipo() == Segnalazione.TipoEntita.RECENSIONE) {
                 recensioneRepository.findById(segnalazione.getIdRiferimento()).ifPresent(recensione -> {
                     Long viaggioId = recensione.getViaggio().getId();
@@ -135,16 +147,18 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
                     recensioneRepository.delete(recensione);
                     viaggioRepository.ricalcolaMediaPerEliminazione(viaggioId, votoSottratto);
-                    log.info("Recensione rimossa e media ricalcolata per il viaggio ID: {}", viaggioId);
 
-                    if (sospendiAutore) {
-                        utenteRepository.findByUsername(autoreUsername).ifPresent(autore -> {
+                    utenteRepository.findByUsername(autoreUsername).ifPresent(autore -> {
+                        if (sospendiAutore && autore.getRuolo() != Utente.Ruolo.ROLE_ORGANIZZATORE) {
                             autore.setAttivo(false);
                             autore.setMotivoSospensione("Sospeso per pubblicazione di recensioni inappropriate/spam.");
                             utenteRepository.save(autore);
                             disabilitaSuKeycloak(autore.getUsername());
-                        });
-                    }
+                            emailService.inviaEmailBan(autore.getEmail(), autore.getUsername());
+                        } else {
+                            emailService.inviaEmailAvvertimento(autore.getEmail(), autore.getUsername(), "Una tua recensione è stata rimossa in quanto ritenuta inappropriata o non veritiera dai moderatori.");
+                        }
+                    });
                 });
             }
         }
@@ -176,6 +190,7 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
     private void disabilitaSuKeycloak(String username) {
         try {
             List<UserRepresentation> users = keycloakAdminClient.realm(REALM_NAME).users().search(username);
+
             if (!users.isEmpty()) {
                 UserRepresentation kcUser = users.get(0);
                 kcUser.setEnabled(false);
@@ -190,17 +205,14 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
     private SegnalazioneDTO convertiConNomi(Segnalazione segnalazione) {
         SegnalazioneDTO dto = modelMapper.map(segnalazione, SegnalazioneDTO.class);
-
         if (segnalazione.getSegnalatoreId() != null) {
             utenteRepository.findById(segnalazione.getSegnalatoreId())
                     .ifPresent(utente -> dto.setSegnalatoreUsername(utente.getUsername()));
         }
-
         if (segnalazione.getAdminId() != null) {
             utenteRepository.findById(segnalazione.getAdminId())
                     .ifPresent(admin -> dto.setAdminUsername(admin.getUsername()));
         }
-
         if (segnalazione.getTipo() != null && segnalazione.getIdRiferimento() != null) {
             switch (segnalazione.getTipo()) {
                 case UTENTE:

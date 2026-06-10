@@ -7,6 +7,7 @@ import com.example.progettoenterprise.security.UtenteLoggato;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -82,5 +83,22 @@ public class UtenteController {
 
         utenteService.eliminaAccount(utenteLoggato.getId());
         return ResponseEntity.ok(Map.of("message", "Account eliminato definitivamente"));
+    }
+
+
+    @PostMapping("/recupero-password")
+    public ResponseEntity<String> recuperoPassword(@RequestParam String email) {
+        log.info("Ricevuta richiesta di recupero password per l'email: {}", email);
+
+        try {
+            utenteService.inviaEmailRecuperoPassword(email);
+            return ResponseEntity.ok("Se l'email è registrata, riceverai a breve un link per il reset.");
+        } catch (IllegalArgumentException e) {
+            log.warn("Tentativo di recupero per email non trovata: {}", email);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Errore durante l'invio dell'email di recupero", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore del server durante l'invio dell'email.");
+        }
     }
 }

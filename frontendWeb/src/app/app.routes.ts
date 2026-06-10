@@ -12,10 +12,11 @@ import { MieiItinerari } from './miei-itinerari/miei-itinerari';
 import { DettaglioViaggio } from './dettaglio-viaggio/dettaglio-viaggio';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 import { DiventaOrganizzatoreComponent} from './diventa-organizzatore/diventa-organizzatore';
-import {ListaViaggiMarker} from './lista-viaggi-marker/lista-viaggi-marker';
+
 import{ InboxOrganizzatore} from './inbox-organizzatore/inbox-organizzatore';
 import {ChatComponent} from './dettaglio-viaggio/components/chat/chat';
-
+import { PaginaInizialeComponent } from './pagina-iniziale/pagina-iniziale';
+import { StatisticheOrganizzatore} from './statistiche-organizzatore/statistiche-organizzatore';
 
 export const routes: Routes = [
 
@@ -26,17 +27,25 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        component: SchermataHomeComponent
+        component: PaginaInizialeComponent
       },
       {
         path: 'home',
-        component: SchermataHomeComponent
+        component: SchermataHomeComponent,
+        canActivate: [autenticazioneGuard]
       },
       {
         path: 'organizzatore',
-        component: SchermataOrganizzatoreComponent
+        component: SchermataOrganizzatoreComponent,
+        canActivate: [autenticazioneGuard]
       },
-      { path: 'inbox-organizzatore',
+      {
+        path: 'statistiche-organizzatore',
+        component: StatisticheOrganizzatore,
+        canActivate: [autenticazioneGuard]
+      },
+      {
+        path: 'inbox-organizzatore',
         component: InboxOrganizzatore
       },
       {
@@ -74,36 +83,27 @@ export const routes: Routes = [
       {
         path: 'diventa-organizzatore',
         component: DiventaOrganizzatoreComponent
+      }
+      ]
+    },
 
+      {
+        path: 'login',
+        component: Login
+      },
+
+      {
+        path: 'registrazione',
+        component: Registrazione
+      },
+
+      {
+        path: '**',
+        redirectTo: ''
       },
       {
-        path:'lista-viaggi-marker',
-        component:ListaViaggiMarker
+        path: 'chat',
+        component: ChatComponent
+
       }
-    ]
-  },
-
-  {
-    path: 'login',
-    component: Login
-  },
-
-  {
-    path: 'registrazione',
-    component: Registrazione
-  },
-
-  {
-    path: '**',
-    redirectTo: ''
-  },
-  {
-    path: 'inbox-organizzatore',
-    component: InboxOrganizzatore,
-  },
-  {
-    path:'chat',
-    component: ChatComponent
-
-  }
-];
+    ];
