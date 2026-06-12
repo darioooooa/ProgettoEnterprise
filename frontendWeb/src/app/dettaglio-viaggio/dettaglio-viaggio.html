@@ -4,19 +4,22 @@
   <section class="content-wrapper">
     <div class="glass-form-container">
 
-      <header class="form-header" style="display: flex; justify-content: space-between; align-items: flex-start; wrap: wrap; gap: 15px;">
+      <header class="form-header">
         <div>
           <button id="btn-torna-prenotazioni" routerLink="/prenotazioni" class="tab-link"> ⬅ Torna alle prenotazioni</button>
           <h1>Esplora la destinazione</h1>
           <p>📍 {{ statistiche?.destinazione || 'Dettagli Itinerario di Viaggio' }}</p>
         </div>
 
-        <button type="button"
-                (click)="scaricaFileIcs()"
-                class="tab-link"
-                style="font-size: 0.9rem; padding: 10px 16px; border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: #a5d6a7; border: 1px solid rgba(165, 214, 167, 0.3); transition: all 0.3s ease; cursor: pointer;">
-          📅 Esporta nei tuoi Calendari (.ics)
-        </button>
+        <div class="header-actions-container">
+          <button type="button" [routerLink]="['/prenota-viaggio', viaggioId]" class="btn-prenota-top">
+            Prenota Ora
+          </button>
+
+          <button type="button" (click)="scaricaFileIcs()" class="tab-link btn-ics-calendar">
+            📅 Esporta nei tuoi Calendari (.ics)
+          </button>
+        </div>
       </header>
 
       <div class="stats-banner" *ngIf="statistiche">
@@ -86,8 +89,17 @@
                 [mioUsername]="mioUsername">
       </app-chat>
 
+      <div class="sezione-prenota-basso">
+        <h3>Ti piace questo itinerario?</h3>
+        <p>Assicurati il tuo posto prima che i posti si esauriscano!</p>
+        <button type="button" [routerLink]="['/prenota-viaggio', viaggioId]" class="btn-prenota-basso">
+          Prenota il tuo posto ora
+        </button>
+      </div>
+
     </div>
   </section>
+
   <app-modale-segnalazione
     *ngIf="mostraSegnalazione"
     [visibile]="mostraSegnalazione"

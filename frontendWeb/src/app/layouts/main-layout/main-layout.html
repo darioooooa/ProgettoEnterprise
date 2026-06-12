@@ -18,8 +18,6 @@
     </nav>
 
     <div class="sezioni-finali-nav">
-      <button *ngIf="isViaggiatore()" class="btn">Prenota ora</button>
-
       <div class="auth-box">
         <a *ngIf="!isLoggato()" routerLink="/login" class="btn-accedi-testo">Accedi</a>
         <a *ngIf="!isLoggato()" routerLink="/registrazione" class="btn-accedi-testo">

@@ -1,0 +1,53 @@
+<div class="prenotazione-container" *ngIf="dettagliViaggio">
+
+  <div class="dettagli-colonna">
+    <h1>{{ dettagliViaggio.titolo }}</h1>
+    <p class="destinazione">📍 {{ dettagliViaggio.destinazione }}</p>
+
+    <div class="info-date">
+      <span><strong>Partenza:</strong> {{ dettagliViaggio.dataInizio | date:'dd/MM/yyyy' }}</span>
+      <span><strong>Ritorno:</strong> {{ dettagliViaggio.dataFine | date:'dd/MM/yyyy' }}</span>
+    </div>
+
+    <div class="descrizione-viaggio">
+      <h3>Il tuo itinerario</h3>
+      <p>{{ dettagliViaggio.descrizione }}</p>
+    </div>
+  </div>
+
+  <div class="card-colonna">
+    <div class="prenotazione-card sticky-card">
+      <h2>Riepilogo</h2>
+
+      <div class="prezzo-singolo">
+        <span class="prezzo-numero">€{{ dettagliViaggio.prezzo }}</span> <span class="testo-piccolo">/ persona</span>
+      </div>
+
+      <div class="posti-disponibili">
+        Posti rimasti: <strong>{{ dettagliViaggio.maxPartecipanti - dettagliViaggio.partecipantiAttuali }}</strong>
+      </div>
+
+      <div class="contatore-wrapper">
+        <label>Partecipanti:</label>
+        <div class="controlli-numero">
+          <button type="button" (click)="diminuisciPersone()" [disabled]="numeroPersone <= 1">-</button>
+          <span class="numero-display">{{ numeroPersone }}</span>
+          <button type="button" (click)="aumentaPersone()" [disabled]="numeroPersone >= (dettagliViaggio.maxPartecipanti - dettagliViaggio.partecipantiAttuali)">+</button>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="totale-wrapper">
+        <span>Totale:</span>
+        <span class="prezzo-totale">€{{ prezzoTotale }}</span>
+      </div>
+
+      <button class="btn-prenota" (click)="confermaPrenotazione()">Prenota Ora</button>
+
+      <div *ngIf="messaggioErrore" class="alert-error mt-3">{{ messaggioErrore }}</div>
+      <div *ngIf="messaggioSuccesso" class="alert-success mt-3">{{ messaggioSuccesso }}</div>
+    </div>
+  </div>
+
+</div>

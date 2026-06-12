@@ -1050,3 +1050,87 @@ input[type="number"]::-webkit-outer-spin-button {
     margin-top: 10px;
   }
 }
+/* --- STILI INTRODOTTI PER LA PRENOTAZIONE --- */
+
+/* Contenitore dei bottoni in alto a destra nell'header */
+.header-actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+/* Bottone Prenota Ora in Alto */
+.btn-prenota-top {
+  font-size: 1rem;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: #10b981; /* Verde Smeraldo */
+  color: white;
+  border: none;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-prenota-top:hover {
+  background: #059669; /* Verde più scuro */
+  transform: translateY(-2px); /* Effetto sollevamento */
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* Adattamento grafico per il bottone del calendario vicino al prenota */
+.btn-ics-calendar {
+  font-size: 0.9rem;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #a5d6a7;
+  border: 1px solid rgba(165, 214, 167, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Sezione Box Prenotazione in fondo alla scheda glass */
+.sezione-prenota-basso {
+  text-align: center;
+  padding: 35px 20px;
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 16px 16px;
+}
+
+.sezione-prenota-basso h3 {
+  color: white;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.sezione-prenota-basso p {
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+
+/* Bottone Prenota Ora Gigante in Basso */
+.btn-prenota-basso {
+  font-size: 1.2rem;
+  padding: 14px 45px;
+  border-radius: 12px;
+  background: #10b981;
+  color: white;
+  border: none;
+  font-weight: bold;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-prenota-basso:hover {
+  background: #059669;
+  transform: scale(1.04); /* Si ingrandisce leggermente */
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}

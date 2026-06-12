@@ -1,0 +1,280 @@
+/* --- IMPORT FONTS (Stessi di schermataHome) --- */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Poppins:wght@300;400;600;900&display=swap');
+
+/* --- SFONDO GLOBALE DELLA PAGINA --- */
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  /* Assicurati che il percorso dell'immagine sia lo stesso degli altri file */
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* Layout Generale */
+.prenotazione-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* --- EFFETTO VETRO (GLASSMORPHISM) SULLE COLONNE --- */
+.dettagli-colonna {
+  flex: 2; /* Prende due terzi dello spazio */
+  min-width: 300px;
+  background: rgba(15, 32, 66, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 40px;
+  color: white;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+
+.card-colonna {
+  flex: 1; /* Prende un terzo dello spazio */
+  min-width: 300px;
+}
+
+/* Testi Colonna Sinistra */
+h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 10px;
+  margin-top: 0;
+}
+
+.dettagli-colonna p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+.destinazione {
+  font-size: 1.2rem !important;
+  color: #90caf9 !important; /* Azzurro tema */
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.info-date {
+  display: flex;
+  gap: 30px;
+  background: rgba(255, 255, 255, 0.05); /* Sfondo semi-trasparente */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 16px;
+  margin: 25px 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.info-date span {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-date strong {
+  color: #90caf9;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* --- CARD DESTRA (PREZZO E CONFERMA) --- */
+.sticky-card {
+  position: sticky;
+  top: 100px; /* Resta appiccicata in alto quando scorri, ma sotto la navbar */
+}
+
+.prenotazione-card {
+  background: rgba(15, 32, 66, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 35px 30px;
+  color: white;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+
+.prezzo-numero {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #10b981; /* Verde smeraldo */
+  font-family: 'Montserrat', sans-serif;
+}
+
+.testo-piccolo {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+}
+
+.posti-disponibili {
+  margin-top: 15px;
+  color: #ffd54f; /* Giallo/Arancio per dare urgenza ma leggibile sul blu */
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  padding: 6px 14px;
+  border-radius: 30px;
+}
+
+/* Controlli +/- Partecipanti */
+.contatore-wrapper {
+  margin: 30px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.controlli-numero {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.controlli-numero button {
+  background: transparent;
+  color: white;
+  border: none;
+  width: 45px;
+  height: 45px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controlli-numero button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  color: #90caf9;
+}
+
+.controlli-numero button:disabled {
+  color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
+}
+
+.numero-display {
+  padding: 0 15px;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: white;
+  min-width: 45px;
+  text-align: center;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 25px 0;
+}
+
+/* Totale e Bottone */
+.totale-wrapper {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: white;
+}
+
+.btn-prenota {
+  width: 100%;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-prenota:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+}
+
+/* --- ALERTS E LOADER (In stile con il tema scuro) --- */
+.mt-3 { margin-top: 20px; }
+
+.alert-error {
+  color: #ffcdd2;
+  background-color: rgba(239, 83, 80, 0.15);
+  border: 1px solid rgba(239, 83, 80, 0.4);
+  border-left: 5px solid #ef5350;
+  padding: 15px;
+  border-radius: 12px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.alert-success {
+  color: #e8f5e9;
+  background-color: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-left: 5px solid #4caf50;
+  padding: 15px;
+  border-radius: 12px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.loader {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 1.4rem;
+  color: #90caf9;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Adattamento Responsive per cellulari */
+@media (max-width: 850px) {
+  .prenotazione-container {
+    flex-direction: column;
+    padding: 40px 15px;
+  }
+
+  .dettagli-colonna, .card-colonna {
+    width: 100%;
+  }
+
+  .sticky-card {
+    position: static;
+  }
+
+  .info-date {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

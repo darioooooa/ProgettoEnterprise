@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams, HttpHeaders} from '@angular/common/http';
+import {from, Observable} from 'rxjs';
 import { Viaggio } from '../models/viaggio.model';
+import {AutenticazioneService} from './autenticazione.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,9 @@ import { Viaggio } from '../models/viaggio.model';
 export class ViaggioService {
   private readonly API_URL = '/api/v1/viaggi';
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private authService: AutenticazioneService) { }
 
   creaViaggio(viaggio: Viaggio): Observable<Viaggio> {
 

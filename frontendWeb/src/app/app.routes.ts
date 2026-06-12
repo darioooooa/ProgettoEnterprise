@@ -17,6 +17,7 @@ import{ InboxOrganizzatore} from './inbox-organizzatore/inbox-organizzatore';
 import {ChatComponent} from './dettaglio-viaggio/components/chat/chat';
 import { PaginaInizialeComponent } from './pagina-iniziale/pagina-iniziale';
 import { StatisticheOrganizzatore} from './statistiche-organizzatore/statistiche-organizzatore';
+import {PrenotaViaggioComponent} from './prenota-viaggio/prenota-viaggio';
 
 export const routes: Routes = [
 
@@ -83,6 +84,11 @@ export const routes: Routes = [
       {
         path: 'diventa-organizzatore',
         component: DiventaOrganizzatoreComponent
+      },
+      {
+        path: 'prenota-viaggio/:id',
+        component: PrenotaViaggioComponent,
+        canActivate: [autenticazioneGuard]
       }
       ]
     },
