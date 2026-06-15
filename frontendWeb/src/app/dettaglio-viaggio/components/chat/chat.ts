@@ -27,6 +27,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   messaggiChat: MessaggioChatDTO[] = [];
   private chatSubscription!: Subscription;
 
+  isLoading: boolean = false;
+
   constructor(
     private chatService: ChatService,
     private auth: AutenticazioneService,
@@ -44,13 +46,23 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   inizializzaChatCommunity() {
+    this.isLoading = true;
     this.chatService.ottieniOCreaStanza(this.viaggioId, this.mioUsername).subscribe({
       next: (idRitorno) => {
         this.stanzaId = idRitorno;
 
-        this.chatService.ottieniCronologia(this.stanzaId).subscribe(storico => {
-          this.messaggiChat = storico;
-          this.gestisciScrollChat();
+        this.chatService.ottieniCronologia(this.stanzaId).subscribe({
+          next: (storico) => {
+            this.messaggiChat = storico;
+            this.gestisciScrollChat();
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error("Errore cronologia:", err);
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          }
         });
 
         this.chatService.connettiEIniziaAscolto(this.stanzaId);
@@ -66,13 +78,16 @@ export class ChatComponent implements OnInit, OnDestroy {
         console.error("Impossibile avviare la chat:", err);
         this.tipoAvviso = 'errore';
         this.messaggioAvviso = "Impossibile caricare la chat. Riprova più tardi.";
+        this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
   }
 
   inviaMessaggioCommunity() {
-    if (!this.nuovoMessaggioTesto.trim() || !this.stanzaId) return;
+    if (!this.nuovoMessaggioTesto.trim() || !this.stanzaId || this.isLoading) return;
+
+    this.isLoading = true;
 
     const dto: MessaggioChatDTO = {
       chatRoomId: this.stanzaId,
@@ -82,6 +97,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.inviaMessaggio(this.stanzaId, dto);
     this.nuovoMessaggioTesto = '';
+
+    setTimeout(() => {
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }, 150);
   }
 
   private gestisciScrollChat() {

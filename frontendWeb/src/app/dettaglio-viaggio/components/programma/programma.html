@@ -3,7 +3,7 @@
 
   <div id="avviso-programma" *ngIf="messaggioAvviso" [class.alert-errore-backend]="tipoAvviso === 'errore'" [class.alert-successo-backend]="tipoAvviso === 'successo'">
     <p>{{ messaggioAvviso }}</p>
-    <button type="button" class="btn-chiudi-alert" (click)="messaggioAvviso = null">×</button>
+    <button type="button" class="btn-chiudi-alert" [disabled]="isLoading" (click)="messaggioAvviso = null">×</button>
   </div>
 
   <div *ngIf="isMioViaggio" class="recensione-form" style="margin-bottom: 30px; padding: 25px;">
@@ -11,35 +11,37 @@
     <div class="form-row">
       <div class="input-group group-flessibile">
         <label>Titolo attività *</label>
-        <input type="text" [(ngModel)]="nuovaAttivita.titolo" placeholder="Es. Visita guidata al museo del Louvre">
+        <input type="text" [(ngModel)]="nuovaAttivita.titolo" [disabled]="isLoading" placeholder="Es. Visita guidata al museo del Louvre">
       </div>
       <div class="input-group group-flessibile">
         <label>Posizione / Luogo *</label>
-        <input type="text" [(ngModel)]="nuovaAttivita.posizione" placeholder="Es. Parigi centro">
+        <input type="text" [(ngModel)]="nuovaAttivita.posizione" [disabled]="isLoading" placeholder="Es. Parigi centro">
       </div>
     </div>
     <div class="form-row" style="margin-top: 15px;">
       <div class="input-group" style="flex: 1;">
         <label>Data e ora inizio *</label>
-        <input type="datetime-local" [(ngModel)]="nuovaAttivita.orarioInizio">
+        <input type="datetime-local" [(ngModel)]="nuovaAttivita.orarioInizio" [disabled]="isLoading">
       </div>
       <div class="input-group" style="flex: 1;">
         <label>Data e ora fine *</label>
-        <input type="datetime-local" [(ngModel)]="nuovaAttivita.orarioFine">
+        <input type="datetime-local" [(ngModel)]="nuovaAttivita.orarioFine" [disabled]="isLoading">
       </div>
       <div class="input-group group-costo-input">
         <label>Costo (€)</label>
-        <input type="number" min="0" step="0.01" [(ngModel)]="nuovaAttivita.costo"placeholder="0.00">
+        <input type="number" min="0" step="0.01" [(ngModel)]="nuovaAttivita.costo" [disabled]="isLoading" placeholder="0.00">
       </div>
     </div>
 
     <div class="input-group" style="margin-top: 15px; margin-bottom: 15px;">
       <label>Descrizione</label>
-      <textarea [(ngModel)]="nuovaAttivita.descrizione" placeholder="Fornisci indicazioni utili, abbigliamento consigliato o cosa include la sosta..."></textarea>
+      <textarea [(ngModel)]="nuovaAttivita.descrizione" [disabled]="isLoading" placeholder="Fornisci indicazioni utili, abbigliamento consigliato o cosa include la sosta..."></textarea>
     </div>
     <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
-      <button *ngIf="attivitaInModifica" type="button" class="btn-reset-filtri" (click)="annullaModificaAttivita()">Annulla modifica</button>
-      <button type="button" class="btn-premium-organizzatore" (click)="aggiungiTappaProgramma()">{{ attivitaInModifica ? 'Aggiorna tappa' : 'Salva tappa' }}</button>
+      <button *ngIf="attivitaInModifica" type="button" class="btn-reset-filtri" [disabled]="isLoading" (click)="annullaModificaAttivita()">Annulla modifica</button>
+      <button type="button" class="btn-premium-organizzatore" [disabled]="isLoading" (click)="aggiungiTappaProgramma()">
+        {{ isLoading ? '⏳ Elaborazione...' : (attivitaInModifica ? 'Aggiorna tappa' : 'Salva tappa') }}
+      </button>
     </div>
   </div>
 
@@ -47,40 +49,40 @@
     <div class="form-row" style="width: 100%; display: flex; gap: 15px; flex-wrap: wrap; margin-top: 12px; align-items: flex-end;">
       <div class="input-group" style="flex: 2;">
         <label>Cerca titolo</label>
-        <input type="text" [(ngModel)]="filtriAttivita.titolo" (keyup.enter)="filtraAttivita()" placeholder="Es. Visita, Museo...">
+        <input type="text" [(ngModel)]="filtriAttivita.titolo" [disabled]="isLoading" (keyup.enter)="filtraAttivita()" placeholder="Es. Visita, Museo...">
       </div>
       <div class="input-group" style="flex: 2;">
         <label>Cerca luogo</label>
-        <input type="text" [(ngModel)]="filtriAttivita.posizione" (keyup.enter)="filtraAttivita()" placeholder="Es. Roma, Centro...">
+        <input type="text" [(ngModel)]="filtriAttivita.posizione" [disabled]="isLoading" (keyup.enter)="filtraAttivita()" placeholder="Es. Roma, Centro...">
       </div>
       <div class="input-group" style="flex: 0.7;">
         <label>Costo min (€)</label>
-        <input type="number" min="0" [(ngModel)]="filtriAttivita.costoMin" (keyup.enter)="filtraAttivita()" placeholder="0">
+        <input type="number" min="0" [(ngModel)]="filtriAttivita.costoMin" [disabled]="isLoading" (keyup.enter)="filtraAttivita()" placeholder="0">
       </div>
       <div class="input-group" style="flex: 0.7;">
         <label>Costo max (€)</label>
-        <input type="number" min="0" [(ngModel)]="filtriAttivita.costoMax" (keyup.enter)="filtraAttivita()" placeholder="100">      </div>
+        <input type="number" min="0" [(ngModel)]="filtriAttivita.costoMax" [disabled]="isLoading" (keyup.enter)="filtraAttivita()" placeholder="100">      </div>
     </div>
     <div class="form-row" style="width: 100%; display: flex; gap: 15px; flex-wrap: wrap; margin-top: 12px; align-items: flex-end;">
       <div class="input-group date-picker" style="flex: 1;">
         <label>Inizio dal giorno</label>
-        <input type="date" [(ngModel)]="filtriAttivita.orarioInizioMin" (change)="filtraAttivita()">
+        <input type="date" [(ngModel)]="filtriAttivita.orarioInizioMin" [disabled]="isLoading" (change)="filtraAttivita()">
       </div>
       <div class="input-group date-picker" style="flex: 1;">
         <label>Inizio al giorno</label>
-        <input type="date" [(ngModel)]="filtriAttivita.orarioInizioMax" (change)="filtraAttivita()">
+        <input type="date" [(ngModel)]="filtriAttivita.orarioInizioMax" [disabled]="isLoading" (change)="filtraAttivita()">
       </div>
       <div class="input-group date-picker" style="flex: 1;">
         <label>Fine dal giorno</label>
-        <input type="date" [(ngModel)]="filtriAttivita.orarioFineMin" (change)="filtraAttivita()">
+        <input type="date" [(ngModel)]="filtriAttivita.orarioFineMin" [disabled]="isLoading" (change)="filtraAttivita()">
       </div>
       <div class="input-group date-picker" style="flex: 1;">
         <label>Fine al giorno</label>
-        <input type="date" [(ngModel)]="filtriAttivita.orarioFineMax" (change)="filtraAttivita()">
+        <input type="date" [(ngModel)]="filtriAttivita.orarioFineMax" [disabled]="isLoading" (change)="filtraAttivita()">
       </div>
       <div class="filter-actions" style="margin-left: auto; padding-top: 5px;">
-        <button type="button" class="btn-add-tappa" (click)="filtraAttivita()">Cerca</button>
-        <button type="button" class="btn-reset-filtri" (click)="pulisciFiltriAttivita()">Resetta</button>
+        <button type="button" class="btn-add-tappa" [disabled]="isLoading" (click)="filtraAttivita()">Cerca</button>
+        <button type="button" class="btn-reset-filtri" [disabled]="isLoading" (click)="pulisciFiltriAttivita()">Resetta</button>
       </div>
     </div>
   </div>
@@ -112,13 +114,14 @@
         </div>
       </div>
       <div *ngIf="isMioViaggio" style="display: flex; gap: 12px; align-items: center; align-self: center;">
-        <button type="button" class="btn-elimina-rec" style="color: #90caf9; text-decoration: underline; margin: 0;" (click)="avviaModificaAttivita(att)">
+        <button type="button" class="btn-elimina-rec" style="color: #90caf9; text-decoration: underline; margin: 0;" [disabled]="isLoading" (click)="avviaModificaAttivita(att)">
           Modifica
         </button>
         <button class="btn-elimina-rec"
-          [class.stato-conferma]="idAttivitaDaEliminare === att.id"
-          style="margin: 0;"
-          (click)="cancellaTappaProgramma(att.id)">
+                [class.stato-conferma]="idAttivitaDaEliminare === att.id"
+                style="margin: 0;"
+                [disabled]="isLoading"
+                (click)="cancellaTappaProgramma(att.id)">
           {{ idAttivitaDaEliminare === att.id ? '⚠️ Confermi?' : 'Elimina tappa' }}
         </button>
       </div>
@@ -126,8 +129,8 @@
   </ul>
 
   <div class="paginazione-mini" *ngIf="totalePagineAttivita > 1">
-    <button [disabled]="paginaAttivita === 0" (click)="cambiaPaginaAttivita(-1)">&larr;</button>
+    <button [disabled]="paginaAttivita === 0 || isLoading" (click)="cambiaPaginaAttivita(-1)">&larr;</button>
     <span>{{ paginaAttivita + 1 }} di {{ totalePagineAttivita }}</span>
-    <button [disabled]="paginaAttivita === totalePagineAttivita - 1" (click)="cambiaPaginaAttivita(1)">&rarr;</button>
+    <button [disabled]="paginaAttivita === totalePagineAttivita - 1 || isLoading" (click)="cambiaPaginaAttivita(1)">&rarr;</button>
   </div>
 </div>

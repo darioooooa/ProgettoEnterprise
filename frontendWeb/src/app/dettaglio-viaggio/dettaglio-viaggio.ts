@@ -35,6 +35,8 @@ export class DettaglioViaggio implements OnInit {
   // Stato del tab attivo
   tabAttivo: 'chat'|'galleria' | 'programma' | 'community' = 'programma'  ;
 
+  isLoading: boolean = false;
+
   constructor(
     private route: ActivatedRoute,
     private viaggioService: ViaggioService,
@@ -79,27 +81,30 @@ export class DettaglioViaggio implements OnInit {
     this.caricaStatistichePadre();
   }
   scaricaFileIcs() {
-    if (!this.viaggioId) return;
+    if (!this.viaggioId || this.isLoading) return;
 
+    this.isLoading = true;
 
     this.prenotazioneService.scaricaFileIcs(this.viaggioId).subscribe({
       next: (fileBlob: Blob) => {
         // Creiamo l'URL di memoria nel browser
         const blobUrl = window.URL.createObjectURL(fileBlob);
 
-
         const linkDownload = document.createElement('a');
         linkDownload.href = blobUrl;
         linkDownload.download = `prenotazione_${this.viaggioId}.ics`;
 
-
         linkDownload.click();
 
-
         window.URL.revokeObjectURL(blobUrl);
+
+        this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Errore durante il download del calendario .ics:", err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
 
@@ -111,6 +116,7 @@ export class DettaglioViaggio implements OnInit {
 
   apriSegnalazioneOrg(idOrg: number, event: Event) {
     event.stopPropagation();
+    if (this.isLoading) return;
     this.tipoDaSegnalare = 'UTENTE';
     this.idDaSegnalare = idOrg;
     this.mostraSegnalazione = true;

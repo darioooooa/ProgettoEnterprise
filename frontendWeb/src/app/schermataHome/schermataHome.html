@@ -4,25 +4,27 @@
     <h2>Trova la tua prossima destinazione</h2>
 
     <div class="search-bar">
-      <input type="text" placeholder="Località (es. Bali, Indonesia)" [(ngModel)]="filtriViaggio.destinazione">
-      <input type="date" [(ngModel)]="filtriViaggio.dataInizioMin">
+      <input type="text" placeholder="Località (es. Bali, Indonesia)" [(ngModel)]="filtriViaggio.destinazione" [disabled]="isLoading">
+      <input type="date" [(ngModel)]="filtriViaggio.dataInizioMin" [disabled]="isLoading">
       <div class="price-wrapper">
         <label>Prezzo Max</label>
-        <input type="range" min="0" max="5000" step="50" [(ngModel)]="filtriViaggio.prezzoMax" class="price-slider">
+        <input type="range" min="0" max="5000" step="50" [(ngModel)]="filtriViaggio.prezzoMax" [disabled]="isLoading" class="price-slider">
 
         <div class="price-display">
-          <input type="number" [(ngModel)]="filtriViaggio.prezzoMax">
+          <input type="number" [(ngModel)]="filtriViaggio.prezzoMax" [disabled]="isLoading">
           <span>€</span>
         </div>
       </div>
-      <select [(ngModel)]="filtriViaggio.maxPartecipanti">
+      <select [(ngModel)]="filtriViaggio.maxPartecipanti" [disabled]="isLoading">
         <option value="">Qualsiasi numero di persone</option>
         <option value="1">1 Persona</option>
         <option value="2">2 Persone</option>
         <option value="3">3 Persone</option>
         <option value="4">4+ Persone</option>
       </select>
-      <button type="button" class="btn" (click)="avviaRicercaViaggi($event)">Cerca</button>
+      <button type="button" class="btn" [disabled]="isLoading" (click)="avviaRicercaViaggi($event)">
+        {{ isLoading ? '...' : 'Cerca' }}
+      </button>
     </div>
   </div>
 </section>
@@ -34,12 +36,12 @@
     Nessun viaggio trovato con questi filtri. Prova a cambiare destinazione o date!
   </p>
 
-  <div class="cards-container" *ngIf="viaggiTrovati.length > 0">
+  <div class="cards-container" *ngIf="viaggiTrovati.length > 0" [style.pointer-events]="isLoading ? 'none' : 'auto'">
     <div class="card" *ngFor="let viaggio of viaggiTrovati">
 
       <img [routerLink]="['/viaggi', viaggio.id]" style="cursor: pointer;" src="/assets/cammelli-che-attraversa-il-deserto-del-Sahara.jpg" [alt]="viaggio.destinazione">
 
-      <button class="plus-icon-button" (click)="toggleItineraryMenu(viaggio.id, $event)">+</button>
+      <button class="plus-icon-button" [disabled]="isLoading" (click)="toggleItineraryMenu(viaggio.id, $event)">+</button>
 
       <div class="card-info" [routerLink]="['/viaggi', viaggio.id]" style="cursor: pointer;">
         <h3>{{ viaggio.titolo }}</h3>
@@ -56,7 +58,7 @@
       <div class="itinerary-dropdown" *ngIf="openItineraryMenuId === viaggio.id" (click)="$event.stopPropagation()">
 
         <div class="dropdown-header">
-          <div class="btn-nuovo-itinerario" (click)=apriModaleItinerario()>
+          <div class="btn-nuovo-itinerario" (click)="apriModaleItinerario()">
             + Crea nuovo itinerario
           </div>
         </div>
@@ -78,29 +80,29 @@
     <div class="pagination-buttons" style="display: flex; justify-content: center;">
       <button class="btn" style="background-color: #666; margin-right: 10px;"
               (click)="paginaPrecedente()"
-              [disabled]="paginaCorrente === 0">
+              [disabled]="paginaCorrente === 0 || isLoading">
         &larr; Precedente
       </button>
 
       <button class="btn" style="margin-left: 10px;"
               (click)="paginaSuccessiva()"
-              [disabled]="paginaCorrente === totalePagine - 1">
+              [disabled]="paginaCorrente === totalePagine - 1 || isLoading">
         Successiva &rarr;
       </button>
     </div>
   </div>
 
-  <div class="modale-overlay-amici" *ngIf="modaleItinerarioAperta" (click)="chiudiModaleItinerario()">
+  <div class="modale-overlay-amici" *ngIf="modaleItinerarioAperta" (click)="isLoading ? null : chiudiModaleItinerario()">
     <div class="modale-content-amici" (click)="$event.stopPropagation()">
       <div class="modale-header-amici">
         <h3>Nuovo Itinerario</h3>
-        <button class="btn-chiudi-amici" (click)="chiudiModaleItinerario()">&times;</button>
+        <button class="btn-chiudi-amici" [disabled]="isLoading" (click)="chiudiModaleItinerario()">&times;</button>
       </div>
       <div class="modale-body-amici">
-        <input type="text" [(ngModel)]="nomeNuovoItinerario" placeholder="Nome dell'itinerario..."
+        <input type="text" [(ngModel)]="nomeNuovoItinerario" [disabled]="isLoading" placeholder="Nome dell'itinerario..."
                style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px;">
-        <button class="btn-itinerari" style="width: 100%; padding: 12px;" (click)="salvaNuovoItinerario()">
-          Crea Itinerario
+        <button class="btn-itinerari" style="width: 100%; padding: 12px;" [disabled]="!nomeNuovoItinerario.trim() || isLoading" (click)="salvaNuovoItinerario()">
+          {{ isLoading ? 'Creazione in corso...' : 'Crea Itinerario' }}
         </button>
       </div>
     </div>

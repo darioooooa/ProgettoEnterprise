@@ -3,6 +3,8 @@ package com.example.progettoenterprise.controllers;
 import com.example.progettoenterprise.data.service.AmiciziaService;
 import com.example.progettoenterprise.dto.AmiciziaDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ public class AmiciziaController {
     // ENDPOINT PER INVIO RICHIESTA DI AMICIZIA
     @PostMapping("/richiesta/{riceventeUsername}")
     @PreAuthorize("isAuthenticated()")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<AmiciziaDTO> inviaRichiesta(
             @PathVariable String riceventeUsername,
             @AuthenticationPrincipal UtenteLoggato mittente) {
@@ -39,6 +42,7 @@ public class AmiciziaController {
     // ENDPOINT PER ACCETTAZIONE RICHIESTA DI AMICIZIA
     @PatchMapping("/{amiciziaId}/accetta")
     @PreAuthorize("isAuthenticated()")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<AmiciziaDTO> accettaRichiesta(
             @PathVariable Long amiciziaId,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
@@ -84,6 +88,7 @@ public class AmiciziaController {
     // RIFIUTA UNA RICHIESTA
     @PatchMapping("/{amiciziaId}/rifiuta")
     @PreAuthorize("isAuthenticated()")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<?> rifiutaRichiesta(
             @PathVariable Long amiciziaId,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
@@ -98,6 +103,7 @@ public class AmiciziaController {
     // RIMUOVERE UN AMICO
     @DeleteMapping("/rimuovi/{amicoId}")
     @PreAuthorize("isAuthenticated()")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<?> rimuoviAmico(
             @PathVariable Long amicoId,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {

@@ -63,6 +63,8 @@ export class AdminDashboard implements OnInit {
   mostraModaleMessaggio: boolean = false;
   messaggioInLettura: string = '';
 
+  isLoading: boolean = false;
+
   constructor(
     private adminService: AdminService,
     private segnalazioneService: SegnalazioneService,
@@ -103,38 +105,54 @@ export class AdminDashboard implements OnInit {
   }
 
   caricaRichieste() {
+    this.isLoading = true;
     this.adminService.getRichieste().subscribe({
       next: (dati) => {
         this.richieste = dati;
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error(err)
+      error: (err) => {
+        console.error(err)
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   approva(id: number) {
-    if (!this.adminIdLoggato) return;
+    if (!this.adminIdLoggato || this.isLoading) return;
     if (confirm("Approvare questa richiesta?")) {
+      this.isLoading = true;
       this.adminService.approvaRichiesta(id, this.adminIdLoggato).subscribe({
         next: () => {
           alert('Approvata!');
           this.caricaRichieste();
         },
-        error: () => alert('Errore.')
+        error: () => {
+          alert('Errore.')
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     }
   }
 
   rifiuta(id: number) {
-    if (!this.adminIdLoggato) return;
+    if (!this.adminIdLoggato || this.isLoading) return;
     const notaRifiuto = prompt("Inserisci motivazione:");
     if (notaRifiuto) {
+      this.isLoading = true;
       this.adminService.rifiutaRichiesta(id, notaRifiuto, this.adminIdLoggato).subscribe({
         next: () => {
           alert('Rifiutata.');
           this.caricaRichieste();
         },
-        error: () => alert('Errore.')
+        error: () => {
+          alert('Errore.')
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     }
   }
@@ -159,39 +177,49 @@ export class AdminDashboard implements OnInit {
 
   caricaSegnalazioni() {
     this.caricamentoSegnalazioni = true;
+    this.isLoading = true;
     this.segnalazioneService.cercaSegnalazioni({}, 0).subscribe({
       next: (risposta) => {
         this.segnalazioni = risposta.content ? risposta.content : risposta;
         this.caricamentoSegnalazioni = false;
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
         this.caricamentoSegnalazioni = false;
+        this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
   }
 
   prendiInCarico(id: number) {
-    if (!this.adminIdLoggato) return;
+    if (!this.adminIdLoggato || this.isLoading) return;
+
+    this.isLoading = true;
     this.segnalazioneService.prendiInCarico(id, this.adminIdLoggato).subscribe({
       next: () => {
         alert('Presa in carico!');
         this.caricaSegnalazioni();
       },
-      error: (err) => alert('Errore.')
+      error: (err) => {
+        alert('Errore.')
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   risolviSegnalazione(id: number, sospendiAutore: boolean = false) {
-    if (!this.adminIdLoggato) return;
+    if (!this.adminIdLoggato || this.isLoading) return;
 
     const messaggioConferma = sospendiAutore
       ? "ATTENZIONE: Stai per applicare la sanzione più dura sull'elemento e sospendere definitivamente l'utente. Confermi?"
       : "Confermi la risoluzione della segnalazione (con eventuale rimozione dell'elemento)?";
 
     if (confirm(messaggioConferma)) {
+      this.isLoading = true;
       this.segnalazioneService.risolviSegnalazione(id, this.adminIdLoggato, sospendiAutore).subscribe({
         next: () => {
           alert('Segnalazione risolta con successo!');
@@ -201,43 +229,63 @@ export class AdminDashboard implements OnInit {
             this.caricaUtentiBannati();
           }
         },
-        error: (err) => alert('Errore durante la risoluzione.')
+        error: (err) => {
+          alert('Errore durante la risoluzione.')
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     }
   }
 
   rifiutaSegnalazione(id: number) {
-    if (!this.adminIdLoggato) return;
+    if (!this.adminIdLoggato || this.isLoading) return;
     if (confirm("Rifiutare la segnalazione? L'elemento segnalato NON verrà eliminato.")) {
+      this.isLoading = true;
       this.segnalazioneService.rifiutaSegnalazione(id, this.adminIdLoggato).subscribe({
         next: () => {
           alert('Segnalazione rifiutata.');
           this.caricaSegnalazioni();
         },
-        error: (err) => alert('Errore.')
+        error: (err) => {
+          alert('Errore.')
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     }
   }
 
   caricaUtentiBannati() {
+    this.isLoading = true;
     this.adminService.getUtentiBannati().subscribe({
       next: (dati) => {
         this.utentiBannati = dati;
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error(err)
+      error: (err) => {
+        console.error(err)
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   sbannaUtente(idUtente: number) {
+    if (this.isLoading) return;
     if (confirm("Riattivare questo utente?")) {
+      this.isLoading = true;
       this.adminService.sbannaUtente(idUtente).subscribe({
         next: () => {
           alert('Utente riattivato!');
-          this.cdr.detectChanges();
           this.caricaUtentiBannati();
         },
-        error: () => alert('Errore.')
+        error: () => {
+          alert('Errore.')
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     }
   }

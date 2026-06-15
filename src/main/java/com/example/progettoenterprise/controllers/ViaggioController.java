@@ -5,6 +5,8 @@ import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import com.example.progettoenterprise.dto.ViaggioMappaDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ public class ViaggioController {
     // Endpoint per creare un nuovo viaggio (organizzatore)
     @PostMapping(consumes = "application/json")
     @PreAuthorize("hasRole('ORGANIZZATORE')")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<ViaggioDTO> creaViaggio(
             @Valid @RequestBody ViaggioDTO viaggioDTO,
             @AuthenticationPrincipal UtenteLoggato organizzatore) {

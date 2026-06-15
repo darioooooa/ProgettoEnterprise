@@ -28,6 +28,8 @@ export class ProgrammaComponent implements OnInit {
 
   filtriAttivita = { titolo: '', posizione: '', costoMin: '', costoMax: '', orarioInizioMin: '', orarioInizioMax: '', orarioFineMin: '', orarioFineMax: '' };
 
+  isLoading: boolean = false;
+
   constructor(private viaggioService: ViaggioService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
@@ -64,22 +66,27 @@ export class ProgrammaComponent implements OnInit {
   }
 
   filtraAttivita() {
+    if (this.isLoading) return;
     this.paginaAttivita = 0;
     this.caricaAttivita();
   }
 
   pulisciFiltriAttivita() {
+    if (this.isLoading) return;
     this.filtriAttivita = { titolo: '', posizione: '', costoMin: '', costoMax: '', orarioInizioMin: '', orarioInizioMax: '', orarioFineMin: '', orarioFineMax: '' };
     this.paginaAttivita = 0;
     this.caricaAttivita();
   }
 
   cambiaPaginaAttivita(dir: number) {
+    if (this.isLoading) return;
     this.paginaAttivita += dir;
     this.caricaAttivita();
   }
 
   aggiungiTappaProgramma() {
+    if (this.isLoading) return;
+
     if (!this.nuovaAttivita.titolo.trim()) {
       this.mostraErroreTappa("Il titolo della tappa è obbligatorio.");
       return;
@@ -93,6 +100,7 @@ export class ProgrammaComponent implements OnInit {
       return;
     }
     this.messaggioAvviso = null;
+    this.isLoading = true;
 
     const payload = {
       titolo: this.nuovaAttivita.titolo.trim(),
@@ -110,10 +118,14 @@ export class ProgrammaComponent implements OnInit {
           this.caricaAttivita();
           this.tipoAvviso = 'successo';
           this.messaggioAvviso = "Attività del programma aggiornata con successo!";
+          this.isLoading = false;
           this.scattaScrollAvviso();
           setTimeout(() => this.messaggioAvviso === "Attività del programma aggiornata con successo!" && (this.messaggioAvviso = null), 4000);
         },
-        error: (err) => this.gestisciErroreTappa(err)
+        error: (err) => {
+          this.isLoading = false;
+          this.gestisciErroreTappa(err);
+        }
       });
     } else {
       this.viaggioService.creaAttivita(this.viaggioId, payload).subscribe({
@@ -122,10 +134,14 @@ export class ProgrammaComponent implements OnInit {
           this.caricaAttivita();
           this.tipoAvviso = 'successo';
           this.messaggioAvviso = "Nuova attività registrata nel programma!";
+          this.isLoading = false;
           this.scattaScrollAvviso();
           setTimeout(() => this.messaggioAvviso === "Nuova attività registrata nel programma!" && (this.messaggioAvviso = null), 4000);
         },
-        error: (err) => this.gestisciErroreTappa(err)
+        error: (err) => {
+          this.isLoading = false;
+          this.gestisciErroreTappa(err);
+        }
       });
     }
   }
@@ -156,6 +172,7 @@ export class ProgrammaComponent implements OnInit {
   }
 
   avviaModificaAttivita(att: any) {
+    if (this.isLoading) return;
     this.attivitaInModifica = true;
     this.idAttivitaInModifica = att.id;
 
@@ -181,6 +198,7 @@ export class ProgrammaComponent implements OnInit {
   }
 
   annullaModificaAttivita() {
+    if (this.isLoading) return;
     this.pulisciStatoFormAttivita();
   }
 
@@ -192,6 +210,8 @@ export class ProgrammaComponent implements OnInit {
   }
 
   cancellaTappaProgramma(idAttivita: number) {
+    if (this.isLoading) return;
+
     if (this.idAttivitaDaEliminare !== idAttivita) {
       this.idAttivitaDaEliminare = idAttivita;
       setTimeout(() => this.idAttivitaDaEliminare === idAttivita && (this.idAttivitaDaEliminare = null), 4000);
@@ -199,6 +219,7 @@ export class ProgrammaComponent implements OnInit {
     }
     this.idAttivitaDaEliminare = null;
     this.messaggioAvviso = null;
+    this.isLoading = true;
 
     this.viaggioService.eliminaAttivita(this.viaggioId, idAttivita).subscribe({
       next: () => {
@@ -206,12 +227,14 @@ export class ProgrammaComponent implements OnInit {
         this.caricaAttivita();
         this.tipoAvviso = 'successo';
         this.messaggioAvviso = "Attività eliminata con successo dal programma.";
+        this.isLoading = false;
         this.scattaScrollAvviso();
         setTimeout(() => this.messaggioAvviso === "Attività eliminata con successo dal programma." && (this.messaggioAvviso = null), 4000);
       },
       error: (err) => {
         this.tipoAvviso = 'errore';
         this.messaggioAvviso = err.error?.messaggio || "Impossibile rimuovere la tappa selezionata.";
+        this.isLoading = false;
         this.scattaScrollAvviso();
       }
     });

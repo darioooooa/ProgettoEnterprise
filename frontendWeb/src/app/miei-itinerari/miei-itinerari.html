@@ -3,9 +3,9 @@
     <h1 class="titolo-glass">I MIEI ITINERARI</h1>
     <p class="sottotitolo-glass">Gestisci le tue avventure e i dettagli delle prenotazioni</p>
 
-    <button class="btn-crea-nuovo" (click)="apriModaleCreazione()">+ Crea Nuovo Itinerario</button>
+    <button class="btn-crea-nuovo" [disabled]="isLoading" (click)="apriModaleCreazione()">+ Crea Nuovo Itinerario</button>
 
-    <div class="lista-itinerari-glass">
+    <div class="lista-itinerari-glass" [style.pointer-events]="isLoading ? 'none' : 'auto'">
       <div class="card-glass" *ngFor="let it of itinerari">
 
         <div class="card-top">
@@ -15,7 +15,7 @@
               {{ it.visibilita }} ✏️
             </span>
           </div>
-          <button class="btn-elimina-itinerario" (click)="eliminaItinerario(it.idItinerario)" title="Elimina intero itinerario">
+          <button class="btn-elimina-itinerario" [disabled]="isLoading" (click)="eliminaItinerario(it.idItinerario)" title="Elimina intero itinerario">
             🗑️
           </button>
         </div>
@@ -33,11 +33,11 @@
               </div>
 
               <div class="azioni-viaggio">
-                <button class="btn-azione-viaggio" (click)="toggleMenuSposta(it.idItinerario, v.id)" title="Sposta in un altro itinerario">
+                <button class="btn-azione-viaggio" [disabled]="isLoading" (click)="toggleMenuSposta(it.idItinerario, v.id)" title="Sposta in un altro itinerario">
                   🔄
                 </button>
 
-                <button class="btn-rimuovi-viaggio" (click)="rimuoviViaggio(it.idItinerario, v.id)" title="Rimuovi questo viaggio">
+                <button class="btn-rimuovi-viaggio" [disabled]="isLoading" (click)="rimuoviViaggio(it.idItinerario, v.id)" title="Rimuovi questo viaggio">
                   ❌
                 </button>
 
@@ -46,6 +46,7 @@
                   <div class="opzioni-itinerari">
                     <ng-container *ngFor="let destinazioneIt of itinerari">
                       <button *ngIf="destinazioneIt.idItinerario !== it.idItinerario"
+                              [disabled]="isLoading"
                               (click)="eseguiSpostamento(it.idItinerario, destinazioneIt.idItinerario, v.id)">
                         {{ destinazioneIt.nome }}
                       </button>
@@ -62,29 +63,31 @@
       </div>
     </div>
 
-    <button class="btn-indietro" routerLink="/">← Torna alla Home</button>
+    <button class="btn-indietro" [disabled]="isLoading" routerLink="/">← Torna alla Home</button>
   </div>
 
-  <div class="modal-overlay" *ngIf="mostraModaleCreazione" (click)="chiudiModaleCreazione()">
+  <div class="modal-overlay" *ngIf="mostraModaleCreazione" (click)="isLoading ? null : chiudiModaleCreazione()">
     <div class="modal-glass" (click)="$event.stopPropagation()">
       <h2>Nuovo Itinerario</h2>
 
       <div class="form-group">
         <label>Nome dell'itinerario</label>
-        <input type="text" [(ngModel)]="nuovoNome" placeholder="Es. Viaggio estivo 2026...">
+        <input type="text" [(ngModel)]="nuovoNome" [disabled]="isLoading" placeholder="Es. Viaggio estivo 2026...">
       </div>
 
       <div class="form-group">
         <label>Visibilità</label>
-        <select [(ngModel)]="nuovaVisibilita">
+        <select [(ngModel)]="nuovaVisibilita" [disabled]="isLoading">
           <option value="PRIVATA">Privata (Solo per me)</option>
           <option value="PUBBLICA">Pubblica (Visibile a tutti)</option>
         </select>
       </div>
 
       <div class="modal-actions">
-        <button class="btn-annulla" (click)="chiudiModaleCreazione()">Annulla</button>
-        <button class="btn-salva" (click)="salvaNuovoItinerario()">Crea</button>
+        <button class="btn-annulla" [disabled]="isLoading" (click)="chiudiModaleCreazione()">Annulla</button>
+        <button class="btn-salva" [disabled]="isLoading" (click)="salvaNuovoItinerario()">
+          {{ isLoading ? 'Creazione...' : 'Crea' }}
+        </button>
       </div>
     </div>
   </div>

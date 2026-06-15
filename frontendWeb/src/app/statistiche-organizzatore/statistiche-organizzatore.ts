@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -31,15 +31,26 @@ export class StatisticheOrganizzatore implements OnInit {
     { titolo: 'Settimana in Islanda', data: '10/04/2026', postiVenduti: 12, guadagno: 2400 }
   ];
 
-  constructor() {}
+  isLoading: boolean = false;
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.aggiornaGuadagni();
   }
 
   cambiaFiltro(nuovoFiltro: 'SETTIMANA' | 'MESE' | 'ANNO' | 'TOTALE') {
+    if (this.isLoading) return;
+
+    this.isLoading = true;
     this.filtroGuadagni = nuovoFiltro;
-    this.aggiornaGuadagni();
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.aggiornaGuadagni();
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }, 400);
   }
 
   private aggiornaGuadagni() {

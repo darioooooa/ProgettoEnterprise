@@ -23,10 +23,25 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(richiestaAutenticata).pipe(
       catchError((errore: HttpErrorResponse) => {
 
+        // Gestione del rate limiting (429)
+        if (errore.status === 429) {
+          const secondiAttesa = errore.headers.get('X-Rate-Limit-Retry-After-Seconds') || 'fallback';
+
+          alert(`⚠️ OPERAZIONE BLOCCATA (Rate Limit)\nHai inviato troppe richieste troppo velocemente.\nRiprova tra ${secondiAttesa} secondi.`);
+
+          return throwError(() => errore);
+        }
+
         // Se il token è scaduto
         if (errore.status === 401 && !request.url.includes('protocol/openid-connect/token')) {
           return this.gestisciErrore401(request, next);
         }
+
+        // Se una richiesta fallisce direttamente con 403 o 401 non gestito sulla sessione iniziale
+        if ((errore.status === 401 || errore.status === 403) && !this.authService.ottieniToken()) {
+          this.eseguiResetInizialeSessioneOrfana();
+        }
+
         if (errore.status === 403 && errore.error?.errore?.includes('sospeso')) {
           alert("⚠️ IL TUO ACCOUNT È STATO SOSPESO.\nSarai disconnesso immediatamente.");
           this.authService.esci();
@@ -72,7 +87,7 @@ export class AuthInterceptor implements HttpInterceptor {
         catchError((erroreRefresh) => {
           // Anche il refresh token è scaduto (o è stato revocato)
           this.staAggiornandoToken = false;
-          this.authService.esci(); // logout
+          this.eseguiResetInizialeSessioneOrfana();
           return throwError(() => erroreRefresh);
         })
       );
@@ -87,5 +102,21 @@ export class AuthInterceptor implements HttpInterceptor {
         })
       );
     }
+  }
+
+  // Metodo per ripristinare l'intera sessione iniziale (logout)
+  private eseguiResetInizialeSessioneOrfana(): void {
+    console.warn("Rilevato token orfano o scaduto irreversibilmente. <ripristino dell'applicazione.");
+
+    // Pulisce tutte le strutture di tracciamento
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Distrugge lo stato in memoria del servizio
+    this.authService.esci();
+
+    this.router.navigate(['/']).then(() => {
+      window.location.reload();
+    });
   }
 }

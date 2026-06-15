@@ -1,14 +1,14 @@
 <div class="lista-viaggi-container">
 
   <div class="header-section">
-    <button class="btn-back" (click)="tornaIndietro()">&larr; Torna alla mappa</button>
+    <button class="btn-back" [disabled]="isLoading" (click)="tornaIndietro()">
+      &larr; Torna alla mappa
+    </button>
     <h1 class="page-title">Viaggi in questa posizione</h1>
     <p class="page-subtitle">Abbiamo trovato diversi viaggi in questa esatta zona. Scegli quello che ti ispira di più!</p>
   </div>
 
-
-
-  <div class="cards-grid">
+  <div class="cards-grid" [style.pointer-events]="isLoading ? 'none' : 'auto'">
 
     <div class="viaggio-card" *ngFor="let viaggio of viaggi">
       <div class="card-image-wrapper">
@@ -25,8 +25,8 @@
       </div>
 
       <div class="card-footer">
-        <button class="btn-dettagli" (click)="vaiAiDettagli(viaggio.id)">
-          Scopri i dettagli
+        <button class="btn-dettagli" [disabled]="isLoading" (click)="vaiAiDettagli(viaggio.id)">
+          {{ isLoading ? '⏳ Caricamento...' : 'Scopri i dettagli' }}
         </button>
       </div>
     </div>

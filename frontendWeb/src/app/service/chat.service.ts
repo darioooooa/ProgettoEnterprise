@@ -79,6 +79,10 @@ export class ChatService {
 
     this.stompClient.onStompError = (frame) => {
       console.error('Errore di sicurezza STOMP/Keycloak:', frame.headers['message']);
+      const messaggioErrore = frame.headers['message'];
+      if (messaggioErrore && messaggioErrore.includes('velocemente')) {
+        alert(`💬 CHAT LIMIT: ${messaggioErrore}`);
+      }
     };
 
     // Attiva il WebSocket

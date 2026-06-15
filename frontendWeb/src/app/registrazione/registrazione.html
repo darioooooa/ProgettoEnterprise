@@ -14,34 +14,35 @@
       </div>
       <div class="input-group">
         <label>Username</label>
-        <input type="text" name="username" [(ngModel)]="nuovoUtente.username" required placeholder="Es. mariorossi69">
+        <input type="text" name="username" [(ngModel)]="nuovoUtente.username" [disabled]="isLoading" required placeholder="Es. mariorossi69">
       </div>
 
       <div class="input-group">
         <label>Nome</label>
-        <input type="text" name="nome" [(ngModel)]="nuovoUtente.nome" required placeholder="Es. Mario ">
+        <input type="text" name="nome" [(ngModel)]="nuovoUtente.nome" [disabled]="isLoading" required placeholder="Es. Mario ">
       </div>
       <div class="input-group">
         <label>Cognome</label>
-        <input type="text" name="cognome" [(ngModel)]="nuovoUtente.cognome" required placeholder="Es. Rossi">
+        <input type="text" name="cognome" [(ngModel)]="nuovoUtente.cognome" [disabled]="isLoading" required placeholder="Es. Rossi">
       </div>
-
 
       <div class="input-group">
         <label>Indirizzo Email</label>
-        <input type="email" name="email" [(ngModel)]="nuovoUtente.email" required placeholder="viaggiatore@esempio.it">
+        <input type="email" name="email" [(ngModel)]="nuovoUtente.email" [disabled]="isLoading" required placeholder="viaggiatore@esempio.it">
       </div>
 
       <div class="input-group">
         <label>Scegli una Password</label>
-        <input type="password" name="password" [(ngModel)]="nuovoUtente.password" required placeholder="••••••••">
+        <input type="password" name="password" [(ngModel)]="nuovoUtente.password" [disabled]="isLoading" required placeholder="••••••••">
       </div>
 
-      <button type="submit" class="btn-submit">Registrati e Parti</button>
+      <button type="submit" class="btn-submit" [disabled]="isLoading">
+        {{ isLoading ? 'Elaborazione iscrizione... ⏳' : 'Registrati e Parti' }}
+      </button>
 
-      <div class="registrazione-footer">
+      <div class="registrazione-footer" [style.pointer-events]="isLoading ? 'none' : 'auto'">
         <span>Hai già un account?</span>
-        <button type="button" routerLink="/login" class="btn-link-trasparente">
+        <button type="button" routerLink="/login" [disabled]="isLoading" class="btn-link-trasparente">
           Torna al Login
         </button>
       </div>

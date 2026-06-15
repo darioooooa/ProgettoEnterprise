@@ -4,9 +4,14 @@
     <h1>ENTERPRISE</h1>
     <p>Scopri le meraviglie del mondo. Inizia la tua avventura oggi.</p>
 
-    <div class="auth-buttons-container">
-      <button class="btn btn-primary" routerLink="/login">Accedi</button>
-      <button class="btn btn-secondary" routerLink="/registrazione">Registrati</button>
+    <div class="auth-buttons-container" [style.pointer-events]="isLoading ? 'none' : 'auto'">
+      <button class="btn btn-primary" [disabled]="isLoading" routerLink="/login">
+        {{ isLoading ? 'Attendere...' : 'Accedi' }}
+      </button>
+
+      <button class="btn btn-secondary" [disabled]="isLoading" routerLink="/registrazione">
+        {{ isLoading ? 'Attendere...' : 'Registrati' }}
+      </button>
     </div>
   </div>
 </section>

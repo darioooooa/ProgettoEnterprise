@@ -30,9 +30,9 @@
       <div class="contatore-wrapper">
         <label>Partecipanti:</label>
         <div class="controlli-numero">
-          <button type="button" (click)="diminuisciPersone()" [disabled]="numeroPersone <= 1">-</button>
+          <button type="button" (click)="diminuisciPersone()" [disabled]="numeroPersone <= 1 || isLoading">-</button>
           <span class="numero-display">{{ numeroPersone }}</span>
-          <button type="button" (click)="aumentaPersone()" [disabled]="numeroPersone >= (dettagliViaggio.maxPartecipanti - dettagliViaggio.partecipantiAttuali)">+</button>
+          <button type="button" (click)="aumentaPersone()" [disabled]="numeroPersone >= (dettagliViaggio.maxPartecipanti - dettagliViaggio.partecipantiAttuali) || isLoading">+</button>
         </div>
       </div>
 
@@ -43,7 +43,9 @@
         <span class="prezzo-totale">€{{ prezzoTotale }}</span>
       </div>
 
-      <button class="btn-prenota" (click)="confermaPrenotazione()">Prenota Ora</button>
+      <button class="btn-prenota" [disabled]="isLoading" (click)="confermaPrenotazione()">
+        {{ isLoading ? 'Elaborazione... ⏳' : 'Prenota Ora' }}
+      </button>
 
       <div *ngIf="messaggioErrore" class="alert-error mt-3">{{ messaggioErrore }}</div>
       <div *ngIf="messaggioSuccesso" class="alert-success mt-3">{{ messaggioSuccesso }}</div>

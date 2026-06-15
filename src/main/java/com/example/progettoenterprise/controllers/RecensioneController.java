@@ -4,6 +4,8 @@ import com.example.progettoenterprise.data.repositories.specifications.Recension
 import com.example.progettoenterprise.data.service.RecensioneService;
 import com.example.progettoenterprise.dto.RecensioneDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class RecensioneController {
     // Endpoint per creare una nuova recensione
     @PostMapping(consumes = "application/json")
     @PreAuthorize("hasRole('VIAGGIATORE')")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<RecensioneDTO> creaRecensione(
             @PathVariable Long viaggioId,
             @Valid @RequestBody RecensioneDTO recDTO,

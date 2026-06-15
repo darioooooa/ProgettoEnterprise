@@ -1,8 +1,8 @@
-import { Component, Inject, OnInit, PLATFORM_ID,ChangeDetectorRef} from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AutenticazioneService } from '../service/autenticazione.service'; // Il service che hai appena aggiornato
+import { AutenticazioneService } from '../service/autenticazione.service';
 
 @Component({
   selector: 'app-diventa-organizzatore',
@@ -22,6 +22,8 @@ export class DiventaOrganizzatoreComponent implements OnInit {
 
   utenteId: number | null = null;
 
+  isLoading: boolean = false;
+
   constructor(
     private authService: AutenticazioneService,
     private navigatore: Router,
@@ -39,10 +41,11 @@ export class DiventaOrganizzatoreComponent implements OnInit {
   }
 
   inviaRichiesta() {
+    if (this.isLoading) return;
+
     // Reset del messaggio di errore iniziale
     this.messaggioErrore = '';
     this.cdr.detectChanges();
-
 
     // Controllo base dei campi
     if (!this.motivazione || !this.biografiaProfessionale || !this.documentiLink ||
@@ -56,6 +59,8 @@ export class DiventaOrganizzatoreComponent implements OnInit {
       return;
     }
 
+    this.isLoading = true;
+
     const payload = {
       motivazione: this.motivazione,
       biografiaProfessionale: this.biografiaProfessionale,
@@ -66,11 +71,13 @@ export class DiventaOrganizzatoreComponent implements OnInit {
 
     this.authService.inviaRichiestaPromozione(this.utenteId, payload).subscribe({
       next: (risposta) => {
+        this.isLoading = false;
         this.navigatore.navigate(['/home']);
       },
       error: (errore) => {
         console.error('ERRORE RICEVUTO:', errore);
 
+        this.isLoading = false;
         let estratto = 'Si è verificato un errore imprevisto. Controlla i dati e riprova.';
         let erroreCorpo = errore.error;
 
@@ -103,4 +110,3 @@ export class DiventaOrganizzatoreComponent implements OnInit {
     });
   }
 }
-

@@ -55,8 +55,8 @@
               </td>
               <td class="actions-cell">
                 <ng-container *ngIf="richiesta.stato === 'IN_ATTESA'">
-                  <button class="btn-approve" (click)="approva(richiesta.id)">Approva</button>
-                  <button class="btn-reject" (click)="rifiuta(richiesta.id)">Rifiuta</button>
+                  <button class="btn-approve" [disabled]="isLoading" (click)="approva(richiesta.id)">Approva</button>
+                  <button class="btn-reject" [disabled]="isLoading" (click)="rifiuta(richiesta.id)">Rifiuta</button>
                 </ng-container>
                 <span class="badge badge-approved" *ngIf="richiesta.stato === 'APPROVATA'">✅ Accettata</span>
                 <span class="badge badge-rejected" *ngIf="richiesta.stato === 'RIFIUTATA'">❌ Rifiutata</span>
@@ -79,7 +79,7 @@
             <button [class.active]="vistaAttualeSegnalazioni === 'ARCHIVIO'" (click)="cambiaVistaSegnalazioni('ARCHIVIO')">Archivio</button>
           </div>
           <div>
-            <select [(ngModel)]="filtroTipo" style="padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); outline: none;">
+            <select [(ngModel)]="filtroTipo" [disabled]="isLoading" style="padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); outline: none;">
               <option value="" style="color: black;">Tutte le Categorie</option>
               <option value="UTENTE" style="color: black;">Utenti</option>
               <option value="MESSAGGIO" style="color: black;">Messaggi</option>
@@ -110,6 +110,7 @@
                   <p style="margin: 5px 0; font-size: 0.85em;">{{ seg.descrizione || 'Nessuna descrizione aggiuntiva' }}</p>
 
                   <button *ngIf="seg.tipo === 'MESSAGGIO' || seg.tipo === 'RECENSIONE'"
+                          [disabled]="isLoading"
                           (click)="apriModaleMessaggio(seg.riferimentoNome)"
                           style="background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85em; margin-top: 4px; transition: 0.3s;">
                     📄 Leggi Contenuto
@@ -123,23 +124,22 @@
                 <span class="badge badge-rejected" *ngIf="seg.stato === 'RIFIUTATA'">❌ Rifiutata</span>
               </td>
               <td class="actions-cell">
-                <button *ngIf="seg.stato === 'APERTA'" class="btn-take" (click)="prendiInCarico(seg.id)">🙋 Prendi in carico</button>
-
+                <button *ngIf="seg.stato === 'APERTA'" class="btn-take" [disabled]="isLoading" (click)="prendiInCarico(seg.id)">🙋 Prendi in carico</button>
                 <ng-container *ngIf="seg.stato === 'IN_LAVORAZIONE'">
                   <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 5px;">
-                    <button class="btn-approve" style="background-color: #f59e0b;" (click)="risolviSegnalazione(seg.id, false)">
+                    <button class="btn-approve" style="background-color: #f59e0b;" [disabled]="isLoading" (click)="risolviSegnalazione(seg.id, false)">
                       <span *ngIf="seg.tipo === 'MESSAGGIO'">🗑️ Elimina Msg</span>
                       <span *ngIf="seg.tipo === 'RECENSIONE'">🗑️ Elimina Recensione</span>
                       <span *ngIf="seg.tipo === 'UTENTE'">✅ Risolvi (Solo Avviso)</span>
                     </button>
 
-                    <button class="btn-approve" style="background-color: #dc2626;" (click)="risolviSegnalazione(seg.id, true)">
+                    <button class="btn-approve" style="background-color: #dc2626;" [disabled]="isLoading" (click)="risolviSegnalazione(seg.id, true)">
                       <span *ngIf="seg.tipo === 'UTENTE'">⛔ Banna Utente</span>
                       <span *ngIf="seg.tipo !== 'UTENTE'">⛔ Elimina & Banna</span>
                     </button>
                   </div>
 
-                  <button class="btn-reject" (click)="rifiutaSegnalazione(seg.id)">Rifiuta</button>
+                  <button class="btn-reject" [disabled]="isLoading" (click)="rifiutaSegnalazione(seg.id)">Rifiuta</button>
                 </ng-container>
 
                 <small style="opacity: 0.7; font-size: 0.8em;" *ngIf="seg.stato === 'CHIUSA' || seg.stato === 'RIFIUTATA'">
@@ -172,7 +172,7 @@
               <td>{{ utente.username }}</td>
               <td>{{ utente.email }}</td>
               <td>
-                <button class="btn-approve" (click)="sbannaUtente(utente.id)">✅ Riattiva</button>
+                <button class="btn-approve" [disabled]="isLoading" (click)="sbannaUtente(utente.id)">✅ Riattiva</button>
               </td>
             </tr>
             </tbody>

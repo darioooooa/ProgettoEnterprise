@@ -6,11 +6,11 @@
       <p>Gestisci le tue avventure e i dettagli delle prenotazioni</p>
     </div>
 
-    <div class="lista-cards">
+    <div class="lista-cards" [style.pointer-events]="isLoading ? 'none' : 'auto'">
 
       <div class="card-prenotazione"
            *ngFor="let p of listaPrenotazioni"
-           [routerLink]="['/viaggi', p.viaggioId]"
+           (click)="vaiAlDettaglioViaggio(p.viaggioId)"
            style="cursor: pointer;">
 
         <div class="area-notifica-imminente">
@@ -19,11 +19,7 @@
                 *ngIf="calcolaGiorniMancanti(p.viaggioDataInizio) > 0 && calcolaGiorniMancanti(p.viaggioDataInizio) <= 30">
 
             <span class="icona-alert">✈</span>
-
-            Il tuo viaggio parte tra
-            {{ calcolaGiorniMancanti(p.viaggioDataInizio) }}
-            giorni
-
+            Il tuo viaggio parte tra {{ calcolaGiorniMancanti(p.viaggioDataInizio) }} giorni
           </span>
 
           <span class="badge-imminente oggi"
@@ -51,8 +47,7 @@
 
           <p class="data">
             <i class="icona-calendario">📅</i>
-            Prenotato il:
-            {{ p.dataPrenotazione | date:'dd MMMM yyyy' }}
+            Prenotato il: {{ p.dataPrenotazione | date:'dd MMMM yyyy' }}
           </p>
 
           <p class="passeggeri">
@@ -60,13 +55,11 @@
           </p>
 
           <p class="data-partenza">
-            🛫 Partenza:
-            <strong>{{ p.viaggioDataInizio | date:'dd/MM/yyyy' }}</strong>
+            🛫 Partenza: <strong>{{ p.viaggioDataInizio | date:'dd/MM/yyyy' }}</strong>
           </p>
 
           <p class="data-ritorno">
-            🛬 Ritorno:
-            <strong>{{ p.viaggioDataFine | date:'dd/MM/yyyy' }}</strong>
+            🛬 Ritorno: <strong>{{ p.viaggioDataFine | date:'dd/MM/yyyy' }}</strong>
           </p>
 
         </div>
@@ -83,7 +76,7 @@
       <div class="messaggio-vuoto" *ngIf="listaPrenotazioni.length === 0">
         <p>Non hai ancora prenotato nessun viaggio. Che aspetti a partire?</p>
 
-        <button routerLink="/esplora" class="btn-esplora">
+        <button routerLink="/esplora" [disabled]="isLoading" class="btn-esplora">
           Esplora i Viaggi
         </button>
       </div>
@@ -91,8 +84,8 @@
     </div>
 
     <div class="azioni-finali">
-      <button routerLink="/home" class="btn-ritorno">
-        Torna alla Home
+      <button routerLink="/home" [disabled]="isLoading" class="btn-ritorno">
+        {{ isLoading ? 'Caricamento...' : 'Torna alla Home' }}
       </button>
     </div>
 

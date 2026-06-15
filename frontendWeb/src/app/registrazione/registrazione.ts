@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-registrazione',
+  standalone: true,
   templateUrl: './registrazione.html',
   imports: [
     FormsModule, CommonModule, RouterLink
@@ -25,6 +26,8 @@ export class Registrazione {
 
   messaggioDiAvviso: string = '';
 
+  isLoading: boolean = false;
+
   constructor(
     private servizioAuth: AutenticazioneService,
     private navigatore: Router,
@@ -32,15 +35,24 @@ export class Registrazione {
   ) {}
 
   confermaIscrizione() {
+    if (this.isLoading) return;
+
     console.log('OGGETTO CHE STO PER SPEDIRE:', JSON.stringify(this.nuovoUtente));
+
+    this.messaggioDiAvviso = '';
+    this.isLoading = true;
+    this.cdr.detectChanges();
+
     this.servizioAuth.registraNuovoUtente(this.nuovoUtente).subscribe({
       next: (risultato) => {
         console.log('Iscrizione completata!', risultato);
+        this.isLoading = false;
         this.navigatore.navigate(['/login']);
       },
       error: (errore) => {
         console.error('Qualcosa è andato storto:', errore);
-        this.messaggioDiAvviso = 'Ops! Sembra che questa email sia già registrata.';
+        this.isLoading = false;
+        this.messaggioDiAvviso = 'Ops! Sembra che questa email o username siano già registrati.';
 
         this.cdr.detectChanges();
       }

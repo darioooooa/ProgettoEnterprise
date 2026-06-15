@@ -4,6 +4,8 @@ import com.example.progettoenterprise.data.repositories.specifications.Prenotazi
 import com.example.progettoenterprise.data.service.PrenotazioneService;
 import com.example.progettoenterprise.dto.PrenotazioneDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ public class PrenotazioneController {
     // CREA UNA NUOVA PRENOTAZIONE
     @PostMapping("/viaggi/{viaggioId}/prenota")
     @PreAuthorize("hasRole('VIAGGIATORE')")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<PrenotazioneDTO> creaPrenotazione(
             @PathVariable Long viaggioId,
             @Valid @RequestBody PrenotazioneDTO richiesta,
@@ -83,6 +86,7 @@ public class PrenotazioneController {
 
     // ESPORTA CALENDARIO ICS
     @GetMapping("/{prenotazioneId}/esporta-calendario")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<byte[]> scaricaFileCalendario(@PathVariable Long prenotazioneId) {
 
         byte[] datiCalendario = prenotazioneService.esportaPrenotazioni(prenotazioneId);

@@ -1,10 +1,11 @@
 package com.example.progettoenterprise.controllers;
 
-import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.service.AdminService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ public class AdminController {
     }
 
     @PostMapping("/{id}/approva")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<String> approvaRichiesta(@PathVariable Long id, @AuthenticationPrincipal UtenteLoggato utenteLoggato){
         log.info("Richiesta di approvazione della richiesta {}", id);
         adminService.approvaRichiesta(id, utenteLoggato.getId());
@@ -38,6 +40,7 @@ public class AdminController {
     }
 
     @PostMapping("/{id}/rifiuta")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<String> rifiutaRichiesta(@PathVariable Long id, @RequestParam Long adminIdCorrente, @RequestBody Map<String, String> payload) {
         log.info("Richiesta di rifiuto della richiesta {}", id);
         String note = payload.get("noteAdmin");
@@ -46,6 +49,7 @@ public class AdminController {
     }
 
     @PostMapping("/utenti/{userId}/ban")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<String> banUtente(
             @PathVariable Long userId) {
 
@@ -60,6 +64,7 @@ public class AdminController {
     }
 
     @PutMapping("/utenti/{id}/riattiva")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<Void> riattivaUtente(@PathVariable Long id) {
         log.info("L'amministratore ha richiesto la riattivazione dell'utente ID: {}", id);
         adminService.sbannaUtente(id);

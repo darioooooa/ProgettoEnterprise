@@ -3,7 +3,7 @@
 
   <div id="avviso-chat" *ngIf="messaggioAvviso" [class.alert-errore-backend]="tipoAvviso === 'errore'" [class.alert-successo-backend]="tipoAvviso === 'successo'">
     <p>{{ messaggioAvviso }}</p>
-    <button type="button" class="btn-chiudi-alert" (click)="messaggioAvviso = null">×</button>
+    <button type="button" class="btn-chiudi-alert" [disabled]="isLoading" (click)="messaggioAvviso = null">×</button>
   </div>
 
   <div class="viaggiatore-chat-container" *ngIf="isLoggato()">
@@ -35,10 +35,12 @@
     <div class="chat-footer-viaggio">
       <input type="text"
              [(ngModel)]="nuovoMessaggioTesto"
+             [disabled]="isLoading"
              (keyup.enter)="inviaMessaggioCommunity()"
              placeholder="Scrivi un messaggio all'organizzatore..." />
-      <button type="button" (click)="inviaMessaggioCommunity()" [disabled]="!nuovoMessaggioTesto.trim()">
-        Invia 🚀
+
+      <button type="button" (click)="inviaMessaggioCommunity()" [disabled]="!nuovoMessaggioTesto.trim() || isLoading">
+        {{ isLoading ? '⏳' : 'Invia 🚀' }}
       </button>
     </div>
   </div>

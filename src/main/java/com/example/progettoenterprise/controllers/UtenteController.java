@@ -4,6 +4,8 @@ import com.example.progettoenterprise.data.repositories.specifications.UtenteSpe
 import com.example.progettoenterprise.data.service.UtenteService;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -87,6 +89,7 @@ public class UtenteController {
 
 
     @PostMapping("/recupero-password")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<String> recuperoPassword(@RequestParam String email) {
         log.info("Ricevuta richiesta di recupero password per l'email: {}", email);
 

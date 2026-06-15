@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
+  standalone: true,
   templateUrl: './login.html',
   imports: [
     FormsModule,
@@ -27,16 +28,21 @@ export class Login {
   emailRecupero: string = '';
   messaggioConferma: boolean = false;
 
+  isLoading: boolean = false;
+
   constructor(
     private servizioAuth: AutenticazioneService,
-    private utenteService: UtenteService, // <-- INIETTATO QUI
+    private utenteService: UtenteService,
     private navigatore: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
   eseguiAccesso() {
+    if (this.isLoading) return;
+
     console.log('Tentativo di accesso per:', this.datiAccesso.username);
     this.messaggioErrore = '';
+    this.isLoading = true;
 
     this.servizioAuth.effettuaAccesso(this.datiAccesso).subscribe({
       next: () => {
@@ -44,6 +50,7 @@ export class Login {
         this.sincronizzaUtenteEReindirizza();
       },
       error: (errore) => {
+        this.isLoading = false;
         this.gestisciErrore(errore);
       }
     });
@@ -56,10 +63,12 @@ export class Login {
         if (utente?.id) {
           localStorage.setItem('userId', utente.id.toString());
         }
+        this.isLoading = false;
         this.indirizzaUtentePerRuolo();
       },
       error: (err) => {
         console.error("Errore sincronizzazione ID:", err);
+        this.isLoading = false;
         this.indirizzaUtentePerRuolo();
       }
     });
@@ -67,19 +76,38 @@ export class Login {
 
   private indirizzaUtentePerRuolo() {
     const ruolo = this.servizioAuth.ottieniRuolo();
+    console.log('Ruolo intercettato da Keycloak/DB:', ruolo);
+    let destinazione = '/home';
 
     switch (ruolo) {
       case 'ROLE_ADMIN':
-        this.navigatore.navigate(['/admin-dashboard']);
+        destinazione = '/admin-dashboard';
         break;
       case 'ROLE_ORGANIZZATORE':
-        this.navigatore.navigate(['/organizzatore']);
+        destinazione = '/organizzatore';
         break;
       case 'ROLE_VIAGGIATORE':
       default:
-        this.navigatore.navigate(['/home']);
+        destinazione = '/home';
         break;
     }
+
+    console.log(`Navigazione difensiva avviata verso: ${destinazione}`);
+
+    this.navigatore.navigate([destinazione]).then((navigatoConSucesso) => {
+      if (navigatoConSucesso) {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      } else {
+        console.error("Navigazione interrotta da un guard o fallita.");
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    }).catch((erroreRouter) => {
+      console.error("Errore critico durante il routing:", erroreRouter);
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    });
   }
 
   private gestisciErrore(errore: any) {
@@ -96,6 +124,7 @@ export class Login {
   }
 
   apriModaleRecupero() {
+    if (this.isLoading) return;
     this.modaleRecuperoAperta = true;
     this.emailRecupero = '';
     this.messaggioConferma = false;
@@ -103,16 +132,21 @@ export class Login {
   }
 
   chiudiModaleRecupero() {
+    if (this.isLoading && this.messaggioConferma) return;
     this.modaleRecuperoAperta = false;
     this.cdr.detectChanges();
   }
 
   inviaEmailRecupero() {
-    if (!this.emailRecupero) return;
+    if (!this.emailRecupero || this.isLoading) return;
+
+    this.isLoading = true;
+    this.cdr.detectChanges();
 
     this.utenteService.recuperaPassword(this.emailRecupero).subscribe({
       next: (risposta) => {
         this.messaggioConferma = true;
+        this.isLoading = false;
         this.cdr.detectChanges();
         setTimeout(() => {
           this.chiudiModaleRecupero();
@@ -121,6 +155,7 @@ export class Login {
       error: (errore) => {
         console.error("Errore durante il recupero password", errore);
         alert("Si è verificato un errore. Assicurati che l'email sia corretta e registrata.");
+        this.isLoading = false;
         this.cdr.detectChanges();
       }
     });

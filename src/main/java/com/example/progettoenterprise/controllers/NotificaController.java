@@ -4,6 +4,8 @@ import com.example.progettoenterprise.data.repositories.specifications.NotificaS
 import com.example.progettoenterprise.data.service.NotificaService;
 import com.example.progettoenterprise.dto.NotificaDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ public class NotificaController {
     //endpoint per inviare una notifica
     @PostMapping("/invia")
     @PreAuthorize("isAuthenticated()")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<NotificaDTO> inviaNotifica(
             @RequestParam Long utenteId,
             @RequestParam String messaggio,

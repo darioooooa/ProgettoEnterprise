@@ -29,6 +29,8 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
   mostraSegnalazione = false;
   idDaSegnalare = 0;
 
+  isLoading: boolean = false;
+
   private chatSubscription!: Subscription;
 
   constructor(
@@ -54,8 +56,11 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
   }
 
   selezionaChat(stanza: any): void {
+    if (this.isLoading) return;
+
     this.disconnettiChatCorrente();
 
+    this.isLoading = true;
     this.stanzaSelezionata = stanza;
     this.messaggiChat = [];
 
@@ -63,13 +68,20 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
       next: (storico) => {
         this.messaggiChat = storico;
         this.autoscroll();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Errore nel recupero dello storico:", err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
 
     this.chatService.connettiEIniziaAscolto(stanza.id);
 
     this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe(nuovoMsg => {
-      if (nuovoMsg.chatRoomId === this.stanzaSelezionata.id) {
+      if (this.stanzaSelezionata && nuovoMsg.chatRoomId === this.stanzaSelezionata.id) {
         this.messaggiChat.push(nuovoMsg);
         this.autoscroll();
       }
@@ -77,7 +89,9 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
   }
 
   inviaMessaggio(): void {
-    if (!this.nuovoMessaggioTesto.trim() || !this.stanzaSelezionata) return;
+    if (!this.nuovoMessaggioTesto.trim() || !this.stanzaSelezionata || this.isLoading) return;
+
+    this.isLoading = true;
 
     const dto: MessaggioChatDTO = {
       chatRoomId: this.stanzaSelezionata.id,
@@ -87,9 +101,15 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
 
     this.chatService.inviaMessaggio(this.stanzaSelezionata.id, dto);
     this.nuovoMessaggioTesto = '';
+
+    setTimeout(() => {
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }, 150);
   }
 
   apriSegnalazione(id: number) {
+    if (this.isLoading) return;
     this.idDaSegnalare = id;
     this.mostraSegnalazione = true;
   }

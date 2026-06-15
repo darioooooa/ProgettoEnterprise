@@ -39,6 +39,8 @@ export class CommunityComponent implements OnInit {
   mostraSegnalazione = false;
   idDaSegnalare = 0;
 
+  isLoading: boolean = false;
+
   constructor(
     private viaggioService: ViaggioService,
     private auth: AutenticazioneService,
@@ -83,24 +85,30 @@ export class CommunityComponent implements OnInit {
   }
 
   filtraRecensioni() {
+    if (this.isLoading) return;
     this.paginaRecensioni = 0;
     this.caricaRecensioni();
   }
 
   pulisciFiltriRecensioni() {
+    if (this.isLoading) return;
     this.filtriRecensioni = { votoEsatto: '', votoMin: '', votoMax: '', parolaChiave: '', dataDa: '', dataA: '' };
     this.paginaRecensioni = 0;
     this.caricaRecensioni();
   }
 
   cambiaPaginaRecensioni(dir: number) {
+    if (this.isLoading) return;
     this.paginaRecensioni += dir;
     this.caricaRecensioni();
   }
 
   aggiungiRecensione() {
+    if (this.isLoading) return;
+
     if (!this.nuovaRecensione.commento.trim()) this.nuovaRecensione.commento = '';
     this.messaggioAvviso = null;
+    this.isLoading = true;
 
     if (this.inModifica && this.idRecensioneInModifica) {
       this.viaggioService.aggiornaRecensione(this.viaggioId, this.idRecensioneInModifica, this.nuovaRecensione).subscribe({
@@ -111,11 +119,15 @@ export class CommunityComponent implements OnInit {
             this.richiestaRefreshPadre.emit();
             this.tipoAvviso = 'successo';
             this.messaggioAvviso = "Recensione aggiornata con successo!";
+            this.isLoading = false;
             this.cdr.detectChanges();
             setTimeout(() => this.messaggioAvviso === "Recensione aggiornata con successo!" && (this.messaggioAvviso = null), 4000);
           }, 300);
         },
-        error: (err) => this.gestisciErroreRecensione(err)
+        error: (err) => {
+          this.isLoading = false;
+          this.gestisciErroreRecensione(err);
+        }
       });
     } else {
       this.viaggioService.inviaRecensione(this.viaggioId, this.nuovaRecensione).subscribe({
@@ -126,6 +138,7 @@ export class CommunityComponent implements OnInit {
             this.richiestaRefreshPadre.emit();
             this.tipoAvviso = 'successo';
             this.messaggioAvviso = "Recensione pubblicata con successo!";
+            this.isLoading = false;
             this.scattaScrollAvviso();
             setTimeout(() => {
               if (this.messaggioAvviso === "Recensione pubblicata con successo!") {
@@ -136,7 +149,8 @@ export class CommunityComponent implements OnInit {
           }, 300);
         },
         error: (err) => {
-          this.gestisciErroreRecensione(err)
+          this.isLoading = false;
+          this.gestisciErroreRecensione(err);
         }
       });
     }
@@ -163,6 +177,7 @@ export class CommunityComponent implements OnInit {
   }
 
   avviaModificaRecensione(rec: any) {
+    if (this.isLoading) return;
     this.inModifica = true;
     this.idRecensioneInModifica = rec.id;
     this.copiaLaMiaRecensione = { ...rec };
@@ -181,12 +196,11 @@ export class CommunityComponent implements OnInit {
   }
 
   annullaModificaRecensione() {
+    if (this.isLoading) return;
     this.nuovaRecensione = { voto: 5, commento: '' };
     this.inModifica = false;
     this.idRecensioneInModifica = null;
-
     this.laMiaRecensione = { ...this.copiaLaMiaRecensione };
-
     this.cdr.detectChanges();
   }
 
@@ -201,10 +215,11 @@ export class CommunityComponent implements OnInit {
   }
 
   cancellaRecensione(idRecensione: number) {
+    if (this.isLoading) return;
+
     if (this.idRecensioneDaEliminare !== idRecensione) {
       // Primo click
       this.idRecensioneDaEliminare = idRecensione;
-
       // Se l'utente non clicca di nuovo entro 4 secondi, resetta lo stato
       setTimeout(() => {
         if (this.idRecensioneDaEliminare === idRecensione) {
@@ -212,28 +227,26 @@ export class CommunityComponent implements OnInit {
           this.cdr.detectChanges();
         }
       }, 4000);
-
       return; // Interrompe il metodo in attesa del secondo click
     }
 
     // Secondo click: esegue l'eliminazione reale sul database
     this.idRecensioneDaEliminare = null;
     this.messaggioAvviso = null;
+    this.isLoading = true;
 
     this.viaggioService.eliminaRecensione(this.viaggioId, idRecensione).subscribe({
       next: () => {
         this.pulisciStatoFormRecensione();
-
         setTimeout(() => {
           this.caricaRecensioni();
-
           this.richiestaRefreshPadre.emit();
 
           // Banner di successo temporaneo
           this.tipoAvviso = 'successo';
           this.messaggioAvviso = "Recensione eliminata.";
+          this.isLoading = false;
           this.scattaScrollAvviso();
-
           setTimeout(() => {
             if (this.messaggioAvviso === "Recensione eliminata.") {
               this.messaggioAvviso = null;
@@ -245,12 +258,14 @@ export class CommunityComponent implements OnInit {
       error: (err) => {
         this.tipoAvviso = 'errore';
         this.messaggioAvviso = err.error?.messaggio || err.error?.message || "Errore nell'eliminazione della recensione. Non hai i permessi.";
+        this.isLoading = false;
         this.scattaScrollAvviso();
       }
     });
   }
 
   apriSegnalazione(id: number) {
+    if (this.isLoading) return;
     this.idDaSegnalare = id;
     this.mostraSegnalazione = true;
   }

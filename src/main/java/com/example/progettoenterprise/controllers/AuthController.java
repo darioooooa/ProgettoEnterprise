@@ -3,6 +3,8 @@ package com.example.progettoenterprise.controllers;
 import com.example.progettoenterprise.data.service.AuthService;
 import com.example.progettoenterprise.dto.RegistrazioneDTO;
 import com.example.progettoenterprise.dto.UtenteDTO;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ public class AuthController {
     // Endpoint per registrare un nuovo utente
     // @Valid valida i dati del corpo della richiesta
     @PostMapping(path = "/register")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<UtenteDTO> registrazione(@Valid @RequestBody RegistrazioneDTO regDTO){
         log.info("Ricevuta richiesta di registrazione per l'utente: {}", regDTO.getUsername());
         UtenteDTO utenteCreato = authService.registraUtente(regDTO);

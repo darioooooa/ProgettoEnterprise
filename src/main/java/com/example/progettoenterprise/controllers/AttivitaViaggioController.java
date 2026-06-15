@@ -4,6 +4,8 @@ import com.example.progettoenterprise.data.repositories.specifications.AttivitaV
 import com.example.progettoenterprise.data.service.AttivitaViaggioService;
 import com.example.progettoenterprise.dto.AttivitaViaggioDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ public class AttivitaViaggioController {
 
     @PostMapping
     @PreAuthorize("hasRole('ORGANIZZATORE')")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<AttivitaViaggioDTO> creaAttivitaViaggio(
             @PathVariable Long viaggioId,
             @Valid @RequestBody AttivitaViaggioDTO attivitaViaggioDTO,

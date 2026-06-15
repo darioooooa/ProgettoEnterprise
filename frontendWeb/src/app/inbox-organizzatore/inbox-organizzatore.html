@@ -13,6 +13,7 @@
       <div *ngFor="let stanza of stanze"
            class="inbox-card"
            [class.active]="stanzaSelezionata?.id === stanza.id"
+           [style.pointer-events]="isLoading ? 'none' : 'auto'"
            (click)="selezionaChat(stanza)">
         <div class="card-avatar">
           {{ stanza.viaggiatoreUsername.substring(0, 2).toUpperCase() }}
@@ -46,7 +47,7 @@
             <div class="msg-meta">
               <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
 
-              <button class="btn-report-msg" *ngIf="msg.mittenteUsername !== mioUsername" (click)="apriSegnalazione(msg.id!)" title="Segnala messaggio">🚩</button>
+              <button class="btn-report-msg" [disabled]="isLoading" *ngIf="msg.mittenteUsername !== mioUsername" (click)="apriSegnalazione(msg.id!)" title="Segnala messaggio">🚩</button>
             </div>
           </div>
         </div>
@@ -55,10 +56,11 @@
       <div class="chat-footer-input-area">
         <input type="text"
                [(ngModel)]="nuovoMessaggioTesto"
+               [disabled]="isLoading"
                (keyup.enter)="inviaMessaggio()"
                placeholder="Scrivi la tua risposta..." />
-        <button type="button" (click)="inviaMessaggio()" [disabled]="!nuovoMessaggioTesto.trim()">
-          Rispondi 🚀
+        <button type="button" (click)="inviaMessaggio()" [disabled]="!nuovoMessaggioTesto.trim() || isLoading">
+          {{ isLoading ? '⏳' : 'Rispondi 🚀' }}
         </button>
       </div>
     </ng-container>

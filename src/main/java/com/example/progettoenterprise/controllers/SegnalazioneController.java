@@ -3,6 +3,8 @@ package com.example.progettoenterprise.controllers;
 import com.example.progettoenterprise.data.repositories.specifications.SegnalazioneSpecification;
 import com.example.progettoenterprise.data.service.SegnalazioneService;
 import com.example.progettoenterprise.dto.SegnalazioneDTO;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ public class SegnalazioneController {
     private final SegnalazioneService segnalazioneService;
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/crea")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<SegnalazioneDTO> creaSegnalazione(
             @RequestBody SegnalazioneDTO segnalazioneDTO,
             @RequestParam Long idSegnalatore) {

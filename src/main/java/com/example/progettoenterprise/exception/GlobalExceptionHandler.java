@@ -2,6 +2,7 @@ package com.example.progettoenterprise.exception;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.dto.ErroreDTO;
+import com.example.progettoenterprise.exception.ratelimiter.ManyRequestException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -107,6 +108,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErroreDTO handleIllegalState(WebRequest request, IllegalStateException e) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, request, e.getMessage());
+    }
+
+    @ExceptionHandler(ManyRequestException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public ErroreDTO manyRequestErrorHandler(WebRequest request, ManyRequestException ex) {
+        return buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, request, ex.getMessage());
     }
 
 

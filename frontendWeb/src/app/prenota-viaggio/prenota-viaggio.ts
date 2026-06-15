@@ -23,6 +23,8 @@ export class PrenotaViaggioComponent implements OnInit {
   messaggioErrore: string = '';
   messaggioSuccesso: string = '';
 
+  isLoading: boolean = false;
+
   constructor(
     private rottaAttuale: ActivatedRoute,
     private prenotazioneService: PrenotazioneService,
@@ -62,6 +64,7 @@ export class PrenotaViaggioComponent implements OnInit {
   }
 
   aumentaPersone() {
+    if (this.isLoading) return;
     const postiRimasti = this.dettagliViaggio.maxPartecipanti - this.dettagliViaggio.partecipantiAttuali;
     if (this.numeroPersone < postiRimasti) {
       this.numeroPersone++;
@@ -70,6 +73,7 @@ export class PrenotaViaggioComponent implements OnInit {
   }
 
   diminuisciPersone() {
+    if (this.isLoading) return;
     if (this.numeroPersone > 1) {
       this.numeroPersone--;
       this.calcolaPrezzo();
@@ -83,8 +87,11 @@ export class PrenotaViaggioComponent implements OnInit {
   }
 
   confermaPrenotazione() {
+    if (this.isLoading) return;
+
     this.messaggioErrore = '';
     this.messaggioSuccesso = '';
+    this.isLoading = true;
 
     this.prenotazioneService.creaPrenotazione(this.viaggioId, this.numeroPersone).subscribe({
       next: (risposta: any) => {
@@ -92,12 +99,15 @@ export class PrenotaViaggioComponent implements OnInit {
         this.cdr.detectChanges();
 
         setTimeout(() => {
+          this.isLoading = false;
           this.navigatore.navigate(['/mie-prenotazioni']);
         }, 3000);
       },
       error: (errore: any) => {
         this.ngZone.run(() => {
+          this.isLoading = false;
           let estratto = "Errore durante la prenotazione. Riprova più tardi.";
+
           if (errore.status === 400 || errore.status === 409) {
             if (errore.error && errore.error.message) {
               estratto = errore.error.message;

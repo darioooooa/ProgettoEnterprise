@@ -1,3 +1,6 @@
 <div class="map-container">
-  <div id="map-display" class="map-frame"></div>
+  <div id="map-display"
+       class="map-frame"
+       [style.pointer-events]="isLoading ? 'none' : 'auto'">
+  </div>
 </div>

@@ -17,28 +17,32 @@
       <div class="input-group">
         <label for="username">Identificativo Utente</label>
         <input type="text" id="username" name="username"
-               [(ngModel)]="datiAccesso.username" required
+               [(ngModel)]="datiAccesso.username" [disabled]="isLoading" required
                placeholder="Inserisci la tua email">
       </div>
 
       <div class="input-group">
         <label for="password">Password</label>
         <input type="password" id="password" name="password"
-               [(ngModel)]="datiAccesso.password" required
+               [(ngModel)]="datiAccesso.password" [disabled]="isLoading" required
                placeholder="••••••••">
 
         <div style="text-align: right; margin-top: 8px;">
-          <a (click)="apriModaleRecupero()" style="color: #e2e8f0; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
+          <a (click)="apriModaleRecupero()"
+             [style.pointer-events]="isLoading ? 'none' : 'auto'"
+             style="color: #e2e8f0; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
             Hai dimenticato la password?
           </a>
         </div>
       </div>
 
-      <button type="submit" class="btn-submit">Inizia l'Avventura</button>
+      <button type="submit" class="btn-submit" [disabled]="isLoading">
+        {{ isLoading ? 'Verifica in corso... ⏳' : "Inizia l'Avventura" }}
+      </button>
 
       <div class="login-footer">
         <span>Non hai un account?</span>
-        <button type="button" routerLink="/registrazione" class="btn-link-trasparente">
+        <button type="button" routerLink="/registrazione" [disabled]="isLoading" class="btn-link-trasparente">
           Registrati
         </button>
       </div>
@@ -46,11 +50,11 @@
   </div>
 </div>
 
-<div class="modale-overlay" *ngIf="modaleRecuperoAperta" (click)="chiudiModaleRecupero()">
+<div class="modale-overlay" *ngIf="modaleRecuperoAperta" (click)="isLoading ? null : chiudiModaleRecupero()">
   <div class="glass-form-container modale-piccola" (click)="$event.stopPropagation()">
 
     <div class="modale-header-azione">
-      <button class="btn-chiudi-x" (click)="chiudiModaleRecupero()">&times;</button>
+      <button class="btn-chiudi-x" [disabled]="isLoading" (click)="chiudiModaleRecupero()">&times;</button>
     </div>
 
     <div class="form-header">
@@ -59,15 +63,15 @@
     </div>
 
     <div class="input-group modale-input-spazio">
-      <input type="email" placeholder="La tua email..." [(ngModel)]="emailRecupero" class="input-vetro">
+      <input type="email" placeholder="La tua email..." [(ngModel)]="emailRecupero" [disabled]="isLoading" class="input-vetro">
     </div>
 
     <div *ngIf="messaggioConferma" class="messaggio-successo-vetro">
       ✅ Link inviato! Controlla la tua casella di posta.
     </div>
 
-    <button type="button" class="btn-submit" (click)="inviaEmailRecupero()" [disabled]="!emailRecupero || messaggioConferma">
-      Invia Link di Recupero
+    <button type="button" class="btn-submit" (click)="inviaEmailRecupero()" [disabled]="!emailRecupero || messaggioConferma || isLoading">
+      {{ isLoading ? 'Invio in corso...' : 'Invia Link di Recupero' }}
     </button>
   </div>
 </div>

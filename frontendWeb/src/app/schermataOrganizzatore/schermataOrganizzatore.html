@@ -1,8 +1,8 @@
 <main class="admin-container">
 
-  <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
-    <button class="btn-admin" style="background-color: #f59e0b; color: white;" routerLink="/statistiche-organizzatore">📊 Statistiche</button>
-    <button class="btn-admin" routerLink="/crea-viaggio">+ Nuovo Viaggio</button>
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;" [style.pointer-events]="isLoading ? 'none' : 'auto'">
+    <button class="btn-admin" style="background-color: #f59e0b; color: white;" [disabled]="isLoading" routerLink="/statistiche-organizzatore">📊 Statistiche</button>
+    <button class="btn-admin" [disabled]="isLoading" routerLink="/crea-viaggio">+ Nuovo Viaggio</button>
   </div>
 
   <div class="admin-header">
@@ -11,10 +11,11 @@
       <h1>Pannello <span>Organizzatore</span></h1>
       <p style="color: var(--text-secondary);">Benvenuto nella gestione operativa dei tuoi pacchetti.</p>
     </div>
-    <button class="btn-ghost">Scarica Report PDF</button>
+    <button class="btn-ghost" [disabled]="isLoading">Scarica Report PDF</button>
   </div>
 
-  <div style="margin-bottom: 40px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+  <div style="margin-bottom: 40px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"
+       [style.pointer-events]="isLoading ? 'none' : 'auto'">
     <app-map (viaggioSelezionato)="vaiAiDettagli($event)"></app-map>
   </div>
 
@@ -30,7 +31,7 @@
           <th style="text-align: center;">Azioni</th>
         </tr>
         </thead>
-        <tbody>
+        <tbody [style.pointer-events]="isLoading ? 'none' : 'auto'">
         <tr *ngIf="listaDeiViaggi.length === 0">
           <td colspan="4" style="text-align: center; padding: 2rem;">Nessun viaggio trovato.</td>
         </tr>
@@ -61,7 +62,7 @@
           <th>Azioni</th>
         </tr>
         </thead>
-        <tbody>
+        <tbody [style.pointer-events]="isLoading ? 'none' : 'auto'">
         <tr *ngIf="ultimePrenotazioni.length === 0">
           <td colspan="5" style="text-align: center; padding: 2rem;">Non hai ancora ricevuto prenotazioni.</td>
         </tr>
@@ -81,8 +82,8 @@
           <td>{{ prenota.dataPrenotazione | date:'dd/MM/yyyy' }}</td>
           <td><span class="badge badge-pending">{{ prenota.numeroPersone }}</span></td>
           <td>
-            <button class="btn-segnala-small" (click)="apriSegnalazioneViaggiatore(prenota.viaggiatoreId, prenota.viaggiatoreUsername)">
-              🚩 Segnala
+            <button class="btn-segnala-small" [disabled]="isLoading" (click)="apriSegnalazioneViaggiatore(prenota.viaggiatoreId, prenota.viaggiatoreUsername)">
+              {{ isLoading ? '...' : '🚩 Segnala' }}
             </button>
           </td>
         </tr>

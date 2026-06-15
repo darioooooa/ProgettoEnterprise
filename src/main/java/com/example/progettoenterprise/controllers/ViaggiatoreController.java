@@ -1,10 +1,11 @@
 package com.example.progettoenterprise.controllers;
 
-import com.example.progettoenterprise.data.entities.RichiestaPromozione;
 import com.example.progettoenterprise.data.service.ViaggiatoreService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import com.example.progettoenterprise.dto.ViaggiatoreDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class ViaggiatoreController {
 
     @PostMapping("/richieste-promozione")
     @PreAuthorize("hasRole('VIAGGIATORE')")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<RichiestaPromozioneDTO> inviaRichiestaPromozione(
             @Valid @RequestBody RichiestaPromozioneDTO richiesta,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {

@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { ViaggioService } from '../service/viaggio.service';
 import { UtenteService } from '../service/utente.service';
@@ -14,7 +14,8 @@ import { UtenteService } from '../service/utente.service';
 })
 export class SchermataUtente implements OnInit {
   isMioProfilo: boolean = true;
-  caricamento: boolean = false;
+
+  isLoading: boolean = false;
 
   nome: string | null = '';
   cognome: string | null = '';
@@ -30,6 +31,7 @@ export class SchermataUtente implements OnInit {
     private utenteService: UtenteService,
     private viaggioService: ViaggioService,
     private cdr: ChangeDetectorRef,
+    private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -38,7 +40,8 @@ export class SchermataUtente implements OnInit {
       this.route.paramMap.subscribe(params => {
         const idDaUrl = params.get('id');
         this.viaggiOrganizzati = []; // Reset
-        this.caricamento = true;
+        this.isLoading = true;
+        this.cdr.detectChanges();
 
         if (!idDaUrl) {
           // Profilo personale
@@ -55,21 +58,21 @@ export class SchermataUtente implements OnInit {
               this.viaggioService.getViaggiByOrganizzatore(Number(mioIdDallAuth)).subscribe({
                 next: (viaggi) => {
                   this.viaggiOrganizzati = viaggi;
-                  this.caricamento = false;
+                  this.isLoading = false;
                   this.cdr.detectChanges();
                 },
                 error: (err) => {
                   console.error("Errore nei tuoi viaggi:", err);
-                  this.caricamento = false;
+                  this.isLoading = false;
                   this.cdr.detectChanges();
                 }
               });
             } else {
-              this.caricamento = false;
+              this.isLoading = false;
               this.cdr.detectChanges();
             }
           } else {
-            this.caricamento = false;
+            this.isLoading = false;
             this.cdr.detectChanges();
           }
         } else {
@@ -94,26 +97,32 @@ export class SchermataUtente implements OnInit {
           this.viaggioService.getViaggiByOrganizzatore(id).subscribe({
             next: (viaggi) => {
               this.viaggiOrganizzati = viaggi;
-              this.caricamento = false;
+              this.isLoading = false;
               this.cdr.detectChanges();
             },
             error: (err) => {
               console.error("Errore viaggi pubblico:", err);
-              this.caricamento = false;
+              this.isLoading = false;
               this.cdr.detectChanges();
             }
           });
         } else {
-          this.caricamento = false;
+          this.isLoading = false;
           this.cdr.detectChanges();
         }
       },
       error: (err) => {
         console.error("Errore caricamento profilo tramite ID:", err);
-        this.caricamento = false;
+        this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
+  }
+
+  vaiAlDettaglioViaggio(viaggioId: number) {
+    if (this.isLoading) return;
+    this.isLoading = true;
+    this.router.navigate(['/viaggi', viaggioId]);
   }
 
   isFuturo(dataInizioStr: string | null): boolean {

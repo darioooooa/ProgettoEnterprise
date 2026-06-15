@@ -4,6 +4,8 @@ import com.example.progettoenterprise.data.service.PagamentoService;
 import com.example.progettoenterprise.dto.PagamentoDTO;
 import com.example.progettoenterprise.dto.PrenotazioneDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
+import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
+import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -52,6 +54,7 @@ public class PagamentoController {
 
     @PostMapping("/checkout/{idPrenotazione}/{idMetodoPagamento}")
     @PreAuthorize("hasRole('VIAGGIATORE')")
+    @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<PrenotazioneDTO> pagaPrenotazione(
             @PathVariable Long idPrenotazione,
             @PathVariable Long idMetodoPagamento,

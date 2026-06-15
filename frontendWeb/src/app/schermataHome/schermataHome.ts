@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import {Router, RouterLink} from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AutenticazioneService } from '../service/autenticazione.service';
-import { AmiciziaService } from '../service/amicizia.service';
 import { ViaggioService } from '../service/viaggio.service';
 import { ItinerarioService } from '../service/itinerario.service';
 
@@ -35,6 +34,8 @@ export class SchermataHomeComponent implements OnInit {
 
   mioUsername: string = '';
   modaleItinerarioAperta = false;
+
+  isLoading: boolean = false;
 
   constructor(
     private servAuth: AutenticazioneService,
@@ -80,32 +81,43 @@ export class SchermataHomeComponent implements OnInit {
 
   avviaRicercaViaggi(evento?: Event) {
     if (evento) { evento.preventDefault(); }
+    if (this.isLoading) return;
+
     this.haCercato = true;
     this.paginaCorrente = 0;
     this.eseguiRicerca();
   }
 
   eseguiRicerca() {
+    if (this.isLoading) return;
+    this.isLoading = true;
+
     const filtriPuliti: any = {};
     if (this.filtriViaggio.destinazione) filtriPuliti.destinazione = this.filtriViaggio.destinazione;
     if (this.filtriViaggio.dataInizioMin) filtriPuliti.dataInizioMin = this.filtriViaggio.dataInizioMin + 'T00:00:00';
     if (this.filtriViaggio.maxPartecipanti) filtriPuliti.maxPartecipanti = this.filtriViaggio.maxPartecipanti;
     if (this.filtriViaggio.prezzoMax) filtriPuliti.prezzoMax = this.filtriViaggio.prezzoMax;
+
     this.zone.run(() => {
       this.viaggioService.getViaggi(this.paginaCorrente, filtriPuliti).subscribe({
         next: (risposta) => {
           this.viaggiTrovati = risposta.content ? [...risposta.content] : [];
           this.totalePagine = risposta.totalPages || 0;
           this.openItineraryMenuId = null;
+          this.isLoading = false;
           this.cdr.detectChanges();
         },
-        error: (err) => console.error('Errore durante la ricerca viaggi', err)
+        error: (err) => {
+          console.error('Errore durante la ricerca viaggi', err);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     });
   }
 
   paginaPrecedente() {
-    if (this.paginaCorrente > 0) {
+    if (this.paginaCorrente > 0 && !this.isLoading) {
       this.paginaCorrente--;
       this.eseguiRicerca();
       window.scrollTo({ top: 500, behavior: 'smooth' });
@@ -113,7 +125,7 @@ export class SchermataHomeComponent implements OnInit {
   }
 
   paginaSuccessiva() {
-    if (this.paginaCorrente < this.totalePagine - 1) {
+    if (this.paginaCorrente < this.totalePagine - 1 && !this.isLoading) {
       this.paginaCorrente++;
       this.eseguiRicerca();
       window.scrollTo({ top: 500, behavior: 'smooth' });
@@ -122,6 +134,8 @@ export class SchermataHomeComponent implements OnInit {
 
   toggleItineraryMenu(viaggioId: number, event: Event) {
     event.stopPropagation();
+    if (this.isLoading) return;
+
     if (this.openItineraryMenuId === viaggioId) {
       this.openItineraryMenuId = null;
     } else {
@@ -130,80 +144,42 @@ export class SchermataHomeComponent implements OnInit {
     }
   }
 
-  creaNuovoItinerario(event: Event) {
-    event.stopPropagation();
-    if (!this.nomeNuovoItinerario.trim()) {
-      alert("Scrivi un nome per il tuo nuovo itinerario!");
-      return;
-    }
-
-    const nuovaLista = {
-      nome: this.nomeNuovoItinerario.trim(),
-      visibilita: 'PRIVATA'
-    };
-
-    this.itinerarioService.creaLista(nuovaLista).subscribe({
-      next: (risposta) => {
-        this.mieiItinerari.push(risposta);
-        this.nomeNuovoItinerario = ''; // Svuotiamo la casella di testo
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error("Errore durante la creazione", err);
-        alert("Ops, c'è stato un errore durante la creazione dell'itinerario.");
-      }
-    });
-  }
-
   selezionaItinerario(itinerarioId: number, viaggioId: number) {
+    if (this.isLoading) return;
+    this.isLoading = true;
     this.openItineraryMenuId = null;
+
     this.itinerarioService.aggiungiViaggioAItinerario(itinerarioId, viaggioId).subscribe({
       next: (risposta: any) => {
         alert(risposta.message || "Viaggio aggiunto con successo all'itinerario!");
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Errore durante il salvataggio", err);
         alert("Si è verificato un problema durante l'aggiunta del viaggio.");
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  richiediNomeNuovoItinerario(viaggioId: number) {
-    const nome = window.prompt("Come vuoi chiamare il nuovo itinerario?");
-
-    if (nome && nome.trim() !== "") {
-      const nuovaLista = {
-        nome: nome.trim(),
-        visibilita: 'PRIVATA'
-      };
-
-      this.itinerarioService.creaLista(nuovaLista).subscribe({
-        next: (risposta) => {
-          this.mieiItinerari.push(risposta);
-          this.cdr.detectChanges();
-          alert("Itinerario creato!");
-        },
-        error: (err) => alert("Errore nella creazione.")
-      });
-    }
-  }
-
   apriModaleItinerario() {
+    if (this.isLoading) return;
     this.nomeNuovoItinerario = '';
     this.modaleItinerarioAperta = true;
   }
 
   chiudiModaleItinerario() {
+    if (this.isLoading) return;
     this.modaleItinerarioAperta = false;
   }
 
-  isSalvataggioInCorso = false;
-
   salvaNuovoItinerario() {
-    if (!this.nomeNuovoItinerario.trim() || this.isSalvataggioInCorso) return;
+    if (!this.nomeNuovoItinerario.trim() || this.isLoading) return;
 
-    this.isSalvataggioInCorso = true; // Blocca il bottone
+    this.isLoading = true;
+    this.cdr.detectChanges();
 
     this.itinerarioService.creaLista({
       nome: this.nomeNuovoItinerario.trim(),
@@ -211,14 +187,15 @@ export class SchermataHomeComponent implements OnInit {
     }).subscribe({
       next: (nuovaLista) => {
         this.mieiItinerari.push(nuovaLista);
-        this.isSalvataggioInCorso = false;
+        this.isLoading = false;
         this.chiudiModaleItinerario();
 
         alert("Itinerario creato con successo!");
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.isSalvataggioInCorso = false;
+        console.error(err);
+        this.isLoading = false;
         alert("Errore durante la creazione. Riprova.");
         this.cdr.detectChanges();
       }
@@ -228,8 +205,6 @@ export class SchermataHomeComponent implements OnInit {
   // --- FUNZIONE PER IL CALCOLO DEI POSTI RIMANENTI ---
   calcolaPostiRimanenti(viaggio: any): number {
     if (!viaggio.maxPartecipanti) return 999;
-
-    const iscritti = viaggio.partecipantiAttuali || 0;
-    return viaggio.maxPartecipanti - iscritti;
+    return viaggio.maxPartecipanti - (viaggio.partecipantiAttuali || 0);
   }
 }

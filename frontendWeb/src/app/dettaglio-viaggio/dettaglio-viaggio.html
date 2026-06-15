@@ -6,18 +6,18 @@
 
       <header class="form-header">
         <div>
-          <button id="btn-torna-prenotazioni" routerLink="/prenotazioni" class="tab-link"> ⬅ Torna alle prenotazioni</button>
+          <button id="btn-torna-prenotazioni" routerLink="/prenotazioni" class="tab-link" [disabled]="isLoading"> ⬅ Torna alle prenotazioni</button>
           <h1>Esplora la destinazione</h1>
           <p>📍 {{ statistiche?.destinazione || 'Dettagli Itinerario di Viaggio' }}</p>
         </div>
 
         <div class="header-actions-container">
-          <button type="button" [routerLink]="['/prenota-viaggio', viaggioId]" class="btn-prenota-top">
+          <button type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-top" [disabled]="isLoading">
             Prenota Ora
           </button>
 
-          <button type="button" (click)="scaricaFileIcs()" class="tab-link btn-ics-calendar">
-            📅 Esporta nei tuoi Calendari (.ics)
+          <button type="button" (click)="scaricaFileIcs()" class="tab-link btn-ics-calendar" [disabled]="isLoading">
+            {{ isLoading ? '⏳ Generazione...' : '📅 Esporta nei tuoi Calendari (.ics)' }}
           </button>
         </div>
       </header>
@@ -45,7 +45,7 @@
         </div>
       </div>
 
-      <div class="organizzatore-card-link" *ngIf="statistiche?.organizzatoreUsername" [routerLink]="['/profilo', statistiche.organizzatoreId]">
+      <div class="organizzatore-card-link" *ngIf="statistiche?.organizzatoreUsername" [routerLink]="isLoading ? null : ['/profilo', statistiche.organizzatoreId]">
         <div class="organizzatore-avatar">👤</div>
         <div class="organizzatore-meta">
           <label>Organizzatore del viaggio</label>
@@ -53,7 +53,7 @@
           <p>Clicca per visualizzare il profilo e i viaggi da lui organizzati</p>
         </div>
 
-        <button class="btn-segnala-org" (click)="apriSegnalazioneOrg(statistiche.organizzatoreId, $event)">
+        <button class="btn-segnala-org" [disabled]="isLoading" (click)="apriSegnalazioneOrg(statistiche.organizzatoreId, $event)">
           🚩 Segnala organizzatore
         </button>
 
@@ -61,10 +61,10 @@
       </div>
 
       <nav class="itinerary-nav-tabs">
-        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'galleria'" (click)="tabAttivo = 'galleria'">🖼️ Galleria</button>
-        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'community'" (click)="tabAttivo = 'community'">💬 Community</button>
-        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
-        <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'chat' " (click)="tabAttivo = 'chat'">🗯️Chat</button>
+        <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'galleria'" (click)="tabAttivo = 'galleria'">🖼️ Galleria</button>
+        <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'community'" (click)="tabAttivo = 'community'">💬 Community</button>
+        <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
+        <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'chat' " (click)="tabAttivo = 'chat'">🗯️ Chat</button>
       </nav>
 
       <app-galleria  *ngIf="tabAttivo === 'galleria'"
@@ -92,7 +92,7 @@
       <div class="sezione-prenota-basso">
         <h3>Ti piace questo itinerario?</h3>
         <p>Assicurati il tuo posto prima che i posti si esauriscano!</p>
-        <button type="button" [routerLink]="['/prenota-viaggio', viaggioId]" class="btn-prenota-basso">
+        <button type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-basso" [disabled]="isLoading">
           Prenota il tuo posto ora
         </button>
       </div>

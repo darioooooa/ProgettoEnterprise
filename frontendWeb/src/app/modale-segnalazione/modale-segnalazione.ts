@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SegnalazioneService } from '../service/segnalazione.service';
@@ -23,25 +23,28 @@ export class ModaleSegnalazione {
 
   motivoSelezionato: string = '';
   descrizione: string = '';
-  invioInCorso: boolean = false;
+
+  isLoading: boolean = false;
 
   constructor(
     private segnalazioneService: SegnalazioneService,
-    private authService: AutenticazioneService
+    private authService: AutenticazioneService,
+    private cdr: ChangeDetectorRef
   ) {}
 
-
   invia() {
-    if (!this.motivoSelezionato) return;
+    if (!this.motivoSelezionato || this.isLoading) return;
 
     const mioIdTesto = this.authService.ottieniId();
     const mioIdNumero = mioIdTesto ? Number(mioIdTesto) : 0;
 
-    if (mioIdNumero === this.idRiferimento) {
+    if (mioIdNumero === this.idRiferimento && this.tipoEntita === 'UTENTE') {
       alert("Non puoi segnalare te stesso!");
       return;
     }
-    this.invioInCorso = true;
+
+    this.isLoading = true;
+    this.cdr.detectChanges();
 
     const datiDaSpedire = {
       tipo: this.tipoEntita,
@@ -53,17 +56,21 @@ export class ModaleSegnalazione {
     this.segnalazioneService.creaSegnalazione(datiDaSpedire, mioIdNumero).subscribe({
       next: () => {
         alert("Segnalazione inviata con successo!");
-        this.invioInCorso = false;
+        this.isLoading = false;
         this.annulla();
       },
       error: (errore) => {
         alert("Si è verificato un errore durante l'invio della segnalazione.");
         console.error(errore);
-        this.invioInCorso = false;
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
+
   annulla() {
+    if (this.isLoading) return;
+
     this.motivoSelezionato = '';
     this.descrizione = '';
     this.chiudiModale.emit();

@@ -20,6 +20,12 @@ export class SchermataOrganizzatoreComponent implements OnInit {
   paginaCorrente: number = 0;
   totalePagine: number = 0;
   ultimePrenotazioni: any[] = [];
+
+  isLoading: boolean = false;
+
+  mostraSegnalazione = false;
+  idDaSegnalare = 0;
+
   constructor(
     private viaggioService: ViaggioService,
     private prenotazioneService: PrenotazioneService,
@@ -34,58 +40,65 @@ export class SchermataOrganizzatoreComponent implements OnInit {
   }
 
   caricaViaggi(pagina: number = 0) {
+    this.isLoading = true;
     this.paginaCorrente = pagina;
+
     this.viaggioService.getViaggi(this.paginaCorrente).subscribe({
       next: (data) => {
         this.listaDeiViaggi = data.content;
         this.totalePagine = data.totalPages;
+        this.isLoading = false;
         this.cdr.detectChanges();
         console.log('Viaggi caricati:', data);
       },
-      error: (e) => console.error('Errore durante il caricamento:', e)
+      error: (e) => {
+        console.error('Errore durante il caricamento:', e);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   paginaSuccessiva() {
-    if (this.paginaCorrente < this.totalePagine - 1) {
+    if (this.paginaCorrente < this.totalePagine - 1 && !this.isLoading) {
       this.caricaViaggi(this.paginaCorrente + 1);
     }
   }
 
   paginaPrecedente() {
-    if (this.paginaCorrente > 0) {
+    if (this.paginaCorrente > 0 && !this.isLoading) {
       this.caricaViaggi(this.paginaCorrente - 1);
     }
   }
 
   modifica(viaggio: any) {
+    if (this.isLoading) return;
     console.log("Voglio modificare il viaggio:", viaggio);
 
     alert("Funzione modifica per: " + viaggio.destinazione);
   }
 
   elimina(viaggio: any) {
+    if (this.isLoading) return;
+
     if (confirm("Sei sicuro di voler eliminare " + viaggio.destinazione + "?")) {
       console.log("Elimino il viaggio con ID:", viaggio.id);
-
-
       this.listaDeiViaggi = this.listaDeiViaggi.filter(v => v !== viaggio);
     }
   }
 
-
   vaiAiDettagli(datiDallaMappa: any) {
+    if (this.isLoading) return;
+    this.isLoading = true;
+
     if (Array.isArray(datiDallaMappa)) {
       console.log("📍 Marker multiplo cliccato! Numero viaggi:", datiDallaMappa.length);
-
-      // Estraiamo tutti gli ID per passarli alla pagina intermedia
       const listaIds = datiDallaMappa.map(v => v.id || v.idViaggio);
 
       this.router.navigate(['lista-viaggi-marker'], {
         queryParams: {ids: listaIds.join(',')}
       });
     } else {
-      // Estraiamo l'ID dall'oggetto singolo
       const viaggioId = datiDallaMappa.id || datiDallaMappa.idViaggio;
       console.log("📍 Marker singolo cliccato! Navigo ai dettagli del viaggio ID:", viaggioId);
 
@@ -109,19 +122,15 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     return nome.substring(0, 2).toUpperCase();
   }
 
-
   getColoreAvatar(nome: string): string {
     if (!nome) return 'green';
     const colori = ['green', 'purple', 'blue', 'orange'];
     return colori[nome.length % colori.length];
   }
 
-  mostraSegnalazione = false;
-  idDaSegnalare = 0;
-
   apriSegnalazioneViaggiatore(id: number, username: string) {
+    if (this.isLoading) return;
     this.idDaSegnalare = id;
     this.mostraSegnalazione = true;
   }
 }
-

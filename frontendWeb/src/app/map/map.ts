@@ -1,14 +1,14 @@
-import { AfterViewInit, Component, PLATFORM_ID, inject, EventEmitter, Output } from '@angular/core';
-
+import { AfterViewInit, Component, PLATFORM_ID, inject, EventEmitter, Output, ChangeDetectorRef } from '@angular/core';
 import mapboxgl from 'mapbox-gl';
 import { isPlatformBrowser } from '@angular/common';
 import { envMap } from '../../environments/envMap';
-import {ViaggioService} from '../service/viaggio.service'; // Controlla che questo percorso sia corretto nel tuo progetto
+import {ViaggioService} from '../service/viaggio.service';
 
 export const MAPBOX_ACCESS_TOKEN = envMap.mapboxToken;
 
 @Component({
   selector: 'app-map',
+  standalone: true,
   imports: [],
   templateUrl: './map.html',
   styleUrl: './map.css',
@@ -19,12 +19,14 @@ export class MapComponent implements AfterViewInit {
   lat = 41.8902; // Centro iniziale
   lng = 12.4922;
 
-
   @Output() viaggioSelezionato = new EventEmitter<any>();
 
   private platformId = inject(PLATFORM_ID);
 
-  constructor(private viaggioService: ViaggioService) {
+  isLoading: boolean = false;
+
+  constructor(private viaggioService: ViaggioService, private cdr: ChangeDetectorRef
+  ) {
     // Configurazione iniziale del token Mapbox
     (mapboxgl as any).accessToken = MAPBOX_ACCESS_TOKEN;
   }
@@ -51,14 +53,22 @@ export class MapComponent implements AfterViewInit {
   }
 
   caricaViaggiPerMappa() {
+    if (this.isLoading) return;
+    this.isLoading = true;
+
     this.viaggioService.getViaggiPerMappa().subscribe({
       next: (viaggi: any) => {
         if (viaggi && viaggi.length > 0) {
           this.aggiungiMarkerIntelligenti(viaggi);
         }
-
+        this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error("Errore nel caricamento dei viaggi sulla mappa:", err)
+      error: (err) => {
+        console.error("Errore nel caricamento dei viaggi sulla mappa:", err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -80,14 +90,12 @@ export class MapComponent implements AfterViewInit {
       }
     });
 
-
     mappaCoordinate.forEach((listaViaggi, chiave) => {
       // Estraiamo le coordinate
       const lat = parseFloat(listaViaggi[0].latitudine);
       const lng = parseFloat(listaViaggi[0].longitudine);
 
       const divPopup = document.createElement('div');
-
 
       // se ci sono più viaggi nella stessa posizione
       if (listaViaggi.length > 1) {
@@ -105,13 +113,18 @@ export class MapComponent implements AfterViewInit {
           bottone.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
+
+            if (this.isLoading) return;
+            this.isLoading = true;
+
             // manda l'array di viaggi
             this.viaggioSelezionato.emit(listaViaggi);
+
+            setTimeout(() => { this.isLoading = false; }, 4000);
           });
         }
 
         const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(divPopup);
-
 
         new mapboxgl.Marker({ color: '#1a56db' })
           .setLngLat([lng, lat])
@@ -119,8 +132,7 @@ export class MapComponent implements AfterViewInit {
           .addTo(this.map!);
       }
 
-        // VIAGGIO SINGOLO
-
+      // VIAGGIO SINGOLO
       else {
         const viaggioSingolo = listaViaggi[0];
 
@@ -138,13 +150,18 @@ export class MapComponent implements AfterViewInit {
           bottone.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
+
+            if (this.isLoading) return;
+            this.isLoading = true;
+
             // manda SOLO IL SINGOLO VIAGGIO
             this.viaggioSelezionato.emit(viaggioSingolo);
+
+            setTimeout(() => { this.isLoading = false; }, 4000);
           });
         }
 
         const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(divPopup);
-
 
         new mapboxgl.Marker({ color: '#ef4444' })
           .setLngLat([lng, lat])
