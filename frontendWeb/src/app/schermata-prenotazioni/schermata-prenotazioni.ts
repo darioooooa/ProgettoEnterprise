@@ -78,4 +78,23 @@ export class SchermataPrenotazioni implements OnInit {
 
     return giorni;
   }
+
+  annullaPrenotazione(evento: Event, idPrenotazione: number): void {
+    evento.stopPropagation();
+
+    const conferma = window.confirm('Sei sicuro di voler annullare questa prenotazione?');
+
+    if (conferma) {
+      this.prenotazioneService.cancellaPrenotazione(idPrenotazione).subscribe({
+        next: () => {
+          alert('Prenotazione annullata con successo!');
+          this.caricaPrenotazioniDalDB();
+        },
+        error: (errore) => {
+          console.error(errore);
+          alert("Si è verificato un problema durante l'annullamento.");
+        }
+      });
+    }
+  }
 }

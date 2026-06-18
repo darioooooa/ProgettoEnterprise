@@ -37,7 +37,6 @@ public class ViaggiatoreServiceImpl implements ViaggiatoreService {
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
     private final UtenteRepository utenteRepository;
-    private final RichiestaPromozioneRepository richiestaRepository;
     private final Keycloak keycloak;
     private final OrganizzatoreRepository organizzatoreRepository;
     private final RichiestaPromozioneRepository richiestaPromozioneRepository;

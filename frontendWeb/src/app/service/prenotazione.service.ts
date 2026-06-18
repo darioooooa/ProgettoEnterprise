@@ -38,4 +38,8 @@ export class PrenotazioneService {
     return this.http.post(url, { numeroPersone: numeroPersone });
   }
 
+  cancellaPrenotazione(id: number): Observable<any> {
+    return this.http.delete(`${this.API_URL}/${id}`);
+  }
+
 }

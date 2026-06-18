@@ -64,11 +64,21 @@
 
         </div>
 
-        <div class="prezzo-sezione">
-          <label>Stato Pagamento</label>
-          <p class="valore-prezzo" [style.color]="p.stato === 'IN_ATTESA' ? '#f39c12' : '#2ecc71'">
-            {{ p.stato === 'IN_ATTESA' ? 'In Attesa' : 'Confermato' }}
-          </p>
+        <div class="zona-azioni-laterali">
+
+          <div class="prezzo-sezione">
+            <label>Stato Pagamento</label>
+            <p class="valore-prezzo" [style.color]="p.stato === 'IN_ATTESA' ? '#f39c12' : '#2ecc71'">
+              {{ p.stato === 'IN_ATTESA' ? 'In Attesa' : 'Confermato' }}
+            </p>
+          </div>
+
+          <button class="btn-annulla"
+                  *ngIf="p.stato === 'IN_ATTESA'"
+                  (click)="annullaPrenotazione($event, p.id)">
+            ✖ Annulla
+          </button>
+
         </div>
 
       </div>

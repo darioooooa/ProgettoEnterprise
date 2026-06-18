@@ -26,7 +26,7 @@ public class ListaViaggioServiceImpl implements ListaViaggioService {
     private final ViaggioRepository viaggioRepository;
     private final ItinerarioPreferitoRepository itinerarioPreferitoRepository;
     private final MessageLang messageLang;
-    private ModelMapper modelMapper;
+    private final ModelMapper modelMapper;
 
 
     @Transactional
