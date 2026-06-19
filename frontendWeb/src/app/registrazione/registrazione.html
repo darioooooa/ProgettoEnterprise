@@ -2,6 +2,13 @@
   <div class="background-overlay"></div>
 
   <div class="glass-form-container">
+
+    <div style="text-align: left; margin-bottom: 1rem;">
+      <a routerLink="/" [style.pointer-events]="isLoading ? 'none' : 'auto'" class="btn-ritorno">
+        ← Torna alla pagina iniziale
+      </a>
+    </div>
+
     <div class="form-header">
       <h1>Crea il tuo profilo</h1>
       <p>Entra a far parte della community dei viaggiatori</p>

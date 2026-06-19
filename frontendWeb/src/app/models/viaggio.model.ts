@@ -12,4 +12,9 @@ export interface Viaggio {
   maxPartecipanti: number;
   partecipantiAttuali: number;
   cittaPartenza: string;
+
+  mediaRecensioni?: number;
+  numeroRecensioni?: number;
+  organizzatoreId?: number;
+  organizzatoreUsername?: string;
 }

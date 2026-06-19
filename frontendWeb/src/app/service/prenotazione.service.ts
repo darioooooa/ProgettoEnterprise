@@ -10,7 +10,7 @@ import { AutenticazioneService } from './autenticazione.service';
 export class PrenotazioneService {
 
   // URL del controller
-  private readonly API_URL = 'https://localhost:8443/api/v1/prenotazioni';
+  private readonly API_URL = '/api/v1/prenotazioni';
 
   constructor(private http: HttpClient, private authService: AutenticazioneService) {
   }

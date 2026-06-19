@@ -3,6 +3,13 @@
   <div class="background-overlay"></div>
 
   <div class="glass-form-container">
+
+    <div style="text-align: left; margin-bottom: 1rem;">
+      <a routerLink="/" [style.pointer-events]="isLoading ? 'none' : 'auto'" class="btn-ritorno">
+        ← Torna alla pagina iniziale
+      </a>
+    </div>
+
     <div class="form-header">
       <h1>Bentornato</h1>
       <p>Accedi e prenota il tuo prossimo viaggio!</p>

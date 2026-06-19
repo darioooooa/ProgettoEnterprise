@@ -22,12 +22,20 @@ import { InboxViaggiatoreComponent } from './inbox-viaggiatore/inbox-viaggiatore
 export const routes: Routes = [
   {
     path: '',
+    component: PaginaInizialeComponent
+  },
+  {
+    path: 'login',
+    component: Login
+  },
+  {
+    path: 'registrazione',
+    component: Registrazione
+  },
+  {
+    path: '',
     component: MainLayoutComponent,
     children: [
-      {
-        path: '',
-        component: PaginaInizialeComponent
-      },
       {
         path: 'home',
         component: SchermataHomeComponent,
@@ -96,14 +104,6 @@ export const routes: Routes = [
       },
 
     ]
-  },
-  {
-    path: 'login',
-    component: Login
-  },
-  {
-    path: 'registrazione',
-    component: Registrazione
   },
   //  Il jolly va tassativamente in fondo a tutto, altrimenti intercetta e blocca le rotte sotto di lui
   {

@@ -1,17 +1,23 @@
-<section class="hero-landing">
-  <div class="overlay"></div>
-  <div class="hero-content">
-    <h1>ENTERPRISE</h1>
-    <p>Scopri le meraviglie del mondo. Inizia la tua avventura oggi.</p>
+<div class="layout-landing">
+  <section class="hero-landing">
+    <div class="overlay"></div>
+    <div class="hero-content">
+      <h1>ENTERPRISE</h1>
+      <p>Scopri le meraviglie del mondo. Inizia la tua avventura oggi.</p>
 
-    <div class="auth-buttons-container" [style.pointer-events]="isLoading ? 'none' : 'auto'">
-      <button class="btn btn-primary" [disabled]="isLoading" routerLink="/login">
-        {{ isLoading ? 'Attendere...' : 'Accedi' }}
-      </button>
+      <div class="auth-buttons-container" [style.pointer-events]="isLoading ? 'none' : 'auto'">
+        <button class="btn btn-primary" [disabled]="isLoading" routerLink="/login">
+          {{ isLoading ? 'Attendere...' : 'Accedi' }}
+        </button>
 
-      <button class="btn btn-secondary" [disabled]="isLoading" routerLink="/registrazione">
-        {{ isLoading ? 'Attendere...' : 'Registrati' }}
-      </button>
+        <button class="btn btn-secondary" [disabled]="isLoading" routerLink="/registrazione">
+          {{ isLoading ? 'Attendere...' : 'Registrati' }}
+        </button>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <footer>
+    <p>🌐 Progetto Enterprise 2025/2026</p>
+  </footer>
+</div>

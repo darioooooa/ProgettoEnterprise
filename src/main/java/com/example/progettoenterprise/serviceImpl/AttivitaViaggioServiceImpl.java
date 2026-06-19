@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
+
 @Service
 @RequiredArgsConstructor
 public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
@@ -42,6 +44,8 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
         if (!viaggio.getOrganizzatore().getId().equals(organizzatoreId)) {
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
         }
+
+        validaDateAttivitaConViaggio(attivitaViaggioDTO, viaggio);
 
         AttivitaViaggio entity = modelMapper.map(attivitaViaggioDTO, AttivitaViaggio.class);
 
@@ -82,6 +86,8 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
             if (!entityEsistente.getViaggio().getOrganizzatore().getId().equals(organizzatoreId)) {
                 throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
             }
+
+            validaDateAttivitaConViaggio(dto, entityEsistente.getViaggio());
 
             // Aggiorna i campi della Entity con i dati che arrivano dal DTO
             entityEsistente.setTitolo(dto.getTitolo());
@@ -150,6 +156,28 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
         }
 
         return attivitaViaggioPage.map(attivita -> modelMapper.map(attivita, AttivitaViaggioDTO.class));
+    }
+
+    // Metodo di validazione delle date
+    private void validaDateAttivitaConViaggio(AttivitaViaggioDTO dto, Viaggio viaggio) {
+        if (dto.getOrarioInizio() == null || dto.getOrarioFine() == null) {
+            throw new IllegalArgumentException(messageLang.getMessage("attivita.date.null"));
+        }
+
+        // Controllo di coerenza interna all'attività (l'inizio deve precedere la fine)
+        if (dto.getOrarioFine().isBefore(dto.getOrarioInizio())) {
+            throw new IllegalArgumentException(messageLang.getMessage("attivita.date.sequence"));
+        }
+
+        // Allineamento con le date del viaggio
+        var inizioViaggioLimit = viaggio.getDataInizio().atStartOfDay();
+        var fineViaggioLimit = viaggio.getDataFine().atTime(LocalTime.MAX);
+        if (dto.getOrarioInizio().isBefore(inizioViaggioLimit)) {
+            throw new IllegalArgumentException(messageLang.getMessage("attivita.date.before_viaggio"));
+        }
+        if (dto.getOrarioFine().isAfter(fineViaggioLimit)) {
+            throw new IllegalArgumentException(messageLang.getMessage("attivita.date.after_viaggio"));
+        }
     }
 
 

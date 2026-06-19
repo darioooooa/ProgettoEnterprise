@@ -1134,3 +1134,136 @@ input[type="number"]::-webkit-outer-spin-button {
   transform: scale(1.04); /* Si ingrandisce leggermente */
   box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
 }
+
+.info-viaggio-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 20px !important;
+  margin-bottom: 20px !important;
+}
+
+.stat-info p .stelle {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+@media (max-width: 650px) {
+  .info-viaggio-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+.viaggio-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 25px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.header-titolo-box {
+  flex: 1;
+}
+
+.header-titolo-box h1 {
+  margin: 0 !important;
+  text-align: left !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: clamp(1.4rem, 3.5vw, 1.8rem) !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+}
+
+.header-azioni-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-ics-calendar-nuovo {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #a5d6a7;
+  border: 1px solid rgba(165, 214, 167, 0.25);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.btn-ics-calendar-nuovo:hover:not(:disabled) {
+  background: rgba(165, 214, 167, 0.12);
+  border-color: rgba(165, 214, 167, 0.45);
+  color: #ffffff;
+}
+
+.viaggio-corpo-sezione {
+  width: 100%;
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.viaggio-titolo-primario {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.5rem;
+  color: #ffffff;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.viaggio-descrizione-contenitore {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 15px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.viaggio-descrizione-testo {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.98rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (max-width: 680px) {
+  .viaggio-header-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .header-azioni-box {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .btn-prenota-top,
+  .btn-ics-calendar-nuovo {
+    width: 100%;
+    height: 44px;
+    justify-content: center;
+  }
+}

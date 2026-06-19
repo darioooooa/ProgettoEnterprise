@@ -8,6 +8,7 @@ import { ProgrammaComponent } from './components/programma/programma';
 import { CommunityComponent } from './components/community/community';
 import {PrenotazioneService} from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
+import { forkJoin } from 'rxjs';
 
 
 @Component({
@@ -26,8 +27,21 @@ import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
   styleUrl: './dettaglio-viaggio.css'
 })
 export class DettaglioViaggio implements OnInit {
+
+  statistiche: any = {
+    titolo: '',
+    descrizione: '',
+    dataInizio: '',
+    dataFine: '',
+    cittaPartenza: '',
+    destinazione: '',
+    prezzo: 0,
+    partecipantiAttuali: 0,
+    maxPartecipanti: 0,
+    mediaRecensioni: 0,
+    numeroRecensioni: 0
+  };
   viaggioId!: number;
-  statistiche: any = null;
   organizzatoreUsername: string = '';
   mioUsername: string = '';
 
@@ -49,7 +63,7 @@ export class DettaglioViaggio implements OnInit {
     this.mioUsername = this.servAuth.ottieniUsername() || '';
     this.viaggioId = Number(this.route.snapshot.paramMap.get('id'));
 
-    if (this.viaggioId) {
+    if (this.isLoggato() && this.viaggioId) {
       this.caricaStatistichePadre();
     }
   }
@@ -65,13 +79,44 @@ export class DettaglioViaggio implements OnInit {
   }
 
   caricaStatistichePadre() {
-    this.viaggioService.getStatisticheRecensioni(this.viaggioId).subscribe({
-      next: (stats) => {
-        this.statistiche = stats;
-        this.organizzatoreUsername = stats.organizzatoreUsername || '';
-        this.cdr.detectChanges();
+    this.isLoading = true;
+
+    // Chiamate parallele simultanee per la massima efficienza
+    forkJoin({
+      datiViaggio: this.viaggioService.getViaggioById(this.viaggioId),
+      stats: this.viaggioService.getStatisticheRecensioni(this.viaggioId)
+    }).subscribe({
+      next: ({ datiViaggio, stats }: { datiViaggio: any, stats: any }) => {
+
+        setTimeout(() => {
+          // Unione
+          this.statistiche = {
+            ...this.statistiche,
+            ...stats,
+            ...datiViaggio
+          };
+
+          this.statistiche.prezzo = datiViaggio?.prezzo ?? 0;
+          this.statistiche.partecipantiAttuali = datiViaggio?.partecipantiAttuali ?? 0;
+          this.statistiche.maxPartecipanti = datiViaggio?.maxPartecipanti ?? 0;
+
+          // Recupero metriche recensioni
+          this.statistiche.mediaRecensioni = stats?.mediaRecensioni ?? 0;
+          this.statistiche.numeroRecensioni = stats?.numeroRecensioni ?? 0;
+
+          this.organizzatoreUsername = stats?.organizzatoreUsername || datiViaggio?.organizzatoreUsername || '';
+          this.isLoading = false;
+
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        }, 50);
+
       },
-      error: (err) => console.error("Errore nel caricamento delle statistiche padre:", err)
+      error: (err) => {
+        console.error("Errore critico durante il caricamento parallelo:", err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 

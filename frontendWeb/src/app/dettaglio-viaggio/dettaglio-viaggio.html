@@ -4,23 +4,71 @@
   <section class="content-wrapper">
     <div class="glass-form-container">
 
-      <header class="form-header">
-        <div>
-          <button id="btn-torna-prenotazioni" routerLink="/prenotazioni" class="tab-link" [disabled]="isLoading"> ⬅ Torna alle prenotazioni</button>
+      <header class="viaggio-header-flex">
+        <div class="header-titolo-box">
           <h1>Esplora la destinazione</h1>
-          <p>📍 {{ statistiche?.destinazione || 'Dettagli Itinerario di Viaggio' }}</p>
         </div>
 
-        <div class="header-actions-container">
-          <button type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-top" [disabled]="isLoading">
+        <div class="header-azioni-box">
+          <button *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'" type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-top" [disabled]="isLoading">
             Prenota Ora
           </button>
 
-          <button type="button" (click)="scaricaFileIcs()" class="tab-link btn-ics-calendar" [disabled]="isLoading">
-            {{ isLoading ? '⏳ Generazione...' : '📅 Esporta nei tuoi Calendari (.ics)' }}
+          <button type="button" (click)="scaricaFileIcs()" class="btn-ics-calendar-nuovo" [disabled]="isLoading">
+            {{ isLoading ? '⏳ ...' : '📅 Esporta (.ics)' }}
           </button>
         </div>
       </header>
+
+      <div class="viaggio-corpo-sezione" *ngIf="statistiche">
+        <h2 class="viaggio-titolo-primario">{{ statistiche.titolo || 'Dettaglio Viaggio' }}</h2>
+        <div class="viaggio-descrizione-contenitore">
+          <p class="viaggio-descrizione-testo">{{ statistiche.descrizione }}</p>
+        </div>
+      </div>
+
+      <div class="stats-banner info-viaggio-grid" *ngIf="statistiche">
+
+        <div class="stat-card">
+          <span class="stat-icon">📅</span>
+          <div class="stat-info">
+            <label>Periodo del viaggio</label>
+            <p>{{ statistiche.dataInizio | date:'dd/MM/yyyy' }} - {{ statistiche.dataFine | date:'dd/MM/yyyy' }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">✈️</span>
+          <div class="stat-info">
+            <label>Itinerario</label>
+            <p>{{ statistiche.cittaPartenza }} ➔ {{ statistiche.destinazione }}</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="stats-banner info-viaggio-grid" *ngIf="statistiche">
+
+        <div class="stat-card">
+          <span class="stat-icon">💰</span>
+          <div class="stat-info">
+            <label>Quota di partecipazione</label>
+            <p *ngIf="statistiche?.prezzo !== undefined && statistiche?.prezzo !== null">
+              {{ statistiche.prezzo | currency:'EUR':'symbol':'1.2-2' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">👥</span>
+          <div class="stat-info">
+            <label>Posti e partecipanti</label>
+            <p>
+              {{ statistiche?.partecipantiAttuali ?? 0 }} / {{ statistiche?.maxPartecipanti ?? '∞' }} occupati
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div class="stats-banner" *ngIf="statistiche">
         <div class="stat-card">
@@ -85,7 +133,7 @@
 
 
 
-      <div class="sezione-prenota-basso">
+      <div class="sezione-prenota-basso" *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'">
         <h3>Ti piace questo itinerario?</h3>
         <p>Assicurati il tuo posto prima che i posti si esauriscano!</p>
         <button type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-basso" [disabled]="isLoading">
