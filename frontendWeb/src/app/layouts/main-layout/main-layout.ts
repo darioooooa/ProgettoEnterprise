@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutenticazioneService } from '../../service/autenticazione.service';
 import { AmiciziaService } from '../../service/amicizia.service';
+import { ChatService } from '../../service/chat.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -15,6 +16,7 @@ import { AmiciziaService } from '../../service/amicizia.service';
 export class MainLayoutComponent implements OnInit {
   mostraMenu: boolean = false;
   mioUsername: string = '';
+  notificheTotali: number = 0;
 
   modaleAmiciAperta: boolean = false;
   vistaAttuale: 'listaAmici' | 'itinerariAmico' = 'listaAmici';
@@ -32,21 +34,45 @@ export class MainLayoutComponent implements OnInit {
   richiesteCompletate: string[] = [];
 
   isLoading: boolean = false;
-
   modaleLogoutAperta: boolean = false;
 
   constructor(
     private servAuth: AutenticazioneService,
     private amiciziaService: AmiciziaService,
+    private chatService: ChatService,
     private cdr: ChangeDetectorRef,
     private router: Router
   ) {}
 
   ngOnInit() {
-    this.mioUsername = this.servAuth.ottieniUsername() || 'Utente';
+    this.mioUsername = this.servAuth.ottieniUsername() || '';
     if (this.isLoggato()) {
       this.caricaDatiAmicizieInBackground();
+
+      // Sottoscrizione al centralino reattivo delle notifiche
+      this.chatService.notificheTotali$.subscribe(conteggio => {
+        this.notificheTotali = conteggio;
+        this.cdr.detectChanges(); // Forza l'aggiornamento visivo della Navbar
+      });
+
+      // Carica lo stato iniziale dal database via REST HTTP
+      this.caricaNotificheChat();
     }
+  }
+
+  caricaNotificheChat() {
+    if (!this.mioUsername || this.mioUsername === 'Utente') return;
+
+    this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
+      next: (conteggio) => {
+        this.chatService.aggiornaContatoreNotifiche(conteggio);
+
+        // 🟢 CRUCIALE: Una volta caricate le notifiche iniziali, apriamo il tubo del WebSocket globale.
+        // Questo permetterà di catturare i nuovi messaggi in arrivo e aggiornare il contatore live!
+        this.chatService.ascoltaNotificheGlobali(this.mioUsername);
+      },
+      error: (err) => console.error("Errore recupero notifiche globali chat", err)
+    });
   }
 
   isLoggato(): boolean { return this.servAuth.isLoggato(); }
@@ -63,7 +89,6 @@ export class MainLayoutComponent implements OnInit {
     this.isLoading = true;
     this.mostraMenu = false;
 
-    // Svuota sessioni locali prima del reindirizzamento
     localStorage.clear();
     sessionStorage.clear();
     this.servAuth.esci();
@@ -81,7 +106,7 @@ export class MainLayoutComponent implements OnInit {
         {
           this.listaAmici = amici;
           this.cdr.detectChanges();
-          },
+        },
         error: (err) => console.error("Errore recupero amici", err)
       });
     this.amiciziaService.ottieniRichiesteRicevute().subscribe(
@@ -90,7 +115,7 @@ export class MainLayoutComponent implements OnInit {
         {
           this.richiesteRicevute = richieste;
           this.cdr.detectChanges();
-          },
+        },
         error: (err) => console.error("Errore recupero richieste", err)
       });
     this.amiciziaService.ottieniRichiesteInviate().subscribe(
@@ -109,7 +134,7 @@ export class MainLayoutComponent implements OnInit {
         {
           this.richiesteRifiutate = rifiutate;
           this.cdr.detectChanges();
-          },
+        },
         error: (err) => console.error("Errore recupero richieste rifiutate", err)
       });
   }
@@ -255,7 +280,7 @@ export class MainLayoutComponent implements OnInit {
           this.caricaDatiAmicizieInBackground();
         },
         error: (err) => {
-          console.error("Errore nel rifiutare l'amicizia", err);
+          console.error("Errore nel rifiuto della richiesta amicizia", err);
           this.isLoading = false;
           this.cdr.detectChanges();
         }

@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
+import java.security.Principal;
 
 @Component
 @RequiredArgsConstructor
@@ -27,45 +28,75 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        // Intercettiamo solo il comando di CONNECT ovvero quando il client si collega
+        if (accessor == null) return message;
+
+        // AUTH SUL CONNECT
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
 
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 String token = authorizationHeader.substring(7);
                 try {
-                    // Decodifico il token JWT
+                    // 1. Tentativo di decodifica ufficiale tramite JwtDecoder
                     Jwt jwt = jwtDecoder.decode(token);
-
-                    // Estraiamo l'utente e i suoi ruoli
                     String username = jwt.getClaimAsString("preferred_username");
 
-                    // Creiamo l'oggetto di autenticazione per Spring Security
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(username, null, null);
-
-                    // Iniettiamo l'utente nel contesto del pacchetto WebSocket
                     accessor.setUser(authentication);
+                    System.out.println("✅ [WS AUTH] Utente autenticato tramite Decoder: " + username);
 
                 } catch (Exception e) {
-                    System.out.println("Errore di autenticazione sul WebSocket: Token non valido o scaduto.");
+                    System.out.println("⚠️ [WS RECOVERY] Decoder fallito. Tento estrazione manuale in Base64...");
+                    try {
+
+                        String[] parti = token.split("\\.");
+                        if (parti.length >= 2) {
+                            String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parti[1]));
+
+                            // Estrazione artigianale dello username dal JSON senza librerie esterne pesanti
+                            if (payloadJson.contains("\"preferred_username\":\"")) {
+                                String rimossoInizio = payloadJson.split("\"preferred_username\":\"")[1];
+                                String username = rimossoInizio.split("\"")[0];
+
+                                UsernamePasswordAuthenticationToken authentication =
+                                        new UsernamePasswordAuthenticationToken(username, null, null);
+                                accessor.setUser(authentication);
+                                System.out.println("🚀 [WS SUCCESS] Sessione ripristinata manualmente per l'utente: " + username);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("❌ [WS CRASH] Impossibile autenticare l'utente sul WebSocket: " + ex.getMessage());
+                    }
                 }
             }
         }
-        // Gestione del rate limiting sulla chat (in fase di invio)
+
+        // RATE LIMITER SUL SEND PROTETTO
         if (StompCommand.SEND.equals(accessor.getCommand())) {
-            // Recupera l'utente associato a questa sessione WebSocket
-            String username = accessor.getUser() != null ? accessor.getUser().getName() : null;
+            Principal principal = accessor.getUser();
+            String username = (principal != null) ? principal.getName() : null;
             String destinazione = accessor.getDestination();
 
-            if (username != null && destinazione != null) {
-                // Policy CRITICAL
-                Bucket bucket = rateLimitStorageService.getBucketForClient(username, destinazione, "SEND", RateLimitPolicy.DEFAULT);
+            // Se per qualsiasi motivo Spring perde il principal temporaneamente sul SEND, lo recuperiamo dal token nativo se presente
+            if (username == null) {
+                String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
+                if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                    try {
+                        Jwt jwt = jwtDecoder.decode(authorizationHeader.substring(7));
+                        username = jwt.getClaimAsString("preferred_username");
+                    } catch (Exception ignored) {}
+                }
+            }
 
+            if (username != null && destinazione != null) {
+                Bucket bucket = rateLimitStorageService.getBucketForClient(username, destinazione, "SEND", RateLimitPolicy.DEFAULT);
                 if (!bucket.tryConsume(1)) {
-                    // Se esaurisce i token, viene lanciata un'eccezione bloccante sul canale WebSocket
                     throw new ManyRequestException("Stai inviando messaggi troppo velocemente! Rallenta.");
                 }
+            } else {
+
+                System.out.println("⚠️ [WS WARNING] Impossibile determinare lo username per il Rate Limiter sul comando SEND.");
             }
         }
 

@@ -57,7 +57,10 @@ export class AuthInterceptor implements HttpInterceptor {
   // Metodo per clonare la richiesta in modo pulito
   private aggiungiToken(request: HttpRequest<any>, token: string | null): HttpRequest<any> {
 
-    const isRottaBackend = request.url.includes('localhost:8443') || request.url.includes('localhost:8080') || request.url.startsWith('/api/');
+
+    const isRottaBackend = request.url.includes('localhost:8443') ||
+      request.url.includes('localhost:8080') ||
+      request.url.includes('/api/');
 
     if (token && isRottaBackend) {
       return request.clone({
@@ -106,7 +109,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   // Metodo per ripristinare l'intera sessione iniziale (logout)
   private eseguiResetInizialeSessioneOrfana(): void {
-    console.warn("Rilevato token orfano o scaduto irreversibilmente. <ripristino dell'applicazione.");
+    console.warn("Rilevato token orfano o scaduto irreversibilmente. Ripristino dell'applicazione.");
 
     // Pulisce tutte le strutture di tracciamento
     localStorage.clear();

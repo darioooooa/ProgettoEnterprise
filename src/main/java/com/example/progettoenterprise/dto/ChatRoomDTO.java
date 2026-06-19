@@ -12,4 +12,5 @@ public class ChatRoomDTO {
     private Long viaggioId;
     private String titoloViaggio;
     private String viaggiatoreUsername;
+    private String organizzatoreUsername;
 }

@@ -26,6 +26,7 @@ public class ChatRoomController {
     private final SimpMessagingTemplate messagingTemplate;
     private final UtenteRepository utenteRepository;
 
+
     @GetMapping("/api/chat/stanza")
     public ResponseEntity<Long> ottieniOCreaStanza(
             @RequestParam Long viaggioId,
@@ -34,6 +35,7 @@ public class ChatRoomController {
         ChatRoom stanza = chatService.ottieniOCreaStanza(viaggioId, viaggiatoreUsername);
         return ResponseEntity.ok(stanza.getId());
     }
+
 
     @GetMapping("/api/chat/stanza/{roomId}/cronologia")
     public ResponseEntity<List<MessaggioChatDTO>> ottieniCronologia(@PathVariable Long roomId) {
@@ -59,25 +61,81 @@ public class ChatRoomController {
         return ResponseEntity.ok(stanze);
     }
 
-    // parte messaggistica in tempo realee
-
     @MessageMapping("/chat/invia/{roomId}")
     public void riceviEInviaMessaggio(
-            @DestinationVariable Long roomId,
+            @DestinationVariable("roomId") Long roomId,
             @Payload MessaggioChatDTO messaggioDTO) {
 
+        System.out.println("📬 [WEBSOCKET] Messaggio intercettato con successo dal controller per la stanza: " + roomId);
 
-        MessaggioChat messaggioSalvato = chatService.salvaMessaggio(
-                roomId,
-                messaggioDTO.getMittenteUsername(),
-                messaggioDTO.getTesto()
-        );
+        try {
+            // Salvataggio sul DB
+            MessaggioChat messaggioSalvato = chatService.salvaMessaggio(
+                    roomId,
+                    messaggioDTO.getMittenteUsername(),
+                    messaggioDTO.getTesto()
+            );
 
-        messaggioDTO.setId(messaggioSalvato.getId());
-        messaggioDTO.setDataInvio(messaggioSalvato.getDataInvio());
-        utenteRepository.findByUsername(messaggioDTO.getMittenteUsername())
-                .ifPresent(utente -> messaggioDTO.setMittenteId(utente.getId()));
+            messaggioDTO.setId(messaggioSalvato.getId());
+            messaggioDTO.setDataInvio(messaggioSalvato.getDataInvio());
 
-        messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, messaggioDTO);
+            if (utenteRepository != null) {
+                utenteRepository.findByUsername(messaggioDTO.getMittenteUsername())
+                        .ifPresent(utente -> messaggioDTO.setMittenteId(utente.getId()));
+            }
+
+            // 1. Spedizione standard sul topic della chat room
+            messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, messaggioDTO);
+            System.out.println("🚀 [WEBSOCKET] Messaggio inoltrato sui canali live della stanza!");
+
+            // 2. SPEDIZIONE DELLA NOTIFICA LIVE SENZA CRASH
+            ChatRoom stanza = chatService.ottieniStanzaPerId(roomId);
+
+            if (stanza != null) {
+                // CONTROLLO DIFENSIVO: Adattiamo i getter in base a come si chiamano nel tuo oggetto ChatRoom.
+                // Se getOrganizzatore() restituisce un oggetto Utente, usiamo .getUsername() su di esso.
+                String organizzatoreUsername = (stanza.getOrganizzatore() != null) ? stanza.getOrganizzatore().getUsername() : "";
+                String viaggiatoreUsername = (stanza.getViaggiatore() != null) ? stanza.getViaggiatore().getUsername() : "";
+
+                // Capiamo chi deve ricevere la notifica
+                String destinatarioUsername = organizzatoreUsername.equals(messaggioDTO.getMittenteUsername())
+                        ? viaggiatoreUsername
+                        : organizzatoreUsername;
+
+                if (!destinatarioUsername.isEmpty()) {
+                    // Spediamo il DTO sul canale privato del destinatario
+                    messagingTemplate.convertAndSend("/topic/notifiche/" + destinatarioUsername, messaggioDTO);
+                    System.out.println("🔔 [NOTIFICA LIVE] Segnale inviato al canale personale di: " + destinatarioUsername);
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("❌ Errore nel salvataggio/invio del messaggio:");
+            e.printStackTrace();
+        }
+    }
+
+    @GetMapping("/api/chat/notifiche-totali")
+    public ResponseEntity<Integer> ottieniNotificheTotali(@RequestParam String username) {
+        int totali = chatService.ottieniNotificheTotali(username);
+        return ResponseEntity.ok(totali);
+    }
+
+
+    @PatchMapping("/api/chat/{roomId}/leggi")
+    public ResponseEntity<Void> segnaComeLetti(
+            @PathVariable Long roomId,
+            @RequestParam String username) {
+
+        chatService.segnaMessaggiComeLetti(roomId, username);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/api/chat/viaggiatore")
+    public ResponseEntity<List<ChatRoomDTO>> ottieniStanzePerViaggiatore(
+            @RequestParam String viaggiatoreUsername) {
+
+        List<ChatRoomDTO> stanze = chatService.ottieniStanzePerViaggiatore(viaggiatoreUsername);
+        return ResponseEntity.ok(stanze);
     }
 }

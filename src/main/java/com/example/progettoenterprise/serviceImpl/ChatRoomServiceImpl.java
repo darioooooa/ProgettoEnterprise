@@ -82,4 +82,28 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                         .build())
                 .collect(Collectors.toList());
     }
+    @Override
+    public int ottieniNotificheTotali(String username) {
+        return messaggioChatRepository.countNotificheTotaliUtente(username);
+    }
+    @Override
+    public void segnaMessaggiComeLetti(Long roomId,String Username){
+        messaggioChatRepository.segnaComeLetti(roomId,Username);
+    }
+    @Override
+    public ChatRoom ottieniStanzaPerId(Long roomid){
+        return chatRoomRepository.findById(roomid).orElseThrow(()->new RuntimeException("Stanza non trovata"));
+    }
+    @Override
+    public List<ChatRoomDTO> ottieniStanzePerViaggiatore(String viaggiatoreUsername) {
+        return chatRoomRepository.findByViaggiatoreUsernameIgnoreCase(viaggiatoreUsername).stream()
+                .map(stanza -> ChatRoomDTO.builder()
+                        .id(stanza.getId())
+                        .viaggioId(stanza.getViaggio().getId())
+                        .titoloViaggio(stanza.getViaggio().getTitolo())
+                        // Mostriamo il nome dell'organizzatore con cui sta parlando!
+                        .organizzatoreUsername(stanza.getOrganizzatore().getUsername())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

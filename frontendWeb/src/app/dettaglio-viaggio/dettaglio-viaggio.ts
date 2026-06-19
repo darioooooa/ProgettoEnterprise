@@ -4,7 +4,6 @@ import {ActivatedRoute, RouterLink} from '@angular/router';
 import { ViaggioService } from '../service/viaggio.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { GalleriaComponent } from './components/galleria/galleria';
-import {ChatComponent} from './components/chat/chat';
 import { ProgrammaComponent } from './components/programma/programma';
 import { CommunityComponent } from './components/community/community';
 import {PrenotazioneService} from '../service/prenotazione.service';
@@ -20,7 +19,7 @@ import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
     ProgrammaComponent,
     CommunityComponent,
     RouterLink,
-    ChatComponent,
+
     ModaleSegnalazione
   ],
   templateUrl: './dettaglio-viaggio.html',
@@ -33,7 +32,7 @@ export class DettaglioViaggio implements OnInit {
   mioUsername: string = '';
 
   // Stato del tab attivo
-  tabAttivo: 'chat'|'galleria' | 'programma' | 'community' = 'programma'  ;
+  tabAttivo: 'galleria' | 'programma' | 'community' = 'programma'  ;
 
   isLoading: boolean = false;
 

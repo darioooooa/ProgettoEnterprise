@@ -1,0 +1,110 @@
+<div class="inbox-container">
+
+  <aside class="sidebar-stanze">
+    <div class="sidebar-header">
+      <h2>💬 I miei Messaggi</h2>
+      <p class="sottotitolo">Parla con gli organizzatori dei tuoi viaggi</p>
+    </div>
+
+    <div class="lista-stanze-scroll">
+      @if (listaStanze.length === 0) {
+        <div class="chat-vuota-info">
+          Non hai ancora nessuna chat attiva.
+        </div>
+      }
+
+      @for (stanza of listaStanze; track stanza.id) {
+        <div
+          class="stanza-item"
+          [class.attiva]="stanzaSelezionata?.id === stanza.id"
+          (click)="selezionaChat(stanza)">
+          <div class="avatar-organizzatore"><span>👤</span></div>
+          <div class="stanza-info">
+            <span class="username-contatto">{{ stanza.organizzatoreUsername }}</span>
+            <span class="titolo-viaggio-tag">✈️ {{ stanza.titoloViaggio }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </aside>
+
+  <main class="area-chat">
+
+    @if (!stanzaSelezionata) {
+      <div class="chat-non-selezionata">
+        <div class="placeholder-content">
+          <div class="icona-animata">✉️</div>
+          <h3>Seleziona una conversazione</h3>
+          <p>Clicca su una chat nella barra laterale per avviare la comunicazione live.</p>
+        </div>
+      </div>
+    }
+
+    @if (stanzaSelezionata) {
+      <div class="chat-attiva-wrapper" style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+
+        @if (messaggioAvviso) {
+          <div id="avviso-chat" [class.alert-errore-backend]="tipoAvviso === 'errore'" [class.alert-successo-backend]="tipoAvviso === 'successo'">
+            <p>{{ messaggioAvviso }}</p>
+            <button type="button" class="btn-chiudi-alert" [disabled]="isLoading" (click)="messaggioAvviso = null">×</button>
+          </div>
+        }
+
+        @if (isLoggato()) {
+          <div class="chat-header">
+            <div class="info-destinatario-corrente">
+              <span class="avatar-corrente">👤</span>
+              <div>
+                <h4>Stai parlando con: {{ stanzaSelezionata.organizzatoreUsername }}</h4>
+                <p>Viaggio: {{ stanzaSelezionata.titoloViaggio }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-body-viaggio" #scrollChat>
+            @if (messaggiChat.length === 0) {
+              <div class="chat-vuota-info">
+                Non ci sono ancora messaggi in questa stanza. Fai la tua prima domanda!
+              </div>
+            }
+
+            @for (msg of messaggiChat; track msg.id) {
+              <div [class.mio-msg]="msg.mittenteUsername === mioUsername"
+                   [class.altro-msg]="msg.mittenteUsername !== mioUsername"
+                   class="msg-row">
+
+                <div class="msg-bubble">
+                  @if (msg.mittenteUsername !== mioUsername) {
+                    <span class="msg-author">&#64;{{ msg.mittenteUsername }}</span>
+                  }
+                  <p class="msg-text">{{ msg.testo }}</p>
+                  <div class="msg-meta">
+                    <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="chat-footer-viaggio">
+            <input type="text"
+                   [(ngModel)]="nuovoMessaggioTesto"
+                   [disabled]="isLoading"
+                   (keyup.enter)="inviaMessaggioCommunity()"
+                   placeholder="Scrivi un messaggio all'organizzatore..." />
+
+            <button type="button" (click)="inviaMessaggioCommunity()" [disabled]="!nuovoMessaggioTesto.trim() || isLoading">
+              {{ isLoading ? '⏳' : 'Invia 🚀' }}
+            </button>
+          </div>
+        }
+
+        @if (!isLoggato()) {
+          <p class="testo-vuoto-vetro" style="margin-top: 20px; padding: 20px;">
+            Devi effettuare il login per poter accedere alla inbox.
+          </p>
+        }
+      </div>
+    }
+  </main>
+</div>

@@ -64,7 +64,6 @@
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'galleria'" (click)="tabAttivo = 'galleria'">🖼️ Galleria</button>
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'community'" (click)="tabAttivo = 'community'">💬 Community</button>
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
-        <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'chat' " (click)="tabAttivo = 'chat'">🗯️ Chat</button>
       </nav>
 
       <app-galleria  *ngIf="tabAttivo === 'galleria'"
@@ -84,10 +83,7 @@
                      (richiestaRefreshPadre)="onSincronizzaRichiesta()">
       </app-community>
 
-      <app-chat *ngIf="tabAttivo === 'chat'"
-                [viaggioId]="viaggioId"
-                [mioUsername]="mioUsername">
-      </app-chat>
+
 
       <div class="sezione-prenota-basso">
         <h3>Ti piace questo itinerario?</h3>

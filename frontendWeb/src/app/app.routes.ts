@@ -13,15 +13,13 @@ import { DettaglioViaggio } from './dettaglio-viaggio/dettaglio-viaggio';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 import { DiventaOrganizzatoreComponent} from './diventa-organizzatore/diventa-organizzatore';
 
-import{ InboxOrganizzatore} from './inbox-organizzatore/inbox-organizzatore';
-import {ChatComponent} from './dettaglio-viaggio/components/chat/chat';
+import { InboxOrganizzatore } from './inbox-organizzatore/inbox-organizzatore';
 import { PaginaInizialeComponent } from './pagina-iniziale/pagina-iniziale';
-import { StatisticheOrganizzatore} from './statistiche-organizzatore/statistiche-organizzatore';
-import {PrenotaViaggioComponent} from './prenota-viaggio/prenota-viaggio';
+import { StatisticheOrganizzatore } from './statistiche-organizzatore/statistiche-organizzatore';
+import { PrenotaViaggioComponent } from './prenota-viaggio/prenota-viaggio';
+import { InboxViaggiatoreComponent } from './inbox-viaggiatore/inbox-viaggiatore';
 
 export const routes: Routes = [
-
-
   {
     path: '',
     component: MainLayoutComponent,
@@ -48,6 +46,12 @@ export const routes: Routes = [
       {
         path: 'inbox-organizzatore',
         component: InboxOrganizzatore
+      },
+
+      {
+        path: 'inbox-viaggiatore',
+        component: InboxViaggiatoreComponent,
+        canActivate: [autenticazioneGuard]
       },
       {
         path: 'crea-viaggio',
@@ -89,27 +93,21 @@ export const routes: Routes = [
         path: 'prenota-viaggio/:id',
         component: PrenotaViaggioComponent,
         canActivate: [autenticazioneGuard]
-      }
-      ]
-    },
-
-      {
-        path: 'login',
-        component: Login
       },
 
-      {
-        path: 'registrazione',
-        component: Registrazione
-      },
-
-      {
-        path: '**',
-        redirectTo: ''
-      },
-      {
-        path: 'chat',
-        component: ChatComponent
-
-      }
-    ];
+    ]
+  },
+  {
+    path: 'login',
+    component: Login
+  },
+  {
+    path: 'registrazione',
+    component: Registrazione
+  },
+  //  Il jolly va tassativamente in fondo a tutto, altrimenti intercetta e blocca le rotte sotto di lui
+  {
+    path: '**',
+    redirectTo: ''
+  }
+];

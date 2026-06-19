@@ -248,6 +248,21 @@ footer {
   color: white;
   transform: translateY(-1px);
 }
+.badge-navbar {
+  background-color: #ff3b30;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 1px 6px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 
 .modale-overlay-amici {
   position: fixed;

@@ -64,27 +64,70 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
     this.stanzaSelezionata = stanza;
     this.messaggiChat = [];
 
-    this.chatService.ottieniCronologia(stanza.id).subscribe({
-      next: (storico) => {
-        this.messaggiChat = storico;
-        this.autoscroll();
-        this.isLoading = false;
-        this.cdr.detectChanges();
+
+    this.chatService.segnaComeLetti(stanza.id, this.mioUsername).subscribe({
+      next: () => {
+        stanza.messaggiNonLetti = 0; // Azzera localmente il contatore della stanza
+
+
+        this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
+          next: (totale) => {
+            this.chatService.aggiornaContatoreNotifiche(totale);
+          }
+        });
+
+
+        this.chatService.ottieniCronologia(stanza.id).subscribe({
+          next: (storico) => {
+            this.messaggiChat = storico;
+            this.autoscroll();
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error("Errore nel recupero dello storico:", err);
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          }
+        });
       },
       error: (err) => {
-        console.error("Errore nel recupero dello storico:", err);
+        console.error("Errore aggiornamento stato letto:", err);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
 
+
+    // Attivazione WebSocket e ascolto in tempo reale per la stanza selezionata
     this.chatService.connettiEIniziaAscolto(stanza.id);
 
-    this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe(nuovoMsg => {
-      if (this.stanzaSelezionata && nuovoMsg.chatRoomId === this.stanzaSelezionata.id) {
-        this.messaggiChat.push(nuovoMsg);
-        this.autoscroll();
-      }
+    this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe({
+      next: (nuovoMsg) => {
+
+        if (this.stanzaSelezionata && nuovoMsg.chatRoomId === this.stanzaSelezionata.id) {
+          this.messaggiChat.push(nuovoMsg);
+          this.autoscroll();
+
+
+          this.chatService.segnaComeLetti(stanza.id, this.mioUsername).subscribe();
+          this.cdr.detectChanges();
+        }
+
+        else {
+
+          this.caricaListaStanze();
+
+          // Aggiorna subito il contatore generale delle notifiche nella Navbar in alto
+          this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
+            next: (totale) => {
+              this.chatService.aggiornaContatoreNotifiche(totale);
+              this.cdr.detectChanges();
+            }
+          });
+        }
+      },
+      error: (err) => console.error("Errore nella ricezione del messaggio live:", err)
     });
   }
 

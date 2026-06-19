@@ -11,4 +11,8 @@ public interface ChatRoomService {
     MessaggioChat salvaMessaggio(Long roomId, String mittenteUsername, String testo);
     List<MessaggioChat> ottieniCronologia(Long roomId);
     List<ChatRoomDTO> ottieniStanzePerOrganizzatore(String organizzatoreUsername);
+    int ottieniNotificheTotali(String username);
+    void segnaMessaggiComeLetti(Long roomId, String username);
+    ChatRoom ottieniStanzaPerId(Long roomid);
+    List<ChatRoomDTO> ottieniStanzePerViaggiatore(String viaggiatoreUsername);
 }
