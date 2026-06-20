@@ -38,5 +38,7 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione,Long>
             @org.springframework.data.repository.query.Param("dataInizio") java.time.LocalDate dataInizio,
             @org.springframework.data.repository.query.Param("dataFine") java.time.LocalDate dataFine
     );
-    }
+
+    List<Prenotazione> findByViaggioIdAndStato(Long viaggioId, Prenotazione.StatoPrenotazione stato);
+}
 

@@ -6,11 +6,7 @@ import com.example.progettoenterprise.dto.PrenotazioneDTO;
 import java.util.List;
 
 public interface PagamentoService {
-    PagamentoDTO aggiungiCarta(PagamentoDTO pagamentoDTO);
-
-
-    List<PagamentoDTO> getCarteViaggiatore(Long idViaggiatore);
-    PrenotazioneDTO pagaPrenotazione(Long idPrenotazione, Long idMetodoPagamento, Long idUtente);
-
-    void eliminaCarta(Long idPagamento);
+    PrenotazioneDTO confermaPagamento(PagamentoDTO dto, Long idUtente);
+    String creaPaymentIntent(Long idPrenotazione, Long idUtente) throws Exception;
+    void rimborsaPrenotazione(Long idPrenotazione)throws Exception;
 }

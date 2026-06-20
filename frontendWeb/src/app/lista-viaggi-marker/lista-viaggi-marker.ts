@@ -1,7 +1,6 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ViaggioService} from '../service/viaggio.service';
-import {forkJoin} from 'rxjs';
 import { Location } from '@angular/common';
 import { CommonModule } from '@angular/common';
 
@@ -18,17 +17,48 @@ export class ListaViaggiMarker implements OnInit{
   viaggi: any[] = [];
   isLoading: boolean = false;
 
+
   constructor(private rotta:ActivatedRoute,
               private router:Router,
               private location: Location,
               private viaggioService: ViaggioService,
+              private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.rotta.queryParams.subscribe(params => {
-      if (params['ids']) {
-        const listaIds = params['ids'].split(',');
-        this.caricaViaggi(listaIds);
+    this.viaggioService.viaggiSelezionati$.subscribe(viaggiInMemoria => {
+
+      if (viaggiInMemoria && viaggiInMemoria.length > 0) {
+
+        this.viaggi = [...viaggiInMemoria];
+        this.cdr.detectChanges();
+        console.log("🚀 Titoli mostrati all'istante! Arricchisco i dettagli in background...");
+
+
+        this.viaggi.forEach((viaggioMappa, index) => {
+          const id = viaggioMappa.id || viaggioMappa.idViaggio;
+
+          if (id) {
+            this.viaggioService.getViaggioById(Number(id)).subscribe({
+              next: (viaggioCompleto: any) => {
+                // Sostituiamo l'oggetto leggero con quello completo del DB con descrizione, prezzo, ecc.
+                this.viaggi[index] = viaggioCompleto;
+
+                this.cdr.detectChanges();
+              },
+              error: (err) => console.error("Errore nel recupero dettagli per ID: " + id, err)
+            });
+          }
+        });
+
+      } else {
+        //in caso non funziona va sempre il metodo degli id
+        this.rotta.queryParams.subscribe(params => {
+          if (params['ids']) {
+            const listaIds = params['ids'].split(',');
+            this.caricaViaggi(listaIds);
+          }
+        });
       }
     });
   }
@@ -37,19 +67,26 @@ export class ListaViaggiMarker implements OnInit{
     if (listaIds.length === 0) return;
 
     this.isLoading = true;
-    const chiamate = listaIds.map((id: any) => this.viaggioService.getViaggioById(Number(id)));
+    let chiamateCompletate = 0;
 
-    // forkJoin le esegue tutte insieme e aspetta che finiscano tutte
-    forkJoin(chiamate).subscribe({
-      next: (risposte: any) => {
-        this.viaggi = risposte;
-        this.isLoading = false;
-        console.log("🎒 Viaggi caricati con successo:", this.viaggi);
-      },
-      error: (err) => {
-        console.error("Errore nel recupero dei viaggi:", err);
-        this.isLoading = false;
-      }
+    // Facciamo un ciclo e stampiamo le card appena arrivano
+    listaIds.forEach((id: any) => {
+      this.viaggioService.getViaggioById(Number(id)).subscribe({
+        next: (viaggio: any) => {
+          this.viaggi.push(viaggio);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Errore nel recupero del viaggio ID " + id, err);
+        },
+        complete: () => {
+          chiamateCompletate++;
+          if (chiamateCompletate === listaIds.length) {
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          }
+        }
+      });
     });
   }
 

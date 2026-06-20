@@ -59,6 +59,8 @@ spring:
           starttls:
             enable: true
 
+
+
 # Logging (per il debug di Spring Security)
 logging:
   level:
@@ -66,3 +68,7 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.security.oauth2: DEBUG
     com.example.progettoenterprise: DEBUG
+
+stripe:
+  api:
+    key: ${STRIPE_SECRET_KEY}

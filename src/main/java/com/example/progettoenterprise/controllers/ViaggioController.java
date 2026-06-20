@@ -62,9 +62,9 @@ public class ViaggioController {
         return ResponseEntity.ok(statistiche);
     }
 
-    @DeleteMapping(value = "/{viaggioId}/viaggio")
+    @DeleteMapping(value = "/{viaggioId}")
     @PreAuthorize("hasRole('ORGANIZZATORE')")
-    public ResponseEntity<Void> cancellaViaggio(@PathVariable Long viaggioId,@AuthenticationPrincipal UtenteLoggato organizzatore){
+    public ResponseEntity<Void> eliminaViaggio(@PathVariable Long viaggioId,@AuthenticationPrincipal UtenteLoggato organizzatore){
 
         log.warn("L'organizzatore {} sta tentando di eliminare il viaggio ID: {}",
                 organizzatore.getUsername(), viaggioId);

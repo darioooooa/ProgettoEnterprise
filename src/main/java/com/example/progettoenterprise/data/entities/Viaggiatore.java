@@ -20,7 +20,4 @@ public class Viaggiatore extends Utente {
     private List<Prenotazione> miePrenotazioni;
 
 
-    @OneToMany(mappedBy = "viaggiatore", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Pagamento> carteDiCredito = new ArrayList<>();
-
 }

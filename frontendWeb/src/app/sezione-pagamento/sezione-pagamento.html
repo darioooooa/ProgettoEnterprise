@@ -1,0 +1,52 @@
+<div class="hero-section">
+  <div class="background-overlay"></div>
+
+  <div class="content-wrapper">
+    <div class="glass-form-container">
+
+      <div class="form-header">
+        <h1>Pagamento Sicuro</h1>
+        <p>Inserisci i dettagli per confermare la tua prenotazione a bordo.</p>
+      </div>
+
+      <form (ngSubmit)="pagaOra()" class="booking-form">
+
+        <div class="input-group">
+          <label for="titolare">Titolare della Carta</label>
+          <input
+            type="text"
+            id="titolare"
+            name="titolare"
+            [(ngModel)]="titolareCarta"
+            placeholder="Es. Mario Rossi"
+            [disabled]="isProcessing"
+            required
+          />
+        </div>
+
+        <div class="input-group">
+          <label>Dettagli Carta di Credito</label>
+          <div id="card-element" class="stripe-glass-container"></div>
+
+          <div *ngIf="errorePagamento" class="error-text">
+            ⚠️ {{ errorePagamento }}
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isProcessing || !titolareCarta">
+
+          <span *ngIf="!isProcessing">CONFERMA PAGAMENTO 💳</span>
+          <span *ngIf="isProcessing">
+            ELABORAZIONE IN CORSO...
+          </span>
+
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {ActivatedRoute, RouterLink} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import { ViaggioService } from '../service/viaggio.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { GalleriaComponent } from './components/galleria/galleria';
@@ -50,12 +50,15 @@ export class DettaglioViaggio implements OnInit {
 
   isLoading: boolean = false;
 
+  isEliminazioneInCorso: boolean = false;
+
   constructor(
     private route: ActivatedRoute,
     private viaggioService: ViaggioService,
     private servAuth: AutenticazioneService,
     private cdr: ChangeDetectorRef,
-    private prenotazioneService: PrenotazioneService
+    private prenotazioneService: PrenotazioneService,
+    private router: Router
 
   ) {}
 
@@ -164,5 +167,27 @@ export class DettaglioViaggio implements OnInit {
     this.tipoDaSegnalare = 'UTENTE';
     this.idDaSegnalare = idOrg;
     this.mostraSegnalazione = true;
+  }
+  eliminaViaggio(idViaggio: number) {
+
+    const conferma = confirm('ATTENZIONE: Sei sicuro di voler cancellare questo viaggio? Tutti i partecipanti verranno automaticamente rimborsati tramite Stripe.');
+
+    if (conferma) {
+      this.isEliminazioneInCorso = true;
+
+      this.viaggioService.eliminaViaggio(idViaggio).subscribe({
+        next: (response) => {
+          this.isEliminazioneInCorso = false;
+          alert('Viaggio cancellato e rimborsi inviati con successo!');
+
+          this.router.navigate(['/organizzatore']);
+        },
+        error: (errore) => {
+          this.isEliminazioneInCorso = false;
+          console.error("Errore durante l'eliminazione:", errore);
+          alert('Si è verificato un errore durante la cancellazione del viaggio.');
+        }
+      });
+    }
   }
 }

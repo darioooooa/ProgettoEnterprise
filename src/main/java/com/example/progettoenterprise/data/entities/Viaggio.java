@@ -48,6 +48,17 @@ public class Viaggio {
     private Double latitudine;
     private Double longitudine;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stato")
+    private StatoViaggio stato = StatoViaggio.APERTO;
+
+    public enum StatoViaggio {
+        APERTO,
+        IN_CORSO,
+        COMPLETATO,
+        ANNULLATO
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizzatore_id") //il nome del campo che è stato aggiunto nel nostro db
     private Utente organizzatore;

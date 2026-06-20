@@ -18,72 +18,65 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/pagamenti")
+@RequestMapping("/api/v1/pagamento")
 @RequiredArgsConstructor
 @Slf4j
 public class PagamentoController {
 
     private final PagamentoService pagamentoService;
-
-    // 1. AGGIUNGI UNA NUOVA CARTA (201 Created)
-    @PostMapping("/aggiungi")
+    @PostMapping("/crea-intent/{idPrenotazione}")
     @PreAuthorize("hasRole('VIAGGIATORE')")
-    public ResponseEntity<PagamentoDTO> aggiungiCarta(
+    public ResponseEntity<Map<String,String>> creaPaymentIntent(@PathVariable Long idPrenotazione,
+                                                          @AuthenticationPrincipal UtenteLoggato utenteLoggato)throws Exception{
+        log.info("L'utente {} sta avviando il pagamento per la prenotazione ID: {}",utenteLoggato.getUsername(), idPrenotazione);
+        // il service che contatta Stripe
+        String clientSecret = pagamentoService.creaPaymentIntent(idPrenotazione, utenteLoggato.getId());
+        // Restituiamo un oggetto JSON con il contenutp dentro, pronto per Angular
+        return ResponseEntity.ok(Map.of("clientSecret", clientSecret));
+    }
+
+    @PostMapping("/conferma")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
+    public ResponseEntity<PrenotazioneDTO> confermaPagamento(
             @RequestBody PagamentoDTO pagamentoDTO,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
-        log.info("L'utente {} sta aggiungendo un metodo di pagamento", utenteLoggato.getUsername());
+        log.info("L'utente {} sta confermando il pagamento per la prenotazione ID: {}",
+                utenteLoggato.getUsername(), pagamentoDTO.getIdPrenotazione());
 
-        // Sicurezza assoluta: ignoriamo l'ID che arriva da fuori e usiamo quello del token
-        pagamentoDTO.setIdViaggiatore(utenteLoggato.getId());
-
-        PagamentoDTO salvato = pagamentoService.aggiungiCarta(pagamentoDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvato);
-    }
-
-    // 2. VISUALIZZA LE PROPRIE CARTE (200 OK)
-    @GetMapping("/mie-carte")
-    @PreAuthorize("hasRole('VIAGGIATORE')")
-    public ResponseEntity<List<PagamentoDTO>> getMieCarte(
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("Recupero metodi di pagamento per l'utente: {}", utenteLoggato.getUsername());
-        List<PagamentoDTO> carte = pagamentoService.getCarteViaggiatore(utenteLoggato.getId());
-        return ResponseEntity.ok(carte);
-    }
-
-    @PostMapping("/checkout/{idPrenotazione}/{idMetodoPagamento}")
-    @PreAuthorize("hasRole('VIAGGIATORE')")
-    @WithRateLimit(RateLimitPolicy.CRITICAL)
-    public ResponseEntity<PrenotazioneDTO> pagaPrenotazione(
-            @PathVariable Long idPrenotazione,
-            @PathVariable Long idMetodoPagamento,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-
-        log.info("L'utente {} sta tentando di pagare la prenotazione ID: {} con la carta ID: {}",
-                utenteLoggato.getUsername(), idPrenotazione, idMetodoPagamento);
-
-        PrenotazioneDTO prenotazioneAggiornata = pagamentoService.pagaPrenotazione(
-                idPrenotazione,
-                idMetodoPagamento,
-                utenteLoggato.getId()
-        );
+        // Salviamo la ricevuta e aggiorniamo la prenotazione nel suo relativo stato
+        PrenotazioneDTO prenotazioneAggiornata = pagamentoService.confermaPagamento(pagamentoDTO, utenteLoggato.getId());
 
         return ResponseEntity.ok(prenotazioneAggiornata);
     }
 
+    @PostMapping("/rimborsa/{idPrenotazione}")
+    @PreAuthorize("hasRole('ORGANIZZATORE')")
+    public ResponseEntity<?> rimborsaPrenotazione(@PathVariable Long idPrenotazione) {
+
+        log.info("Richiesta di rimborso ricevuta per la prenotazione ID: {}", idPrenotazione);
+
+        try {
+            // Chiamiamo il service che dialoga con Stripe
+            pagamentoService.rimborsaPrenotazione(idPrenotazione);
 
 
-    // 3. ELIMINA UNA CARTA (200 OK con messaggio JSON)
-    @DeleteMapping("/{idPagamento}")
-    @PreAuthorize("hasRole('VIAGGIATORE')")
-    public ResponseEntity<?> eliminaCarta(
-            @PathVariable Long idPagamento,
-            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Rimborso elaborato con successo su Stripe. Stato prenotazione aggiornato."
+            ));
 
-        log.warn("L'utente {} sta eliminando la carta ID: {}", utenteLoggato.getUsername(), idPagamento);
+        } catch (Exception e) {
+            log.error("Errore durante il rimborso per la prenotazione {}: ", idPrenotazione, e);
 
-        pagamentoService.eliminaCarta(idPagamento);
-        return ResponseEntity.ok(Map.of("message", "Metodo di pagamento eliminato con successo"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "success", false,
+                    "error", "Impossibile completare il rimborso: " + e.getMessage()
+            ));
+        }
     }
+
+
+
+
 }

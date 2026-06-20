@@ -89,14 +89,17 @@ export class SchermataOrganizzatoreComponent implements OnInit {
 
   vaiAiDettagli(datiDallaMappa: any) {
     if (this.isLoading) return;
-    this.isLoading = true;
 
     if (Array.isArray(datiDallaMappa)) {
-      console.log("📍 Marker multiplo cliccato! Numero viaggi:", datiDallaMappa.length);
-      const listaIds = datiDallaMappa.map(v => v.id || v.idViaggio);
+      console.log("📍 Marker multiplo cliccato!");
 
-      this.router.navigate(['lista-viaggi-marker'], {
-        queryParams: {ids: listaIds.join(',')}
+      // Salviamo i dati completi in memoria
+      this.viaggioService.setViaggiSelezionati(datiDallaMappa);
+
+      // Passiamo gli ID nell'URL in caso non funzioni
+      const listaIds = datiDallaMappa.map(v => v.id || v.idViaggio);
+      this.router.navigate(['/lista-viaggi-marker'], {
+        queryParams: { ids: listaIds.join(',') }
       });
     } else {
       const viaggioId = datiDallaMappa.id || datiDallaMappa.idViaggio;

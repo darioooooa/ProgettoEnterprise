@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,21 +26,25 @@ public class Pagamento {
     @Column(length = 100)
     private String titolareCarta;
 
-    @Column(length = 16)
-    private String numeroCarta;
-
-    @Column(length = 5)
-    private String dataScadenza;
-
-    @Column(length = 3)
-    private String cvv; //
-
     private String circuito;
 
+    private BigDecimal importo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "viaggiatore_id")
-    private Viaggiatore viaggiatore;
+    private String ricevutaPagamento;//token di stripe per il rimborso
+
+    public enum StatoPagamento {
+        COMPLETATO,
+        IN_ATTESA,
+        RIMBORSATO,
+        RIMBORSO_FALLITO
+    }
+
+    @Enumerated(EnumType.STRING)
+    private StatoPagamento statoPagamento;
+
+    @OneToOne(fetch= FetchType.LAZY)
+    @JoinColumn(name = "prenotazione_id")
+    private Prenotazione prenotazione;
 
     @CreatedBy
     @Column(name = "creato_da", updatable = false)

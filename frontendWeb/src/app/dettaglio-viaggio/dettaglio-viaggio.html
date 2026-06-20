@@ -7,10 +7,24 @@
       <header class="viaggio-header-flex">
         <div class="header-titolo-box">
           <h1>Esplora la destinazione</h1>
+          <p>📍 {{ statistiche?.destinazione || 'Dettagli Itinerario di Viaggio' }}</p>
         </div>
 
-        <div class="header-azioni-box">
-          <button *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'" type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-top" [disabled]="isLoading">
+        <div class="header-actions-container">
+
+          <button *ngIf="isMioViaggio()"
+                  type="button"
+                  (click)="eliminaViaggio(viaggioId)"
+                  class="btn-elimina-top"
+                  [disabled]="isEliminazioneInCorso || isLoading">
+            {{ isEliminazioneInCorso ? '⏳ Rimborsi in corso...' : '🗑️ Elimina Viaggio' }}
+          </button>
+
+          <button *ngIf="!isMioViaggio()"
+                  type="button"
+                  [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]"
+                  class="btn-prenota-top"
+                  [disabled]="isLoading">
             Prenota Ora
           </button>
 

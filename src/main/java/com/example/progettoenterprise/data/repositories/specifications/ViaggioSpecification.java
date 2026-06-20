@@ -83,6 +83,8 @@ public class ViaggioSpecification {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("dataInizio"), java.time.LocalDate.now()));
                 predicates.add(cb.lessThan(root.get("partecipantiAttuali"), root.get("maxPartecipanti")));
             }
+            //scarta sempre i viaggi che sono stati annullati
+            predicates.add(cb.notEqual(root.get("stato"), Viaggio.StatoViaggio.ANNULLATO));
 
             // Ordinamento per data di inizio più recente
             query.orderBy(cb.asc(root.get("dataInizio")));

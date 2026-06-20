@@ -3,11 +3,14 @@ package com.example.progettoenterprise.serviceImpl;
 import com.example.progettoenterprise.config.CacheConfig;
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.AttivitaViaggio;
+import com.example.progettoenterprise.data.entities.Prenotazione;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.entities.Viaggio;
+import com.example.progettoenterprise.data.repositories.PrenotazioneRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.repositories.specifications.ViaggioSpecification;
+import com.example.progettoenterprise.data.service.PagamentoService;
 import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import com.example.progettoenterprise.dto.ViaggioMappaDTO;
@@ -38,6 +41,8 @@ public class ViaggioServiceImpl implements ViaggioService {
     private final UtenteRepository utenteRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
+    private final PagamentoService pagamentoService;
+    private final PrenotazioneRepository prenotazioneRepository;
 
     @Override
     @Transactional
@@ -73,6 +78,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         viaggio.setMediaRecensioni(0.0);
         viaggio.setNumeroRecensioni(0);
         viaggio.setPartecipantiAttuali(0);
+        viaggio.setStato(Viaggio.StatoViaggio.APERTO);
         Viaggio salvato = viaggioRepository.save(viaggio);
         return modelMapper.map(salvato, ViaggioDTO.class);
     }
@@ -90,8 +96,23 @@ public class ViaggioServiceImpl implements ViaggioService {
                     organizzatoreId, viaggioId, viaggio.getOrganizzatore().getId());
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
         }
+        List<Prenotazione> prenotazioniDaRimborsare = prenotazioneRepository
+                .findByViaggioIdAndStato(viaggioId, Prenotazione.StatoPrenotazione.CONFERMATA);
 
-        viaggioRepository.delete(viaggio);
+        for (Prenotazione prenotazione : prenotazioniDaRimborsare) {
+            try {
+                pagamentoService.rimborsaPrenotazione(prenotazione.getId());
+                log.info("Rimborso Stripe automatico effettuato per la prenotazione ID: {}", prenotazione.getId());
+            } catch (Exception e) {
+                // Se una carta è bloccata, stampiamo l'errore ma il ciclo continua per rimborsare gli altri
+                log.error("Impossibile rimborsare la prenotazione ID {}: {}", prenotazione.getId(), e.getMessage());
+            }
+        }
+
+        viaggio.setStato(Viaggio.StatoViaggio.ANNULLATO);
+        viaggioRepository.save(viaggio);
+
+        log.info("Il viaggio ID {} è stato contrassegnato come ANNULLATO", viaggioId);
     }
 
     // Metodo per fornire dettagli delle recensioni di un viaggio
@@ -165,14 +186,17 @@ public class ViaggioServiceImpl implements ViaggioService {
         }
 
         // 3. Mappiamo nel DTO
-        return viaggi.stream().map(viaggio -> {
-            ViaggioMappaDTO dto = new ViaggioMappaDTO();
-            dto.setId(viaggio.getId());
-            dto.setTitolo(viaggio.getTitolo());
-            dto.setLatitudine(viaggio.getLatitudine());
-            dto.setLongitudine(viaggio.getLongitudine());
-            return dto;
-        }).collect(Collectors.toList());
+        return viaggi.stream()
+                // Teniamo solo i viaggi che non sono annullati
+                .filter(viaggio -> viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
+                .map(viaggio -> {
+                    ViaggioMappaDTO dto = new ViaggioMappaDTO();
+                    dto.setId(viaggio.getId());
+                    dto.setTitolo(viaggio.getTitolo());
+                    dto.setLatitudine(viaggio.getLatitudine());
+                    dto.setLongitudine(viaggio.getLongitudine());
+                    return dto;
+                }).collect(Collectors.toList());
     }
 
     @Override
@@ -253,6 +277,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         log.info("Trovati {} viaggi per l'organizzatore id: {}", viaggi.size(), organizzatoreId);
 
         return viaggi.stream()
+                .filter(viaggio -> viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
                 .map(viaggio -> modelMapper.map(viaggio, ViaggioDTO.class))
                 .collect(Collectors.toList());
     }

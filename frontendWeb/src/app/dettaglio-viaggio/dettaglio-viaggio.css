@@ -1,6 +1,25 @@
 * {
   box-sizing: border-box;
 }
+.btn-elimina-top {
+  background-color: #e74c3c; /* Rosso di eliminazione */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-elimina-top:hover:not(:disabled) {
+  background-color: #c0392b;
+}
+
+.btn-elimina-top:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
 
 .hero-section {
   width: 100%;
@@ -8,7 +27,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url('/assets/montagnabella.jpg') no-repeat center center fixed;
+  background: url('../../../public/assets/montagnabella.jpg') no-repeat center center fixed;
   background-size: cover;
   position: relative;
   padding: 60px 20px;

@@ -12,6 +12,7 @@ export interface Viaggio {
   maxPartecipanti: number;
   partecipantiAttuali: number;
   cittaPartenza: string;
+  stato:string;
 
   mediaRecensioni?: number;
   numeroRecensioni?: number;

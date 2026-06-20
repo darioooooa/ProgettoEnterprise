@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders} from '@angular/common/http';
-import {from, Observable} from 'rxjs';
+import {BehaviorSubject, from, Observable} from 'rxjs';
 import { Viaggio } from '../models/viaggio.model';
 import {AutenticazioneService} from './autenticazione.service';
 
@@ -9,10 +9,15 @@ import {AutenticazioneService} from './autenticazione.service';
 })
 export class ViaggioService {
   private readonly API_URL = '/api/v1/viaggi';
+  //serve per contenere i viaggi per la schermata lista-viaggi-marker
+  private viaggiSelezionatiSource = new BehaviorSubject<any[]>([]);
+  viaggiSelezionati$ = this.viaggiSelezionatiSource.asObservable();
 
-  constructor(
-    private http: HttpClient,
-    private authService: AutenticazioneService) { }
+  setViaggiSelezionati(viaggi: any[]) {
+    this.viaggiSelezionatiSource.next(viaggi);
+  }
+
+  constructor(private http: HttpClient) { }
 
   creaViaggio(viaggio: Viaggio): Observable<Viaggio> {
 
@@ -120,5 +125,8 @@ export class ViaggioService {
 
   eliminaAttivita(viaggioId: number, attivitaId: number): Observable<any> {
     return this.http.delete<any>(`${this.API_URL}/${viaggioId}/attivita-viaggi/${attivitaId}`);
+  }
+  eliminaViaggio(viaggioId: number): Observable<any> {
+    return this.http.delete<any>(`${this.API_URL}/${viaggioId}`);
   }
 }

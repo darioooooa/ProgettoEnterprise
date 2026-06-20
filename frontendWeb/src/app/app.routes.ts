@@ -15,9 +15,11 @@ import { DiventaOrganizzatoreComponent} from './diventa-organizzatore/diventa-or
 
 import { InboxOrganizzatore } from './inbox-organizzatore/inbox-organizzatore';
 import { PaginaInizialeComponent } from './pagina-iniziale/pagina-iniziale';
-import { StatisticheOrganizzatore } from './statistiche-organizzatore/statistiche-organizzatore';
-import { PrenotaViaggioComponent } from './prenota-viaggio/prenota-viaggio';
-import { InboxViaggiatoreComponent } from './inbox-viaggiatore/inbox-viaggiatore';
+import { StatisticheOrganizzatore} from './statistiche-organizzatore/statistiche-organizzatore';
+import {PrenotaViaggioComponent} from './prenota-viaggio/prenota-viaggio';
+import {SezionePagamentoComponent} from './sezione-pagamento/sezione-pagamento';
+import {ListaViaggiMarker} from './lista-viaggi-marker/lista-viaggi-marker';
+import {InboxViaggiatoreComponent} from './inbox-viaggiatore/inbox-viaggiatore';
 
 export const routes: Routes = [
   {
@@ -36,6 +38,10 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
+      {
+        path: '',
+        component: PaginaInizialeComponent
+      },
       {
         path: 'home',
         component: SchermataHomeComponent,
@@ -102,8 +108,17 @@ export const routes: Routes = [
         component: PrenotaViaggioComponent,
         canActivate: [autenticazioneGuard]
       },
-
-    ]
+      {
+        path:'pagamento/:id',
+        component:SezionePagamentoComponent,
+        canActivate: [autenticazioneGuard]
+      },
+      {
+        path: 'lista-viaggi-marker',
+        component: ListaViaggiMarker,
+        canActivate:[autenticazioneGuard]
+      }
+      ]
   },
   //  Il jolly va tassativamente in fondo a tutto, altrimenti intercetta e blocca le rotte sotto di lui
   {

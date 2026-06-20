@@ -95,13 +95,14 @@ export class PrenotaViaggioComponent implements OnInit {
 
     this.prenotazioneService.creaPrenotazione(this.viaggioId, this.numeroPersone).subscribe({
       next: (risposta: any) => {
-        this.messaggioSuccesso = "Prenotazione inviata! Trovi i dettagli nella tua area personale.";
-        this.cdr.detectChanges();
 
-        setTimeout(() => {
-          this.isLoading = false;
-          this.navigatore.navigate(['/mie-prenotazioni']);
-        }, 3000);
+        //  Recuperiamo l'ID della prenotazione creata dal database
+        const idPrenotazione = risposta.id;
+
+        // Fermiamo il caricamento e saltiamo alla pagina Stripe
+        this.isLoading = false;
+        this.navigatore.navigate(['/pagamento', idPrenotazione]);
+
       },
       error: (errore: any) => {
         this.ngZone.run(() => {
@@ -123,6 +124,7 @@ export class PrenotaViaggioComponent implements OnInit {
           this.messaggioErrore = estratto;
           this.cdr.detectChanges();
         });
-      }    });
+      }
+    });
   }
 }

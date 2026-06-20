@@ -31,6 +31,6 @@ public class MessaggioChat {
     @Column(name = "data_invio", nullable = false)
     private LocalDateTime dataInvio;
 
-    @Column(nullable = false)
-    private boolean letto=false;
+    @Column(name = "letto", nullable = false, columnDefinition = "boolean default false")
+    private boolean letto = false;
 }
