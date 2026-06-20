@@ -1,7 +1,7 @@
 package com.example.progettoenterprise.dto;
 
 import com.example.progettoenterprise.data.entities.ItinerarioPreferito;
-import com.example.progettoenterprise.data.entities.Viaggio;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ListaViaggioDTO {
+    @JsonIgnore
     private ItinerarioPreferito itinerarioPreferito;
 
-    private Viaggio viaggio;
+    private ViaggioDTO viaggio;
 }

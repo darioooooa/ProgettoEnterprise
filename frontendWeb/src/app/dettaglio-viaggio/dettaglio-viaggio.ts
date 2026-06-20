@@ -1,26 +1,26 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms'; // <-- IMPORTANTE per l'input del prezzo
 import { ViaggioService } from '../service/viaggio.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { GalleriaComponent } from './components/galleria/galleria';
 import { ProgrammaComponent } from './components/programma/programma';
 import { CommunityComponent } from './components/community/community';
-import {PrenotazioneService} from '../service/prenotazione.service';
+import { PrenotazioneService } from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 import { forkJoin } from 'rxjs';
-
 
 @Component({
   selector: 'app-dettaglio-viaggio',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule, // <-- Aggiunto per il binding sul nuovoPrezzo
     GalleriaComponent,
     ProgrammaComponent,
     CommunityComponent,
     RouterLink,
-
     ModaleSegnalazione
   ],
   templateUrl: './dettaglio-viaggio.html',
@@ -39,18 +39,26 @@ export class DettaglioViaggio implements OnInit {
     partecipantiAttuali: 0,
     maxPartecipanti: 0,
     mediaRecensioni: 0,
-    numeroRecensioni: 0
+    numeroRecensioni: 0,
+    latitudine: 0,
+    longitudine: 0
   };
   viaggioId!: number;
   organizzatoreUsername: string = '';
   mioUsername: string = '';
 
-  // Stato del tab attivo
-  tabAttivo: 'galleria' | 'programma' | 'community' = 'programma'  ;
+  tabAttivo: 'galleria' | 'programma' | 'community' = 'programma';
 
   isLoading: boolean = false;
-
   isEliminazioneInCorso: boolean = false;
+
+  mostraSegnalazione = false;
+  tipoDaSegnalare = '';
+  idDaSegnalare = 0;
+
+  // Variabili per la modifica in linea
+  inModificaPrezzo: boolean = false;
+  nuovoPrezzo: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -59,7 +67,6 @@ export class DettaglioViaggio implements OnInit {
     private cdr: ChangeDetectorRef,
     private prenotazioneService: PrenotazioneService,
     private router: Router
-
   ) {}
 
   ngOnInit() {
@@ -84,7 +91,6 @@ export class DettaglioViaggio implements OnInit {
   caricaStatistichePadre() {
     this.isLoading = true;
 
-    // Chiamate parallele simultanee per la massima efficienza
     forkJoin({
       datiViaggio: this.viaggioService.getViaggioById(this.viaggioId),
       stats: this.viaggioService.getStatisticheRecensioni(this.viaggioId)
@@ -92,7 +98,6 @@ export class DettaglioViaggio implements OnInit {
       next: ({ datiViaggio, stats }: { datiViaggio: any, stats: any }) => {
 
         setTimeout(() => {
-          // Unione
           this.statistiche = {
             ...this.statistiche,
             ...stats,
@@ -103,7 +108,9 @@ export class DettaglioViaggio implements OnInit {
           this.statistiche.partecipantiAttuali = datiViaggio?.partecipantiAttuali ?? 0;
           this.statistiche.maxPartecipanti = datiViaggio?.maxPartecipanti ?? 0;
 
-          // Recupero metriche recensioni
+          this.statistiche.latitudine = datiViaggio?.latitudine ?? 0;
+          this.statistiche.longitudine = datiViaggio?.longitudine ?? 0;
+
           this.statistiche.mediaRecensioni = stats?.mediaRecensioni ?? 0;
           this.statistiche.numeroRecensioni = stats?.numeroRecensioni ?? 0;
 
@@ -123,10 +130,10 @@ export class DettaglioViaggio implements OnInit {
     });
   }
 
-  // Invocato tramite @Output dai figli se un'azione richiede di aggiornare i voti in cima
   onSincronizzaRichiesta() {
     this.caricaStatistichePadre();
   }
+
   scaricaFileIcs() {
     if (!this.viaggioId || this.isLoading) return;
 
@@ -134,15 +141,12 @@ export class DettaglioViaggio implements OnInit {
 
     this.prenotazioneService.scaricaFileIcs(this.viaggioId).subscribe({
       next: (fileBlob: Blob) => {
-        // Creiamo l'URL di memoria nel browser
         const blobUrl = window.URL.createObjectURL(fileBlob);
-
         const linkDownload = document.createElement('a');
         linkDownload.href = blobUrl;
         linkDownload.download = `prenotazione_${this.viaggioId}.ics`;
 
         linkDownload.click();
-
         window.URL.revokeObjectURL(blobUrl);
 
         this.isLoading = false;
@@ -154,12 +158,7 @@ export class DettaglioViaggio implements OnInit {
         this.cdr.detectChanges();
       }
     });
-
-
-}
-  mostraSegnalazione = false;
-  tipoDaSegnalare = '';
-  idDaSegnalare = 0;
+  }
 
   apriSegnalazioneOrg(idOrg: number, event: Event) {
     event.stopPropagation();
@@ -168,8 +167,8 @@ export class DettaglioViaggio implements OnInit {
     this.idDaSegnalare = idOrg;
     this.mostraSegnalazione = true;
   }
-  eliminaViaggio(idViaggio: number) {
 
+  eliminaViaggio(idViaggio: number) {
     const conferma = confirm('ATTENZIONE: Sei sicuro di voler cancellare questo viaggio? Tutti i partecipanti verranno automaticamente rimborsati tramite Stripe.');
 
     if (conferma) {
@@ -179,7 +178,6 @@ export class DettaglioViaggio implements OnInit {
         next: (response) => {
           this.isEliminazioneInCorso = false;
           alert('Viaggio cancellato e rimborsi inviati con successo!');
-
           this.router.navigate(['/organizzatore']);
         },
         error: (errore) => {
@@ -189,5 +187,50 @@ export class DettaglioViaggio implements OnInit {
         }
       });
     }
+  }
+
+  // --- NUOVI METODI PER LA MODIFICA IN LINEA ---
+  attivaModificaPrezzo() {
+    this.nuovoPrezzo = this.statistiche.prezzo;
+    this.inModificaPrezzo = true;
+  }
+
+  annullaModificaPrezzo() {
+    this.inModificaPrezzo = false;
+  }
+
+  salvaPrezzo() {
+    if (this.isLoading) return;
+    this.isLoading = true;
+
+    // Ricostruiamo l'oggetto includendo i campi obbligatori per evitare errori dal backend
+    const viaggioAggiornato = {
+      titolo: this.statistiche.titolo,
+      descrizione: this.statistiche.descrizione,
+      destinazione: this.statistiche.destinazione,
+      cittaPartenza: this.statistiche.cittaPartenza,
+      dataInizio: this.statistiche.dataInizio,
+      dataFine: this.statistiche.dataFine,
+      prezzo: this.nuovoPrezzo,
+      maxPartecipanti: this.statistiche.maxPartecipanti,
+      latitudine: this.statistiche.latitudine,
+      longitudine: this.statistiche.longitudine
+    };
+
+    this.viaggioService.modificaViaggio(this.viaggioId, viaggioAggiornato).subscribe({
+      next: (risposta) => {
+        this.statistiche.prezzo = this.nuovoPrezzo;
+        this.inModificaPrezzo = false;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Errore durante l'aggiornamento del prezzo:", err);
+        alert("Impossibile aggiornare il prezzo in questo momento.");
+        this.inModificaPrezzo = false;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }

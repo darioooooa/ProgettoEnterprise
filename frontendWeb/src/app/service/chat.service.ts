@@ -147,6 +147,14 @@ export class ChatService {
     });
   }
 
+  public notificheAmicizia$ = new Subject<void>();
+  ascoltaNotificheAmicizia(username: string) {
+    const canaleAmicizie = `/topic/notifiche/${username}`;
+    this.stompClient.subscribe(canaleAmicizie, (messaggio: any) => {
+      console.log("Nuova richiesta di amicizia ricevuta in tempo reale!");
+      this.notificheAmicizia$.next(); // Suona il megafono!
+    });
+  }
 
   disconnetti(): void {
     if (this.stompClient) {
@@ -154,4 +162,6 @@ export class ChatService {
       console.log('WebSocket disconnesso.');
     }
   }
+
+
 }

@@ -47,20 +47,36 @@ public class AmiciziaServiceImpl implements AmiciziaService {
         }
 
         // 4. Controlliamo se esiste una relazione in QUALSIASI direzione (A->B oppure B->A)
-        amiciziaRepository.findQualsiasiRelazione(richiedente, ricevente)
-                .ifPresent(a -> {
-                    log.warn("Richiesta fallita: esiste già una relazione tra {} e {}", richiedente.getUsername(), ricevente.getUsername());
-                    throw new IllegalStateException(messageLang.getMessage("amicizia.already_exists"));
-                });
+        java.util.Optional<Amicizia> relazioneEsistente = amiciziaRepository.findQualsiasiRelazione(richiedente, ricevente);
 
-        // 5. Creazione della relazione
-        Amicizia nuovaAmicizia = new Amicizia();
-        nuovaAmicizia.setRichiedente(richiedente);
-        nuovaAmicizia.setRicevente(ricevente);
-        nuovaAmicizia.setStato(StatoAmicizia.IN_ATTESA);
+        Amicizia amiciziaDaSalvare;
 
-        Amicizia salvata = amiciziaRepository.save(nuovaAmicizia);
-        log.info("Richiesta di amicizia creata con successo (ID: {}) tra {} e {}",
+        if (relazioneEsistente.isPresent()) {
+            Amicizia amiciziaPrecedente = relazioneEsistente.get();
+
+            // Se sono già amici o c'è già una richiesta in sospeso, blocchiamo
+            if (amiciziaPrecedente.getStato() == StatoAmicizia.IN_ATTESA || amiciziaPrecedente.getStato() == StatoAmicizia.ACCETTATA) {
+                log.warn("Richiesta fallita: esiste già una relazione attiva o in attesa tra {} e {}", richiedente.getUsername(), ricevente.getUsername());
+                throw new IllegalStateException(messageLang.getMessage("amicizia.already_exists"));
+            } else {
+                // Se la richiesta era stata RIFIUTATA in passato, la "ricicliamo"
+                log.info("Trovata una precedente amicizia rifiutata. Viene riutilizzata come nuova richiesta da {} verso {}", richiedente.getUsername(), ricevente.getUsername());
+                amiciziaPrecedente.setRichiedente(richiedente);
+                amiciziaPrecedente.setRicevente(ricevente);
+                amiciziaPrecedente.setStato(StatoAmicizia.IN_ATTESA);
+                amiciziaDaSalvare = amiciziaPrecedente;
+            }
+        } else {
+            // Se non c'è mai stata NESSUNA relazione tra i due, ne creiamo una completamente nuova
+            amiciziaDaSalvare = new Amicizia();
+            amiciziaDaSalvare.setRichiedente(richiedente);
+            amiciziaDaSalvare.setRicevente(ricevente);
+            amiciziaDaSalvare.setStato(StatoAmicizia.IN_ATTESA);
+        }
+
+        // 5. Salvataggio
+        Amicizia salvata = amiciziaRepository.save(amiciziaDaSalvare);
+        log.info("Richiesta di amicizia registrata con successo (ID: {}) tra {} e {}",
                 salvata.getId(), richiedente.getUsername(), ricevente.getUsername());
 
         return modelMapper.map(salvata, AmiciziaDTO.class);

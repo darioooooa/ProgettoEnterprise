@@ -161,4 +161,13 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
 
         log.info("Viaggio {} rimosso dalla lista {} dall'utente {}", idViaggio, idLista, idUtente);
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<ItinerarioPreferitoDTO> getListePubblicheDiUtente(String username) {
+        return itinerarioRepository.findByProprietarioUsernameAndVisibilita(username, ItinerarioPreferito.Visibilita.PUBBLICA)
+                .stream()
+                .map(l -> modelMapper.map(l, ItinerarioPreferitoDTO.class))
+                .collect(Collectors.toList());
+    }
 }

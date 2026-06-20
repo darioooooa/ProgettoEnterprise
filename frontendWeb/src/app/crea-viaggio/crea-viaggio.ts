@@ -29,7 +29,8 @@ export class CreaViaggio {
     latitudine: 0.0,
     maxPartecipanti: 10,
     partecipantiAttuali: 0,
-    cittaPartenza: ''
+    cittaPartenza: '',
+    stato: 'Attivo'
   };
 
   isLoading: boolean = false;

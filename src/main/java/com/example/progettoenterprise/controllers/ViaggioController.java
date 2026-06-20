@@ -72,21 +72,21 @@ public class ViaggioController {
         viaggioService.eliminaViaggio(viaggioId,organizzatore.getId());
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("/mappa-viaggi")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ViaggioMappaDTO>> getViaggiPerMappa(@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
         List<ViaggioMappaDTO> viaggiMappa = viaggioService.getViaggiMappa(utenteLoggato.getId());
         return ResponseEntity.ok(viaggiMappa);
-
     }
+
     @GetMapping("/{viaggioId}")
     @PreAuthorize("isAuthenticated()")
     @CrossOrigin(origins = "http://localhost:4200")
     public ResponseEntity<ViaggioDTO> getViaggioById(@PathVariable Long viaggioId,@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
-        log.info("Richiesta dettagli completi per il viaggio ID: {}", viaggioId);
+        log.info("Richiesta dettagli completi for il viaggio ID: {}", viaggioId);
 
-        // Chiamiamo il service (ora andiamo a creare il metodo getViaggioById nel service)
         return ResponseEntity.ok(viaggioService.getViaggioById(viaggioId, utenteLoggato.getId()));
     }
 
@@ -95,5 +95,21 @@ public class ViaggioController {
     public ResponseEntity<List<ViaggioDTO>> getViaggiByOrganizzatore(@PathVariable Long organizzatoreId, @AuthenticationPrincipal UtenteLoggato utente) {
         log.info("Richiesta dei viaggi da parte dell'utente con id {}, per l'organizzatore con id {}", utente.getId(), organizzatoreId);
         return ResponseEntity.ok(viaggioService.getViaggiByOrganizzatore(organizzatoreId));
+    }
+
+
+    @PutMapping("/{viaggioId}")
+    @PreAuthorize("hasRole('ORGANIZZATORE')")
+    public ResponseEntity<ViaggioDTO> modificaViaggio(
+            @PathVariable Long viaggioId,
+            @Valid @RequestBody ViaggioDTO viaggioDTO,
+            @AuthenticationPrincipal UtenteLoggato organizzatore) {
+
+        log.info("L'organizzatore {} sta modificando il viaggio ID: {}", organizzatore.getUsername(), viaggioId);
+
+        // Chiamata al metodo del Service passando l'ID del viaggio, il DTO e l'ID dell'utente loggato
+        ViaggioDTO viaggioAggiornato = viaggioService.modificaViaggio(viaggioId, viaggioDTO, organizzatore.getId());
+
+        return ResponseEntity.ok(viaggioAggiornato);
     }
 }

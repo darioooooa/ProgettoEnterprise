@@ -89,19 +89,46 @@ public class AmiciziaServiceImplTest {
     }
 
     @Test
-    @DisplayName("Invia Richiesta: Errore (Relazione Già Esistente)")
+    @DisplayName("Invia Richiesta: Errore (Relazione Già Esistente - In Attesa o Accettata)")
     void testInviaRichiesta_GiaEsistente() {
         Utente req = mock(Utente.class); when(req.getId()).thenReturn(1L);
         Utente rec = mock(Utente.class); when(rec.getId()).thenReturn(2L);
 
         when(utenteRepository.findById(1L)).thenReturn(Optional.of(req));
         when(utenteRepository.findByUsername("luigi")).thenReturn(Optional.of(rec));
-        when(amiciziaRepository.findQualsiasiRelazione(req, rec)).thenReturn(Optional.of(new Amicizia()));
+
+        // Creiamo un'amicizia che è già IN_ATTESA
+        Amicizia esistente = new Amicizia();
+        esistente.setStato(Amicizia.StatoAmicizia.IN_ATTESA);
+
+        when(amiciziaRepository.findQualsiasiRelazione(req, rec)).thenReturn(Optional.of(esistente));
         when(messageLang.getMessage("amicizia.already_exists")).thenReturn("Err");
 
         assertThrows(IllegalStateException.class, () -> amiciziaService.inviaRichiesta(1L, "luigi"));
     }
 
+    @Test
+    @DisplayName("Invia Richiesta: Successo (Ricicla Amicizia Rifiutata)")
+    void testInviaRichiesta_RiciclaRifiutata() {
+        Utente req = mock(Utente.class); when(req.getId()).thenReturn(1L);
+        Utente rec = mock(Utente.class); when(rec.getId()).thenReturn(2L);
+
+        when(utenteRepository.findById(1L)).thenReturn(Optional.of(req));
+        when(utenteRepository.findByUsername("luigi")).thenReturn(Optional.of(rec));
+
+        // Creiamo un'amicizia che in passato era stata RIFIUTATA
+        Amicizia vecchiaRifiutata = new Amicizia();
+        vecchiaRifiutata.setStato(Amicizia.StatoAmicizia.RIFIUTATA);
+
+        when(amiciziaRepository.findQualsiasiRelazione(req, rec)).thenReturn(Optional.of(vecchiaRifiutata));
+        when(amiciziaRepository.save(any(Amicizia.class))).thenReturn(vecchiaRifiutata);
+        when(modelMapper.map(vecchiaRifiutata, AmiciziaDTO.class)).thenReturn(new AmiciziaDTO());
+
+        assertNotNull(amiciziaService.inviaRichiesta(1L, "luigi"));
+
+        // Verifichiamo che il programma abbia cambiato lo stato da RIFIUTATA a IN_ATTESA
+        assertEquals(Amicizia.StatoAmicizia.IN_ATTESA, vecchiaRifiutata.getStato());
+    }
 
     @Test
     @DisplayName("Accetta Richiesta: Successo")

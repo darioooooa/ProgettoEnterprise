@@ -135,4 +135,10 @@ public class ItinerarioPreferitoController {
 
         return ResponseEntity.ok(Map.of("message", "Viaggio spostato con successo!"));
     }
+
+    @GetMapping("/utente/{username}/pubblici")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ItinerarioPreferitoDTO>> getListePubblicheUtente(@PathVariable String username) {
+        return ResponseEntity.ok(itinerarioService.getListePubblicheDiUtente(username));
+    }
 }

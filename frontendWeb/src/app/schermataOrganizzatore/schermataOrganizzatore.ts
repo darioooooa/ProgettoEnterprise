@@ -73,9 +73,9 @@ export class SchermataOrganizzatoreComponent implements OnInit {
 
   modifica(viaggio: any) {
     if (this.isLoading) return;
-    console.log("Voglio modificare il viaggio:", viaggio);
+    const viaggioId = viaggio.id || viaggio.idViaggio;
 
-    alert("Funzione modifica per: " + viaggio.destinazione);
+    this.router.navigate(['/viaggi', viaggioId]);
   }
 
   elimina(viaggio: any) {

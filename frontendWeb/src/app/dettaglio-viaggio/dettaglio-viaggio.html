@@ -65,11 +65,38 @@
 
         <div class="stat-card">
           <span class="stat-icon">💰</span>
-          <div class="stat-info">
+          <div class="stat-info" style="width: 100%;">
             <label>Quota di partecipazione</label>
-            <p *ngIf="statistiche?.prezzo !== undefined && statistiche?.prezzo !== null">
-              {{ statistiche.prezzo | currency:'EUR':'symbol':'1.2-2' }}
-            </p>
+
+            <div *ngIf="!inModificaPrezzo" style="display: flex; align-items: center;">
+
+              <p *ngIf="statistiche?.prezzo !== undefined && !isMioViaggio()">
+                {{ statistiche.prezzo | currency:'EUR':'symbol':'1.2-2' }}
+              </p>
+
+              <p *ngIf="statistiche?.prezzo !== undefined && isMioViaggio()"
+                 (click)="attivaModificaPrezzo()"
+                 style="color: #f59e0b; border-bottom: 1px dashed #f59e0b; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: bold;"
+                 title="Clicca per modificare il prezzo">
+                {{ statistiche.prezzo | currency:'EUR':'symbol':'1.2-2' }}
+                <span style="font-size: 0.8rem;">✏️</span>
+              </p>
+            </div>
+
+            <div *ngIf="inModificaPrezzo" style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+              <input type="number" [(ngModel)]="nuovoPrezzo" [disabled]="isLoading"
+                     style="width: 80px; padding: 4px 8px; border-radius: 4px; border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.1); color: white; font-weight: bold; outline: none;">
+
+              <button (click)="salvaPrezzo()" [disabled]="isLoading"
+                      style="background: #10b981; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;">
+                ✓
+              </button>
+              <button (click)="annullaModificaPrezzo()" [disabled]="isLoading"
+                      style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;">
+                ✗
+              </button>
+            </div>
+
           </div>
         </div>
 
@@ -144,8 +171,6 @@
                      [isMioViaggio]="isMioViaggio()"
                      (richiestaRefreshPadre)="onSincronizzaRichiesta()">
       </app-community>
-
-
 
       <div class="sezione-prenota-basso" *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'">
         <h3>Ti piace questo itinerario?</h3>

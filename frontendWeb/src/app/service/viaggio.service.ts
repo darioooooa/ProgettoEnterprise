@@ -129,4 +129,7 @@ export class ViaggioService {
   eliminaViaggio(viaggioId: number): Observable<any> {
     return this.http.delete<any>(`${this.API_URL}/${viaggioId}`);
   }
+  modificaViaggio(id: number, viaggioDTO: any): Observable<any> {
+    return this.http.put<any>(`${this.API_URL}/${id}`, viaggioDTO);
+  }
 }

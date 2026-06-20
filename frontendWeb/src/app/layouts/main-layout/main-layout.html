@@ -36,8 +36,9 @@
         </a>
 
         <div *ngIf="isLoggato()" class="user-logged-wrapper" [style.pointer-events]="isLoading ? 'none' : 'auto'" (click)="toggleMenu()">
-          <button class="btn-omino" [disabled]="isLoading">
+          <button class="btn-omino" style="position: relative;" [disabled]="isLoading">
             <span>👤</span>
+            <span class="badge-notifica-top" *ngIf="numeroRichiestePendenti > 0">!</span>
           </button>
           <span class="username-navbar">{{ ottieniUsername() }}</span>
         </div>
@@ -68,8 +69,9 @@
         Le mie prenotazioni
       </a>
 
-      <button (click)="apriModaleAmici()" [disabled]="isLoading" class="voce-laterale">
+      <button (click)="apriModaleAmici()" [disabled]="isLoading" class="voce-laterale" style="display: flex; justify-content: space-between; align-items: center;">
         I miei amici
+        <span class="badge-contatore-laterale" *ngIf="numeroRichiestePendenti > 0">{{ numeroRichiestePendenti }}</span>
       </button>
 
       <a *ngIf="isViaggiatore()" routerLink="/diventa-organizzatore" [style.pointer-events]="isLoading ? 'none' : 'auto'" (click)="toggleMenu()" class="voce-laterale" style="color: #10b981; font-weight: bold;">
@@ -88,64 +90,44 @@
     <div class="modale-content-amici" (click)="$event.stopPropagation()">
 
       <ng-container *ngIf="vistaAttuale === 'listaAmici'">
-
         <div class="modale-tabs-amici">
           <button class="tab-link" [class.attivo]="schedaAttiva === 'amici'" [disabled]="isLoading" (click)="cambiaScheda('amici')">
             Amici ({{ listaAmici.length }})
           </button>
-
           <button class="tab-link" [class.attivo]="schedaAttiva === 'richieste'" [disabled]="isLoading" (click)="cambiaScheda('richieste')">
             Ricevute ({{ richiesteRicevute.length }})
           </button>
-
           <button class="tab-link" [class.attivo]="schedaAttiva === 'inviate'" [disabled]="isLoading" (click)="cambiaScheda('inviate')">
             Inviate ({{ richiesteInviate.length }})
           </button>
-
           <button class="tab-link" [class.attivo]="schedaAttiva === 'cerca'" [disabled]="isLoading" (click)="cambiaScheda('cerca')">
             🔍 Trova Amici
           </button>
-
-          <button class="btn-chiudi-amici" [disabled]="isLoading" (click)="chiudiModale()">
-            &times;
-          </button>
+          <button class="btn-chiudi-amici" [disabled]="isLoading" (click)="chiudiModale()">&times;</button>
         </div>
 
         <div class="modale-body-amici">
-
           <div *ngIf="schedaAttiva === 'amici'">
-            <p *ngIf="listaAmici.length === 0" class="testo-vuoto">
-              Non hai ancora aggiunto amici.
-            </p>
-
+            <p *ngIf="listaAmici.length === 0" class="testo-vuoto">Non hai ancora aggiunto amici.</p>
             <ul class="lista-amici">
               <li *ngFor="let amico of listaAmici" class="amico-item">
                 <div class="amico-info">
                   <span class="icona-amico">👤</span>
-                  <span class="nome-amico">
-                    {{ amico.richiedenteUsername === mioUsername ? amico.riceventeUsername : amico.richiedenteUsername }}
-                  </span>
+                  <span class="nome-amico">{{ amico.richiedenteUsername === mioUsername ? amico.riceventeUsername : amico.richiedenteUsername }}</span>
                 </div>
-
-                <button class="btn-itinerari" [disabled]="isLoading" (click)="vediItinerari(amico)">
-                  Itinerari
-                </button>
+                <button class="btn-itinerari" [disabled]="isLoading" (click)="vediItinerari(amico)">Itinerari</button>
               </li>
             </ul>
           </div>
 
           <div *ngIf="schedaAttiva === 'richieste'">
-            <p *ngIf="richiesteRicevute.length === 0" class="testo-vuoto">
-              Nessuna richiesta ricevuta in sospeso.
-            </p>
-
+            <p *ngIf="richiesteRicevute.length === 0" class="testo-vuoto">Nessuna richiesta ricevuta in sospeso.</p>
             <ul class="lista-amici">
               <li *ngFor="let req of richiesteRicevute" class="amico-item">
                 <div class="amico-info">
                   <span class="icona-richiesta">📩</span>
                   <span class="nome-amico">{{ req.richiedenteUsername }}</span>
                 </div>
-
                 <div class="azioni-richiesta">
                   <button class="btn-accetta" [disabled]="isLoading" (click)="accettaRichiesta(req.id)">✓</button>
                   <button class="btn-rifiuta" [disabled]="isLoading" (click)="rifiutaRichiesta(req.id)">&times;</button>
@@ -155,81 +137,113 @@
           </div>
 
           <div *ngIf="schedaAttiva === 'inviate'">
-            <p *ngIf="richiesteInviate.length === 0" class="testo-vuoto">
-              Non hai richieste inviate in attesa.
-            </p>
-
+            <p *ngIf="richiesteInviate.length === 0" class="testo-vuoto">Non hai richieste inviate in attesa.</p>
             <ul class="lista-amici">
               <li *ngFor="let req of richiesteInviate" class="amico-item">
                 <div class="amico-info">
                   <span class="icona-richiesta">📤</span>
                   <span class="nome-amico">{{ req.riceventeUsername }}</span>
                 </div>
-
-                <span class="badge-inviata" style="background-color:#f1f1f1;color:#666;border:1px solid #ccc;">
-                  In attesa...
-                </span>
+                <span class="badge-inviata" style="background-color:#f1f1f1;color:#666;border:1px solid #ccc;">In attesa...</span>
               </li>
             </ul>
           </div>
 
           <div *ngIf="schedaAttiva === 'cerca'">
             <div class="box-ricerca">
-              <input
-                type="text"
-                #inputUsername
-                [disabled]="isLoading"
-                placeholder="Inserisci lo username..."
-                (input)="usernameCercato = inputUsername.value"
-                (keyup.enter)="cercaUtente()">
-
-              <button class="btn-itinerari" [disabled]="isLoading" (click)="cercaUtente()">
-                {{ isLoading ? '...' : 'Cerca' }}
-              </button>
+              <input type="text" #inputUsername [disabled]="isLoading" placeholder="Inserisci lo username..." (input)="usernameCercato = inputUsername.value" (keyup.enter)="cercaUtente()">
+              <button class="btn-itinerari" [disabled]="isLoading" (click)="cercaUtente()">{{ isLoading ? '...' : 'Cerca' }}</button>
             </div>
-
-            <p *ngIf="erroreRicerca" class="testo-errore">
-              {{ erroreRicerca }}
-            </p>
-
+            <p *ngIf="erroreRicerca" class="testo-errore">{{ erroreRicerca }}</p>
             <div *ngIf="utentiTrovati.length > 0" class="risultato-ricerca-box" style="max-height:250px;overflow-y:auto;margin-top:15px;">
               <ul class="lista-amici" style="padding:0;margin:0;list-style:none;">
                 <li *ngFor="let utente of utentiTrovati" class="amico-item" style="border-bottom:1px solid #ddd;padding:10px 0;">
                   <div class="amico-info">
                     <span class="icona-amico">👤</span>
-                    <div>
-                      <span class="nome-amico">{{ utente.username }}</span>
-                    </div>
+                    <div><span class="nome-amico">{{ utente.username }}</span></div>
                   </div>
-
-                  <button class="btn-itinerari" [disabled]="isLoading" (click)="inviaRichiestaAmicizia(utente.username)">
-                    Aggiungi
-                  </button>
+                  <button class="btn-itinerari" [disabled]="isLoading" (click)="inviaRichiestaAmicizia(utente.username)">Aggiungi</button>
                 </li>
               </ul>
             </div>
           </div>
-
         </div>
       </ng-container>
 
       <ng-container *ngIf="vistaAttuale === 'itinerariAmico'">
         <div class="modale-header-amici">
-          <button class="btn-indietro" [disabled]="isLoading" (click)="tornaIndietro()">
-            &#8592; Indietro
-          </button>
-
-          <button class="btn-chiudi-amici" [disabled]="isLoading" (click)="chiudiModale()">
-            &times;
-          </button>
+          <button class="btn-indietro" [disabled]="isLoading" (click)="tornaIndietro()">&#8592; Indietro</button>
+          <button class="btn-chiudi-amici" [disabled]="isLoading" (click)="chiudiModale()">&times;</button>
         </div>
-
         <div class="modale-body-amici">
-          <h3 class="titolo-amico">Itinerari dell'amico</h3>
-          <p class="testo-vuoto">Nessun itinerario pubblico.</p>
+          <h3 class="titolo-amico" style="margin-bottom: 15px;">Itinerari di {{ ottieniUsernameAmico(amicoSelezionato) }}</h3>
+
+          <div *ngIf="isLoading" style="text-align: center; padding: 20px; color: #666; font-style: italic;">
+            Recupero itinerari in corso...
+          </div>
+
+          <div *ngIf="!isLoading">
+            <p *ngIf="itinerariAmicoSelezionato.length === 0" class="testo-vuoto">Nessun itinerario pubblico.</p>
+
+            <div *ngIf="itinerariAmicoSelezionato.length > 0" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+              <ul class="lista-amici" style="padding: 0; margin: 0; list-style: none;">
+
+                <li *ngFor="let lista of itinerariAmicoSelezionato" class="amico-item"
+                    style="flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e2e8f0; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;">
+
+                  <div style="font-weight: bold; color: #1e293b; font-size: 1.1rem; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+
+                    <span>📌 {{ lista.nome }}</span>
+
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                      <span style="font-size: 0.75rem; font-weight: bold; color: #fff; background: #3b82f6; padding: 3px 8px; border-radius: 12px;">
+                        {{ lista.viaggiContenuti ? lista.viaggiContenuti.length : 0 }} viaggi
+                      </span>
+
+                      <button (click)="lista.espanso = !lista.espanso"
+                              style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             style="transition: transform 0.3s ease;"
+                             [style.transform]="lista.espanso ? 'rotate(180deg)' : 'rotate(0deg)'">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style="width: 100%; margin-top: 15px;" *ngIf="lista.espanso && lista.viaggiContenuti && lista.viaggiContenuti.length > 0">
+                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+
+                      <li *ngFor="let elemento of lista.viaggiContenuti"
+                          style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+
+                        <div style="display: flex; flex-direction: column;">
+                          <span style="font-weight: 600; color: #334155; font-size: 0.95rem;">{{elemento.titolo }}</span>
+                          <span style="font-size: 0.8rem; color: #64748b;">📍 {{ elemento.destinazione }}</span>
+                        </div>
+
+                        <button class="btn-itinerari" style="padding: 6px 12px; font-size: 0.8rem; background-color: #10b981; color: white;"
+                                [disabled]="isLoading || (!elemento.id && !elemento.idViaggio && !elemento.viaggio?.id)"
+                                (click)="vaiAlDettaglioViaggio(elemento.id || elemento.idViaggio || elemento.viaggio?.id)">
+                          Vedi
+                        </button>
+                      </li>
+
+                    </ul>
+                  </div>
+
+                  <div *ngIf="lista.espanso && (!lista.viaggiContenuti || lista.viaggiContenuti.length === 0)"
+                       style="font-size: 0.85rem; color: #94a3b8; font-style: italic; margin-top: 10px;">
+                    Nessun viaggio salvato in questa lista.
+                  </div>
+
+                </li>
+
+              </ul>
+            </div>
+          </div>
         </div>
       </ng-container>
-
     </div>
   </div>
 
@@ -241,10 +255,26 @@
       </div>
       <div class="modale-body-amici text-center">
         <p style="margin-bottom: 25px; font-size: 1.1rem; color: #444;">Sei sicuro di voler uscire dal tuo account?</p>
-
         <div class="action-buttons-row">
           <button class="btn-annulla" [disabled]="isLoading" (click)="annullaLogout()">Annulla</button>
           <button class="btn-conferma-rosso" [disabled]="isLoading" (click)="eseguiLogout()">Sì, esci</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modale-overlay-amici" *ngIf="modaleConfermaAperta" (click)="isLoading ? null : chiudiConferma()">
+    <div class="modale-content-amici modale-piccola" (click)="$event.stopPropagation()">
+      <div class="modale-header-amici">
+        <h3>Attenzione</h3>
+        <button class="btn-chiudi-amici" [disabled]="isLoading" (click)="chiudiConferma()">&times;</button>
+      </div>
+      <div class="modale-body-amici text-center">
+        <p style="margin-bottom: 25px; font-size: 1.1rem; color: #444;">{{ messaggioConferma }}</p>
+
+        <div class="action-buttons-row">
+          <button class="btn-annulla" [disabled]="isLoading" (click)="chiudiConferma()">Annulla</button>
+          <button class="btn-itinerari" style="padding: 10px 20px; font-size: 1rem;" [disabled]="isLoading" (click)="eseguiConferma()">Conferma</button>
         </div>
       </div>
     </div>

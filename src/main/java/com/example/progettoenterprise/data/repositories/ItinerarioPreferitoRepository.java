@@ -19,4 +19,6 @@ public interface ItinerarioPreferitoRepository extends JpaRepository<ItinerarioP
     List<ItinerarioPreferito> findByUtentiAutorizzati_Utente_Id(Long utenteId);
 
     List<ItinerarioPreferito> findByVisibilitaOrderByDataCreazioneDesc(Visibilita visibilita);
+    List<ItinerarioPreferito> findByProprietarioUsernameAndVisibilita(String username, Visibilita visibilita);
+
 }

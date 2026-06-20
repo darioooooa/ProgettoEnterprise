@@ -1,10 +1,12 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { RouterOutlet, RouterLink, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { AutenticazioneService } from '../../service/autenticazione.service';
 import { AmiciziaService } from '../../service/amicizia.service';
 import { ChatService } from '../../service/chat.service';
+import { ItinerarioService } from '../../service/itinerario.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -13,7 +15,7 @@ import { ChatService } from '../../service/chat.service';
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css'
 })
-export class MainLayoutComponent implements OnInit {
+export class MainLayoutComponent implements OnInit, OnDestroy {
   mostraMenu: boolean = false;
   mioUsername: string = '';
   notificheTotali: number = 0;
@@ -27,6 +29,7 @@ export class MainLayoutComponent implements OnInit {
   richiesteInviate: any[] = [];
   richiesteRifiutate: any[] = [];
   amicoSelezionato: any = null;
+  itinerariAmicoSelezionato: any[] = [];
 
   usernameCercato: string = '';
   utentiTrovati: any[] = [];
@@ -35,11 +38,20 @@ export class MainLayoutComponent implements OnInit {
 
   isLoading: boolean = false;
   modaleLogoutAperta: boolean = false;
+  numeroRichiestePendenti: number = 0;
+
+  private controlloAutomatico?: Subscription;
+  private controlloPagine?: Subscription;
+
+  modaleConfermaAperta: boolean = false;
+  messaggioConferma: string = '';
+  azioneDaConfermare: (() => void) | null = null;
 
   constructor(
     private servAuth: AutenticazioneService,
     private amiciziaService: AmiciziaService,
     private chatService: ChatService,
+    private itinerarioService: ItinerarioService,
     private cdr: ChangeDetectorRef,
     private router: Router
   ) {}
@@ -48,15 +60,38 @@ export class MainLayoutComponent implements OnInit {
     this.mioUsername = this.servAuth.ottieniUsername() || '';
     if (this.isLoggato()) {
       this.caricaDatiAmicizieInBackground();
+      this.avviaControlloAmicizie();
 
-      // Sottoscrizione al centralino reattivo delle notifiche
       this.chatService.notificheTotali$.subscribe(conteggio => {
         this.notificheTotali = conteggio;
-        this.cdr.detectChanges(); // Forza l'aggiornamento visivo della Navbar
+        this.cdr.detectChanges();
       });
-
-      // Carica lo stato iniziale dal database via REST HTTP
       this.caricaNotificheChat();
+    }
+
+    this.controlloPagine = this.router.events.subscribe(evento => {
+      if (evento instanceof NavigationEnd) {
+        if (!evento.urlAfterRedirects.includes('/viaggi/')) {
+          const appuntiAmico = sessionStorage.getItem('amicoDaRipristinare');
+
+          if (appuntiAmico) {
+            const amico = JSON.parse(appuntiAmico);
+            sessionStorage.removeItem('amicoDaRipristinare');
+
+            this.modaleAmiciAperta = true;
+            this.vediItinerari(amico);
+          }
+        }
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.controlloAutomatico) {
+      this.controlloAutomatico.unsubscribe();
+    }
+    if (this.controlloPagine) {
+      this.controlloPagine.unsubscribe();
     }
   }
 
@@ -66,9 +101,6 @@ export class MainLayoutComponent implements OnInit {
     this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
       next: (conteggio) => {
         this.chatService.aggiornaContatoreNotifiche(conteggio);
-
-        // 🟢 CRUCIALE: Una volta caricate le notifiche iniziali, apriamo il tubo del WebSocket globale.
-        // Questo permetterà di catturare i nuovi messaggi in arrivo e aggiornare il contatore live!
         this.chatService.ascoltaNotificheGlobali(this.mioUsername);
       },
       error: (err) => console.error("Errore recupero notifiche globali chat", err)
@@ -84,59 +116,53 @@ export class MainLayoutComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  logout() {
-    if (this.isLoading) return;
-    this.isLoading = true;
-    this.mostraMenu = false;
+  avviaControlloAmicizie() {
+    if (!this.mioUsername) return;
+    this.chatService.ascoltaNotificheAmicizia(this.mioUsername);
 
-    localStorage.clear();
-    sessionStorage.clear();
-    this.servAuth.esci();
+    this.controlloAutomatico = this.chatService.notificheAmicizia$.subscribe(() => {
+      this.amiciziaService.ottieniRichiesteRicevute().subscribe({
+        next: (richieste) => {
+          this.richiesteRicevute = richieste;
+          this.numeroRichiestePendenti = richieste.length;
+          this.cdr.detectChanges();
+        }
+      });
 
-    this.router.navigate(['/']).then(() => {
-      this.isLoading = false;
-      this.cdr.detectChanges();
     });
   }
 
   caricaDatiAmicizieInBackground() {
-    this.amiciziaService.ottieniMieiAmici().subscribe(
-      {
-        next: (amici) =>
-        {
-          this.listaAmici = amici;
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error("Errore recupero amici", err)
-      });
-    this.amiciziaService.ottieniRichiesteRicevute().subscribe(
-      {
-        next: (richieste) =>
-        {
-          this.richiesteRicevute = richieste;
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error("Errore recupero richieste", err)
-      });
-    this.amiciziaService.ottieniRichiesteInviate().subscribe(
-      {
-        next: (inviate) =>
-        {
-          this.richiesteInviate = inviate;
-          this.richiesteCompletate = inviate.map(r => r.riceventeUsername);
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error("Errore recupero richieste inviate", err)
-      });
-    this.amiciziaService.ottieniRichiesteRifiutate().subscribe(
-      {
-        next: (rifiutate) =>
-        {
-          this.richiesteRifiutate = rifiutate;
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error("Errore recupero richieste rifiutate", err)
-      });
+    this.amiciziaService.ottieniMieiAmici().subscribe({
+      next: (amici) => {
+        this.listaAmici = amici;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Errore recupero amici", err)
+    });
+    this.amiciziaService.ottieniRichiesteRicevute().subscribe({
+      next: (richieste) => {
+        this.richiesteRicevute = richieste;
+        this.numeroRichiestePendenti = richieste.length;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Errore recupero richieste", err)
+    });
+    this.amiciziaService.ottieniRichiesteInviate().subscribe({
+      next: (inviate) => {
+        this.richiesteInviate = inviate;
+        this.richiesteCompletate = inviate.map(r => r.riceventeUsername);
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Errore recupero richieste inviate", err)
+    });
+    this.amiciziaService.ottieniRichiesteRifiutate().subscribe({
+      next: (rifiutate) => {
+        this.richiesteRifiutate = rifiutate;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Errore recupero richieste rifiutate", err)
+    });
   }
 
   apriModaleAmici() {
@@ -149,26 +175,25 @@ export class MainLayoutComponent implements OnInit {
     this.caricaDatiAmicizieInBackground();
   }
 
-  chiudiModale()
-  {
+  chiudiModale() {
     if (this.isLoading) return;
     this.modaleAmiciAperta = false;
     this.amicoSelezionato = null;
   }
 
-  cambiaScheda(scheda: 'amici' | 'richieste' | 'inviate' | 'cerca')
-  {
+  cambiaScheda(scheda: 'amici' | 'richieste' | 'inviate' | 'cerca') {
     if (this.isLoading) return;
     this.schedaAttiva = scheda;
+
     if (scheda === 'cerca') {
       this.pulisciRicerca();
+    } else {
+      this.caricaDatiAmicizieInBackground();
     }
-    this.caricaDatiAmicizieInBackground();
     this.cdr.detectChanges();
   }
 
-  pulisciRicerca()
-  {
+  pulisciRicerca() {
     this.usernameCercato = '';
     this.utentiTrovati = [];
     this.erroreRicerca = '';
@@ -209,23 +234,86 @@ export class MainLayoutComponent implements OnInit {
     });
   }
 
-  inviaRichiestaAmicizia(riceventeUsername: string) {
+  chiediConferma(messaggio: string, azione: () => void) {
     if (this.isLoading) return;
-    this.isLoading = true;
+    this.messaggioConferma = messaggio;
+    this.azioneDaConfermare = azione;
+    this.modaleConfermaAperta = true;
+    this.cdr.detectChanges();
+  }
 
-    this.amiciziaService.inviaRichiesta(riceventeUsername).subscribe({
-      next: () => {
-        this.richiesteCompletate = [...this.richiesteCompletate, riceventeUsername];
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        this.caricaDatiAmicizieInBackground();
-      },
-      error: (err) => {
-        this.erroreRicerca = "Esiste già una richiesta pendente o un'amicizia attiva con questo utente.";
-        console.error(err);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
+  eseguiConferma() {
+    if (this.azioneDaConfermare) {
+      this.azioneDaConfermare();
+    }
+    this.chiudiConferma();
+  }
+
+  chiudiConferma() {
+    this.modaleConfermaAperta = false;
+    this.azioneDaConfermare = null;
+    this.cdr.detectChanges();
+  }
+
+  inviaRichiestaAmicizia(riceventeUsername: string) {
+    this.chiediConferma(`Vuoi inviare una richiesta a ${riceventeUsername}?`, () => {
+      this.isLoading = true;
+      this.amiciziaService.inviaRichiesta(riceventeUsername).subscribe({
+        next: () => {
+          this.richiesteCompletate = [...this.richiesteCompletate, riceventeUsername];
+          this.isLoading = false;
+          this.caricaDatiAmicizieInBackground();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.erroreRicerca = "Esiste già una richiesta pendente o un'amicizia attiva con questo utente.";
+          console.error(err);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    });
+  }
+
+  accettaRichiesta(amiciziaId: number) {
+    this.chiediConferma('Vuoi accettare questa richiesta di amicizia?', () => {
+      this.isLoading = true;
+      this.amiciziaService.accettaRichiesta(amiciziaId).subscribe({
+        next: (amiciziaAggiornata) => {
+          this.richiesteRicevute = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
+          this.isLoading = false;
+          this.caricaDatiAmicizieInBackground();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Errore nell'accettare l'amicizia", err);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    });
+  }
+
+  rifiutaRichiesta(amiciziaId: number) {
+    this.chiediConferma('Sei sicuro di voler rifiutare questa richiesta?', () => {
+      this.isLoading = true;
+      this.amiciziaService.rifiutaRichiesta(amiciziaId).subscribe({
+        next: () => {
+          const richiestaDaRifiutare = this.richiesteRicevute.find(r => r.id === amiciziaId);
+          if (richiestaDaRifiutare) {
+            this.richiesteRifiutate.push(richiestaDaRifiutare);
+          }
+          this.richiesteRicevute = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
+          this.isLoading = false;
+          this.caricaDatiAmicizieInBackground();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Errore nel rifiutare l'amicizia", err);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 
@@ -242,61 +330,47 @@ export class MainLayoutComponent implements OnInit {
     return this.listaAmici.some(amico => amico.richiedenteUsername === usernameCercato || amico.riceventeUsername === usernameCercato);
   }
 
-  accettaRichiesta(amiciziaId: number)
-  {
+  ottieniUsernameAmico(amico: any): string {
+    if (!amico) return '';
+    return amico.richiedenteUsername === this.mioUsername ? amico.riceventeUsername : amico.richiedenteUsername;
+  }
+
+  vediItinerari(amico: any) {
     if (this.isLoading) return;
+    this.amicoSelezionato = amico;
+    this.vistaAttuale = 'itinerariAmico';
+    this.itinerariAmicoSelezionato = [];
     this.isLoading = true;
-    this.amiciziaService.accettaRichiesta(amiciziaId).subscribe({
-      next: (amiciziaAggiornata) =>
-      {
-        this.richiesteRicevute = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
+    this.cdr.detectChanges();
+
+    const usernameAmico = this.ottieniUsernameAmico(amico);
+
+    this.itinerarioService.getListePubblicheUtente(usernameAmico).subscribe({
+      next: (liste) => {
+        this.itinerariAmicoSelezionato = liste;
         this.isLoading = false;
         this.cdr.detectChanges();
-        this.caricaDatiAmicizieInBackground();
       },
       error: (err) => {
-        console.error("Errore nell'accettare l'amicizia", err);
+        console.error("Errore recupero itinerari amico", err);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
   }
 
-  rifiutaRichiesta(amiciziaId: number) {
+  vaiAlDettaglioViaggio(viaggioId: number) {
     if (this.isLoading) return;
-    this.isLoading = true;
 
-    this.amiciziaService.rifiutaRichiesta(amiciziaId).subscribe(
-      {
-        next: () =>
-        {
-          const richiestaDaRifiutare = this.richiesteRicevute.find(r => r.id === amiciziaId);
-          if (richiestaDaRifiutare) {
-            this.richiesteRifiutate.push(richiestaDaRifiutare);
-          }
-          this.richiesteRicevute = this.richiesteRicevute.filter(r => r.id !== amiciziaId);
-          this.isLoading = false;
-          this.cdr.detectChanges();
-          this.caricaDatiAmicizieInBackground();
-        },
-        error: (err) => {
-          console.error("Errore nel rifiuto della richiesta amicizia", err);
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        }
-      });
+    if (this.amicoSelezionato) {
+      sessionStorage.setItem('amicoDaRipristinare', JSON.stringify(this.amicoSelezionato));
+    }
+
+    this.chiudiModale();
+    this.router.navigate(['/viaggi', viaggioId]);
   }
 
-  vediItinerari(amico: any)
-  {
-    if (this.isLoading) return;
-    this.amicoSelezionato = amico;
-    this.vistaAttuale = 'itinerariAmico';
-    this.cdr.detectChanges();
-  }
-
-  tornaIndietro()
-  {
+  tornaIndietro() {
     if (this.isLoading) return;
     this.vistaAttuale = 'listaAmici';
     this.amicoSelezionato = null;
@@ -327,22 +401,15 @@ export class MainLayoutComponent implements OnInit {
 
   eseguiLogout() {
     if (this.isLoading) return;
-
     this.isLoading = true;
     this.modaleLogoutAperta = false;
     this.cdr.detectChanges();
 
     localStorage.clear();
     sessionStorage.clear();
-
     this.servAuth.esci();
 
     this.router.navigate(['/']).then(() => {
-      console.log('Navigazione difensiva di Logout completata verso la radice.');
-      this.isLoading = false;
-      this.cdr.detectChanges();
-    }).catch((err) => {
-      console.error("Errore nel routing di Logout:", err);
       this.isLoading = false;
       this.cdr.detectChanges();
     });

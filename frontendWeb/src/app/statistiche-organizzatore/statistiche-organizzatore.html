@@ -2,7 +2,7 @@
 
   <header class="dashboard-header">
     <h1>Le tue Statistiche 📊</h1>
-    <p>Monitora l'andamento dei tuoi viaggi, le opinioni dei clienti e i tuoi ricavi.</p>
+    <p>Monitora l'andamento dei tuoi viaggi, le opinioni dei clienti e i tuoi ricavi reali.</p>
   </header>
 
   <div class="stats-grid" [style.pointer-events]="isLoading ? 'none' : 'auto'">
@@ -11,7 +11,9 @@
       <div class="icon-box icon-blue">✈️</div>
       <div class="stat-info">
         <h3>Viaggi Organizzati</h3>
-        <p class="stat-number">{{ totaleViaggi }}</p>
+        <p class="stat-number">
+          {{ isLoading ? '...' : totaleViaggi }}
+        </p>
       </div>
     </div>
 
@@ -19,7 +21,9 @@
       <div class="icon-box icon-purple">💬</div>
       <div class="stat-info">
         <h3>Recensioni Totali</h3>
-        <p class="stat-number">{{ totaleRecensioni }}</p>
+        <p class="stat-number">
+          {{ isLoading ? '...' : totaleRecensioni }}
+        </p>
       </div>
     </div>
 
@@ -28,9 +32,9 @@
       <div class="stat-info">
         <h3>Media Valutazioni</h3>
         <p class="stat-number">
-          {{ mediaRecensioni }} <span class="testo-piccolo">/ 5</span>
+          {{ isLoading ? '...' : mediaRecensioni }} <span class="testo-piccolo" *ngIf="!isLoading">/ 5</span>
         </p>
-        <div class="stelle-container">
+        <div class="stelle-container" *ngIf="!isLoading">
           <span class="stella" *ngFor="let s of getStelleArray(mediaRecensioni)">★</span>
         </div>
       </div>
@@ -40,9 +44,8 @@
       <div class="guadagni-header">
         <div class="icon-box icon-green">💰</div>
 
-        <!-- Filtro Guadagni -->
         <select class="filtro-select" [ngModel]="filtroGuadagni" [disabled]="isLoading" (ngModelChange)="cambiaFiltro($event)">
-          <option value="SETTIMANA">Ultima Settimana</option>
+          <option value="SETTIMANA">Ultimi 7 Giorni</option>
           <option value="MESE">Questo Mese</option>
           <option value="ANNO">Quest'Anno</option>
           <option value="TOTALE">Totale Storico</option>
@@ -50,7 +53,7 @@
       </div>
 
       <div class="stat-info guadagni-info">
-        <h3>Guadagni Stimati</h3>
+        <h3>Guadagni Lordi</h3>
         <p class="stat-number text-green">
           {{ isLoading ? 'Calcolo...' : (guadagnoMostrato | number:'1.2-2') + ' €' }}
         </p>
@@ -59,11 +62,10 @@
 
   </div>
 
-  <!-- SEZIONE DETTAGLIO VIAGGI RECENTI -->
   <div class="recent-trips-section" [style.pointer-events]="isLoading ? 'none' : 'auto'">
     <div class="section-header">
-      <h2>Ultimi Viaggi Conclusi</h2>
-      <button class="btn-outline" [disabled]="isLoading">Vedi tutti</button>
+      <h2>Ultimi Viaggi Creati</h2>
+      <button class="btn-outline" [disabled]="isLoading" routerLink="/organizzatore">Vedi tutti</button>
     </div>
 
     <div class="table-responsive">
@@ -73,23 +75,31 @@
           <th>Nome Viaggio</th>
           <th>Data Partenza</th>
           <th>Posti Venduti</th>
-          <th>Ricavo Netto</th>
+          <th>Ricavo (Stimato)</th>
         </tr>
         </thead>
         <tbody>
+        <tr *ngIf="isLoading">
+          <td colspan="4" style="text-align: center; color: var(--text-secondary); font-style: italic; padding: 20px;">
+            Analisi e recupero dati dal database in corso... ⏳
+          </td>
+        </tr>
+
+        <tr *ngIf="!isLoading && viaggiRecenti.length === 0">
+          <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+            Non hai ancora pubblicato nessun viaggio.
+          </td>
+        </tr>
+
         <tr *ngFor="let viaggio of viaggiRecenti">
           <td class="trip-title"><strong>{{ viaggio.titolo }}</strong></td>
-          <td>{{ viaggio.data }}</td>
+
+          <td>{{ viaggio.data | date:'dd/MM/yyyy' }}</td>
+
           <td>
             <span class="badge-posti">{{ viaggio.postiVenduti }} pax</span>
           </td>
           <td class="trip-revenue">+{{ viaggio.guadagno | number:'1.2-2' }} €</td>
-        </tr>
-
-        <tr *ngIf="isLoading">
-          <td colspan="4" style="text-align: center; color: var(--text-secondary); font-style: italic; padding: 10px;">
-            Aggiornamento metriche in corso...
-          </td>
         </tr>
         </tbody>
       </table>

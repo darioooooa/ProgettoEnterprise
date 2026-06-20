@@ -52,4 +52,8 @@ export class ItinerarioService {
   spostaViaggio(idSorgente: number, idDestinazione: number, idViaggio: number) {
     return this.http.post(`/api/v1/itinerari-preferiti/${idSorgente}/sposta-in/${idDestinazione}/viaggi/${idViaggio}`, {});
   }
+
+  getListePubblicheUtente(username: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/utente/${username}/pubblici`);
+  }
 }

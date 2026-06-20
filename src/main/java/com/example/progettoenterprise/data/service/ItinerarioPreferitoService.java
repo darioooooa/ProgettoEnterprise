@@ -1,6 +1,8 @@
 package com.example.progettoenterprise.data.service;
 
 import com.example.progettoenterprise.dto.ItinerarioPreferitoDTO;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 public interface ItinerarioPreferitoService {
@@ -13,4 +15,7 @@ public interface ItinerarioPreferitoService {
     void rimuoviViaggioDallaLista(Long idLista, Long idViaggio, Long idUtente);
     void eliminaLista(Long id, Long utenteId);
     ItinerarioPreferitoDTO cambiaVisibilita(Long id, String visibilita, Long utenteId);
+
+    @Transactional(readOnly = true)
+    List<ItinerarioPreferitoDTO> getListePubblicheDiUtente(String username);
 }
