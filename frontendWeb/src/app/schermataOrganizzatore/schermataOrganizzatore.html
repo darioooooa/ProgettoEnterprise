@@ -20,32 +20,52 @@
   </div>
 
   <div class="management-section">
-    <div class="section-header"><h2>I tuoi Viaggi</h2></div>
+    <div class="section-header"><h2>I tuoi viaggi</h2></div>
     <div class="table-container">
       <table class="admin-table">
         <thead>
         <tr>
+          <th>Titolo viaggio</th>
           <th>Destinazione</th>
           <th>Prezzo</th>
-          <th>Stato</th>
-          <th style="text-align: center;">Azioni</th>
+          <th style="text-align: center;">Stato svolgimento</th>
         </tr>
         </thead>
         <tbody [style.pointer-events]="isLoading ? 'none' : 'auto'">
         <tr *ngIf="listaDeiViaggi.length === 0">
           <td colspan="4" style="text-align: center; padding: 2rem;">Nessun viaggio trovato.</td>
         </tr>
-        <tr *ngFor="let v of listaDeiViaggi">
-          <td><strong>{{ v.destinazione }}</strong></td>
+        <tr *ngFor="let v of listaDeiViaggi" (click)="vaiAlDettaglioViaggio(v)" style="cursor: pointer;">
+          <td><strong>{{ v.titolo || 'Nessun Titolo' }}</strong></td>
+          <td>{{ v.destinazione }}</td>
           <td>{{ v.prezzo }}€</td>
-          <td><span class="badge badge-active">Attivo</span></td>
           <td style="text-align: center;">
-            <span class="action-icon edit-icon" (click)="modifica(v)">✏️</span>
-            <span class="action-icon delete-icon" (click)="elimina(v)">🗑️</span>
+            <span [ngClass]="getBadgeStatoSvolgimento(v).classe">
+              {{ getBadgeStatoSvolgimento(v).testo }}
+            </span>
           </td>
         </tr>
         </tbody>
       </table>
+      <div class="pagination-bar" *ngIf="totalePagine > 1" style="margin-top: 20px;">
+        <div class="pagination-info">
+          Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
+        </div>
+        <div class="pagination-buttons">
+          <button class="btn-pagination"
+                  (click)="paginaPrecedente()"
+                  [disabled]="paginaCorrente === 0 || isLoading"
+                  [class.disabled]="paginaCorrente === 0">
+            &larr; Precedente
+          </button>
+          <button class="btn-pagination"
+                  (click)="paginaSuccessiva()"
+                  [disabled]="paginaCorrente === totalePagine - 1 || isLoading"
+                  [class.disabled]="paginaCorrente === totalePagine - 1">
+            Successiva &rarr;
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

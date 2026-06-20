@@ -428,44 +428,6 @@ body::after {
 .user-info .email { font-size: 0.75rem; color: var(--text-muted); }
 
 /* ============================================================
-   STATUS BADGE
-   ============================================================ */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
-  border-radius: 30px;
-  font-size: 0.73rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.badge::before {
-  content: '';
-  width: 5px; height: 5px;
-  border-radius: 50%;
-}
-
-.badge-active  {
-  background: rgba(5,150,105,0.1);
-  color: #047857;
-}
-.badge-active::before  { background: #10b981; box-shadow: 0 0 6px #10b981; }
-
-.badge-pending {
-  background: rgba(217,119,6,0.1);
-  color: #b45309;
-}
-.badge-pending::before { background: #f59e0b; }
-
-.badge-inactive {
-  background: rgba(100,116,139,0.1);
-  color: #64748b;
-}
-.badge-inactive::before { background: #94a3b8; }
-
-/* ============================================================
    BOTTONI
    ============================================================ */
 .btn-admin {
@@ -708,4 +670,51 @@ body::after {
 .btn-segnala-small:hover {
   background: rgba(239, 83, 80, 0.2);
   transform: translateY(-1px);
+}
+
+.badge-futuro,
+.badge-in-corso,
+.badge-completato,
+.badge-grigio {
+  padding: 6px 14px !important;
+  border-radius: 30px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  font-family: 'DM Sans', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.badge-futuro {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #b45309 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+.badge-in-corso {
+  background: rgba(5, 150, 105, 0.1) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(5, 150, 105, 0.35) !important;
+}
+
+.badge-completato {
+  background: rgba(15, 23, 42, 0.08) !important;
+  color: #334155 !important;
+  border: 1px solid rgba(15, 23, 42, 0.25) !important;
+}
+
+.badge-grigio {
+  background: rgba(220, 38, 38, 0.1) !important;
+  color: #b91c1c !important;
+  border: 1px solid rgba(220, 38, 38, 0.3) !important;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  transition: background-color 0.2s ease;
 }

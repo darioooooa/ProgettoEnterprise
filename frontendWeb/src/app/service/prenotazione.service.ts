@@ -42,4 +42,8 @@ export class PrenotazioneService {
     return this.http.delete(`${this.API_URL}/${id}`);
   }
 
+  verificaPrenotazioneUtente(viaggioId: number): Observable<any> {
+    return this.http.get(`${this.API_URL}/viaggi/${viaggioId}/stato-utente`);
+  }
+
 }

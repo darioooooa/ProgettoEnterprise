@@ -98,4 +98,28 @@ public class PrenotazioneController {
 
         return new ResponseEntity<>(datiCalendario, intestazioni, HttpStatus.OK);
     }
+
+    @GetMapping("/viaggi/{viaggioId}/stato-utente")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
+    public ResponseEntity<?> getStatoPrenotazioneUtente(
+            @PathVariable Long viaggioId,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        log.info("L'utente {} sta verificando il proprio stato di prenotazione per il viaggio ID: {}",
+                utenteLoggato.getUsername(), viaggioId);
+
+        return prenotazioneService.ottieniStatoPrenotazioneUtente(viaggioId, utenteLoggato.getId())
+                .map(dto -> {
+                    boolean isAcquistata = "CONFERMATA".equals(dto.getStato().toString());
+                    boolean isInAttesa = "IN_ATTESA".equals(dto.getStato().toString());
+
+                    return ResponseEntity.ok(Map.of(
+                            "prenotata", true,
+                            "acquistata", isAcquistata,
+                            "inAttesaDiPagamento", isInAttesa,
+                            "statoPrenotazione", dto.getStato()
+                    ));
+                })
+                .orElse(ResponseEntity.ok(Map.of("prenotata", false, "acquistata", false)));
+    }
 }
