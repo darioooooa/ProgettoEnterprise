@@ -145,11 +145,7 @@ public class ViaggioServiceImpl implements ViaggioService {
                     return new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId));
                 });
 
-        // Se è un organizzatore, si forza il filtro per solo i suoi viaggi
-        if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)){
-            viaggioFilter.setOrganizzatoreId(utenteId);
-        }
-        else if (utente.getRuolo().equals(Utente.Ruolo.ROLE_VIAGGIATORE)) {
+        if (utente.getRuolo().equals(Utente.Ruolo.ROLE_VIAGGIATORE)) {
             viaggioFilter.setMostraSoloDisponibili(true);
         }
 

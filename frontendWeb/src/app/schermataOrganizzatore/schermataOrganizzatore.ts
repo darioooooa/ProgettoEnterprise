@@ -2,6 +2,7 @@ import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink,Router} from '@angular/router';
 import {ViaggioService} from '../service/viaggio.service';
+import { AutenticazioneService } from '../service/autenticazione.service';
 
 import {MapComponent} from '../map/map';
 import { PrenotazioneService } from '../service/prenotazione.service';
@@ -30,7 +31,8 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     private viaggioService: ViaggioService,
     private prenotazioneService: PrenotazioneService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private servAuth: AutenticazioneService
   ) {
   }
 
@@ -43,7 +45,12 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     this.isLoading = true;
     this.paginaCorrente = pagina;
 
-    this.viaggioService.getViaggi(this.paginaCorrente).subscribe({
+    const mioId = this.servAuth.ottieniId();
+    const filtriDashboard = {
+      organizzatoreId: mioId
+    };
+
+    this.viaggioService.getViaggi(this.paginaCorrente, filtriDashboard).subscribe({
       next: (data) => {
         this.listaDeiViaggi = data.content;
         this.totalePagine = data.totalPages;

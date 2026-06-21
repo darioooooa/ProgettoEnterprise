@@ -48,7 +48,10 @@ public class ViaggioSpecification {
                 predicates.add(cb.lessThanOrEqualTo(root.get("prezzo"), viaggioFilter.getPrezzoMax()));
             }
             if (viaggioFilter.getMaxPartecipanti() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("maxPartecipanti"), viaggioFilter.getMaxPartecipanti()));
+                predicates.add(cb.greaterThanOrEqualTo(
+                        cb.diff(root.get("maxPartecipanti"), root.get("partecipantiAttuali")),
+                        viaggioFilter.getMaxPartecipanti()
+                ));
             }
 
 
