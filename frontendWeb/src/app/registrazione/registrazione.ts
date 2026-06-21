@@ -25,8 +25,9 @@ export class Registrazione {
   };
 
   messaggioDiAvviso: string = '';
-
   isLoading: boolean = false;
+  registrazioneCompletata: boolean = false;
+  emailInserita: string = '';
 
   constructor(
     private servizioAuth: AutenticazioneService,
@@ -46,8 +47,12 @@ export class Registrazione {
     this.servizioAuth.registraNuovoUtente(this.nuovoUtente).subscribe({
       next: (risultato) => {
         console.log('Iscrizione completata!', risultato);
+
+        this.emailInserita = this.nuovoUtente.email;
+        this.registrazioneCompletata = true;
         this.isLoading = false;
-        this.navigatore.navigate(['/login']);
+
+        this.cdr.detectChanges();
       },
       error: (errore) => {
         console.error('Qualcosa è andato storto:', errore);

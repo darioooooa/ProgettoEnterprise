@@ -2,11 +2,14 @@ package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.AttivitaViaggio;
+import com.example.progettoenterprise.data.entities.Prenotazione;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.entities.Viaggio;
+import com.example.progettoenterprise.data.repositories.PrenotazioneRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.repositories.specifications.ViaggioSpecification;
+import com.example.progettoenterprise.data.service.PagamentoService;
 import com.example.progettoenterprise.dto.AttivitaViaggioDTO;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import com.example.progettoenterprise.dto.ViaggioMappaDTO;
@@ -41,6 +44,12 @@ public class ViaggioServiceImplTest {
 
     @Mock
     private UtenteRepository utenteRepository;
+
+    @Mock
+    private PrenotazioneRepository prenotazioneRepository;
+
+    @Mock
+    private PagamentoService pagamentoService;
 
     @Mock
     private ModelMapper modelMapper;
@@ -202,21 +211,34 @@ public class ViaggioServiceImplTest {
     }
 
     @Test
-    @DisplayName("Eliminazione viaggio: Caso di successo")
-    void testEliminaViaggio_Successo() {
+    @DisplayName("Eliminazione viaggio: Caso di successo con annullamento e rimborsi")
+    void testEliminaViaggio_Successo() throws Exception {
         Long idViaggio = 1L;
         Long idOrganizzatore = 5L;
 
-        Viaggio viaggioDalDb = mock(Viaggio.class);
-        Utente proprietario = mock(Utente.class);
+        Viaggio viaggioDalDb = new Viaggio();
+        viaggioDalDb.setId(idViaggio);
 
-        when(proprietario.getId()).thenReturn(idOrganizzatore);
-        when(viaggioDalDb.getOrganizzatore()).thenReturn(proprietario);
+        // Essendo Utente abstract, usiamo mock()
+        Utente proprietario = mock(Utente.class);
+        lenient().when(proprietario.getId()).thenReturn(idOrganizzatore);
+        viaggioDalDb.setOrganizzatore(proprietario);
+
+        Prenotazione prenotazione = new Prenotazione();
+        prenotazione.setId(10L);
+
         when(viaggioRepository.findById(idViaggio)).thenReturn(Optional.of(viaggioDalDb));
+        when(prenotazioneRepository.findByViaggioIdAndStato(idViaggio, Prenotazione.StatoPrenotazione.CONFERMATA))
+                .thenReturn(List.of(prenotazione));
 
         viaggioService.eliminaViaggio(idViaggio, idOrganizzatore);
 
-        verify(viaggioRepository, times(1)).delete(viaggioDalDb);
+        verify(pagamentoService, times(1)).rimborsaPrenotazione(10L);
+
+        // Verifica che il viaggio sia stato ANNULLATO e salvato
+        assertEquals(Viaggio.StatoViaggio.ANNULLATO, viaggioDalDb.getStato());
+        verify(viaggioRepository, times(1)).save(viaggioDalDb);
+        verify(viaggioRepository, never()).delete((Viaggio) any());
     }
 
     @Test

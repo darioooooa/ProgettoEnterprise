@@ -9,50 +9,73 @@
       </a>
     </div>
 
-    <div class="form-header">
-      <h1>Crea il tuo profilo</h1>
-      <p>Entra a far parte della community dei viaggiatori</p>
+    <div *ngIf="!registrazioneCompletata">
+      <div class="form-header">
+        <h1>Crea il tuo profilo</h1>
+        <p>Entra a far parte della community dei viaggiatori</p>
+      </div>
+
+      <form (ngSubmit)="confermaIscrizione()" class="booking-form">
+
+        <div *ngIf="messaggioDiAvviso" class="errore-login">
+          {{ messaggioDiAvviso }}
+        </div>
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" name="username" [(ngModel)]="nuovoUtente.username" [disabled]="isLoading" required placeholder="Es. mariorossi69">
+        </div>
+
+        <div class="input-group">
+          <label>Nome</label>
+          <input type="text" name="nome" [(ngModel)]="nuovoUtente.nome" [disabled]="isLoading" required placeholder="Es. Mario ">
+        </div>
+        <div class="input-group">
+          <label>Cognome</label>
+          <input type="text" name="cognome" [(ngModel)]="nuovoUtente.cognome" [disabled]="isLoading" required placeholder="Es. Rossi">
+        </div>
+
+        <div class="input-group">
+          <label>Indirizzo Email</label>
+          <input type="email" name="email" [(ngModel)]="nuovoUtente.email" [disabled]="isLoading" required placeholder="viaggiatore@esempio.it">
+        </div>
+
+        <div class="input-group">
+          <label>Scegli una Password</label>
+          <input type="password" name="password" [(ngModel)]="nuovoUtente.password" [disabled]="isLoading" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="isLoading">
+          {{ isLoading ? 'Elaborazione iscrizione... ⏳' : 'Registrati e Parti' }}
+        </button>
+
+        <div class="registrazione-footer" [style.pointer-events]="isLoading ? 'none' : 'auto'">
+          <span>Hai già un account?</span>
+          <button type="button" routerLink="/login" [disabled]="isLoading" class="btn-link-trasparente">
+            Torna al Login
+          </button>
+        </div>
+      </form>
     </div>
 
-    <form (ngSubmit)="confermaIscrizione()" class="booking-form">
+    <div *ngIf="registrazioneCompletata" class="schermata-successo">
 
-      <div *ngIf="messaggioDiAvviso" class="errore-login">
-        {{ messaggioDiAvviso }}
-      </div>
-      <div class="input-group">
-        <label>Username</label>
-        <input type="text" name="username" [(ngModel)]="nuovoUtente.username" [disabled]="isLoading" required placeholder="Es. mariorossi69">
-      </div>
+      <div class="icona-email">✉️</div>
 
-      <div class="input-group">
-        <label>Nome</label>
-        <input type="text" name="nome" [(ngModel)]="nuovoUtente.nome" [disabled]="isLoading" required placeholder="Es. Mario ">
-      </div>
-      <div class="input-group">
-        <label>Cognome</label>
-        <input type="text" name="cognome" [(ngModel)]="nuovoUtente.cognome" [disabled]="isLoading" required placeholder="Es. Rossi">
+      <h2>Controlla la tua casella di posta!</h2>
+
+      <p>Abbiamo inviato un link di verifica all'indirizzo:</p>
+      <div class="email-evidenziata">{{ emailInserita }}</div>
+
+      <div class="istruzioni">
+        <p>Per attivare il tuo account e poter accedere, <strong>clicca sul link</strong> che troverai all'interno del messaggio che ti abbiamo inviato.</p>
+        <p class="testo-piccolo">
+          Non vedi l'email? Controlla anche nella cartella Spam o Posta Indesiderata.
+        </p>
       </div>
 
-      <div class="input-group">
-        <label>Indirizzo Email</label>
-        <input type="email" name="email" [(ngModel)]="nuovoUtente.email" [disabled]="isLoading" required placeholder="viaggiatore@esempio.it">
-      </div>
+      <button class="btn-submit" routerLink="/login">Torna alla pagina di Accesso</button>
 
-      <div class="input-group">
-        <label>Scegli una Password</label>
-        <input type="password" name="password" [(ngModel)]="nuovoUtente.password" [disabled]="isLoading" required placeholder="••••••••">
-      </div>
+    </div>
 
-      <button type="submit" class="btn-submit" [disabled]="isLoading">
-        {{ isLoading ? 'Elaborazione iscrizione... ⏳' : 'Registrati e Parti' }}
-      </button>
-
-      <div class="registrazione-footer" [style.pointer-events]="isLoading ? 'none' : 'auto'">
-        <span>Hai già un account?</span>
-        <button type="button" routerLink="/login" [disabled]="isLoading" class="btn-link-trasparente">
-          Torna al Login
-        </button>
-      </div>
-    </form>
   </div>
 </div>
