@@ -1,0 +1,51 @@
+<div id="sezione-chat-esclusiva" class="itinerary-section">
+  <legend>Comunicazioni Live</legend>
+
+  <div id="avviso-chat" *ngIf="messaggioAvviso" [class.alert-errore-backend]="tipoAvviso === 'errore'" [class.alert-successo-backend]="tipoAvviso === 'successo'">
+    <p>{{ messaggioAvviso }}</p>
+    <button type="button" class="btn-chiudi-alert" [disabled]="isLoading" (click)="messaggioAvviso = null">×</button>
+  </div>
+
+  <div class="viaggiatore-chat-container" *ngIf="isLoggato()">
+    <div class="chat-header-viaggio">
+      <h3>💬 Chiedi informazioni all'Organizzatore</h3>
+      <p>Parla in tempo reale con l'organizzatore di questo viaggio per qualsiasi dubbio</p>
+    </div>
+
+    <div class="chat-body-viaggio" #scrollChat>
+      <div *ngIf="messaggiChat.length === 0" class="chat-vuota-info">
+        Non ci sono ancora messaggi in questa stanza. Fai la tua prima domanda!
+      </div>
+
+      <div *ngFor="let msg of messaggiChat"
+           [class.mio-msg]="msg.mittenteUsername === mioUsername"
+           [class.altro-msg]="msg.mittenteUsername !== mioUsername"
+           class="msg-row">
+
+        <div class="msg-bubble">
+          <span class="msg-author" *ngIf="msg.mittenteUsername !== mioUsername">&#64;{{ msg.mittenteUsername }}</span>
+          <p class="msg-text">{{ msg.testo }}</p>
+          <div class="msg-meta">
+            <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-footer-viaggio">
+      <input type="text"
+             [(ngModel)]="nuovoMessaggioTesto"
+             [disabled]="isLoading"
+             (keyup.enter)="inviaMessaggioCommunity()"
+             placeholder="Scrivi un messaggio all'organizzatore..." />
+
+      <button type="button" (click)="inviaMessaggioCommunity()" [disabled]="!nuovoMessaggioTesto.trim() || isLoading">
+        {{ isLoading ? '⏳' : 'Invia 🚀' }}
+      </button>
+    </div>
+  </div>
+
+  <p *ngIf="!isLoggato()" class="testo-vuoto-vetro" style="margin-top: 20px;">
+    Devi effettuare il login per poter avviare una chat con l'organizzatore.
+  </p>
+</div>

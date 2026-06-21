@@ -1,0 +1,164 @@
+@import '../../dettaglio-viaggio.css';
+
+.viaggiatore-chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 420px;
+  background: rgba(15, 32, 66, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  margin-top: 25px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.chat-header-viaggio {
+  padding: 16px 24px;
+  background: rgba(10, 25, 47, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chat-header-viaggio h3 {
+  margin: 0;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.chat-header-viaggio p {
+  margin: 4px 0 0 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.82rem;
+}
+
+.chat-body-viaggio {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.chat-vuota-info {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.88rem;
+  margin-top: 40px;
+}
+
+.msg-row {
+  display: flex;
+  width: 100%;
+}
+
+.mio-msg { justify-content: flex-end; }
+.altro-msg { justify-content: flex-start; }
+
+.msg-bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.mio-msg .msg-bubble {
+  background: #0d47a1;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.altro-msg .msg-bubble {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom-left-radius: 4px;
+}
+
+.msg-author {
+  display: block;
+  font-size: 0.72rem;
+  color: #90caf9;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.msg-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.msg-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.msg-time {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.btn-report-msg {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.btn-report-msg:hover {
+  opacity: 1;
+}
+
+.chat-footer-viaggio {
+  padding: 16px 24px;
+  background: rgba(10, 25, 47, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 12px;
+}
+
+.chat-footer-viaggio input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  padding: 0 16px !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+  outline: none !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 0.9rem !important;
+  height: 40px !important;
+}
+
+.chat-footer-viaggio button {
+  height: 40px !important;
+  padding: 0 20px !important;
+  border-radius: 10px !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600 !important;
+  background: #fff !important;
+  color: #0d47a1 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.chat-footer-viaggio button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

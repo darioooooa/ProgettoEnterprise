@@ -158,7 +158,7 @@
         <div class="organizzatore-meta">
           <label>Organizzatore del viaggio</label>
           <h3>{{ statistiche.organizzatoreUsername }}</h3>
-          <p>Clicca per visualizzare il profilo e i viaggi da lui organizzati</p>
+          <p>Clicca per visualizzare il profilo e i viaggi da lui organized</p>
         </div>
 
         <button class="btn-segnala-org" [disabled]="isLoading" (click)="apriSegnalazioneOrg(statistiche.organizzatoreId, $event)">
@@ -172,6 +172,8 @@
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'galleria'" (click)="tabAttivo = 'galleria'">🖼️ Galleria</button>
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'community'" (click)="tabAttivo = 'community'">💬 Community</button>
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
+        <!-- 🟢 TAB CHAT REINSERITO NEL LAYOUT AGGIORNATO -->
+        <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'chat'" (click)="tabAttivo = 'chat'">✉️ Chat Live</button>
       </nav>
 
       <app-galleria  *ngIf="tabAttivo === 'galleria'"
@@ -190,6 +192,12 @@
                      [isMioViaggio]="isMioViaggio()"
                      (richiestaRefreshPadre)="onSincronizzaRichiesta()">
       </app-community>
+
+      <!-- 🟢 COMPONENTE CHAT CONDIZIONATO AL TAB -->
+      <app-chat *ngIf="tabAttivo === 'chat'"
+                [viaggioId]="viaggioId"
+                [mioUsername]="mioUsername">
+      </app-chat>
 
       <div class="sezione-prenota-basso" *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE' && !isMioViaggio()">
 
@@ -215,7 +223,7 @@
 
         <ng-container *ngIf="!isGiaAcquistato && statistiche?.stato !== 'APERTO'">
           <h3>Iscrizioni chiuse</h3>
-          <p>Purtroppo non è più possibile prenotarsi a questo itinerario. Torna alla home per scoprire nuove mete!</p>
+          <p>Purtrohto non è più possibile prenotarsi a questo itinerario. Torna alla home per scoprire nuove mete!</p>
         </ng-container>
 
       </div>

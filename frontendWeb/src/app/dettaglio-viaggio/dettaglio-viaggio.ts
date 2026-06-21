@@ -10,17 +10,20 @@ import { CommunityComponent } from './components/community/community';
 import { PrenotazioneService } from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 import { forkJoin } from 'rxjs';
+// 🟢 REINTRODOTTO L'IMPORT CHIRURGICO DELLA CHAT RECUPERATA
+import { ChatComponent } from './components/chat/chat';
 
 @Component({
   selector: 'app-dettaglio-viaggio',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule, // Aggiunto per il binding sul nuovoPrezzo
+    FormsModule,
     GalleriaComponent,
     ProgrammaComponent,
     CommunityComponent,
     RouterLink,
+    ChatComponent, // 👈 Collegato correttamente ai metadati standalone
     ModaleSegnalazione
   ],
   templateUrl: './dettaglio-viaggio.html',
@@ -48,8 +51,8 @@ export class DettaglioViaggio implements OnInit {
   organizzatoreUsername: string = '';
   mioUsername: string = '';
 
-  // Stato del tab attivo
-  tabAttivo: 'galleria' | 'programma' | 'community' = 'programma'  ;
+
+  tabAttivo: 'chat' | 'galleria' | 'programma' | 'community' = 'programma';
 
   isLoading: boolean = false;
   isEliminazioneInCorso: boolean = false;
@@ -226,7 +229,7 @@ export class DettaglioViaggio implements OnInit {
     }
   }
 
-  // --- NUOVI METODI PER LA MODIFICA IN LINEA ---
+  // --- METODI PER LA MODIFICA IN LINEA ---
   attivaModificaPrezzo() {
     this.nuovoPrezzo = this.statistiche.prezzo;
     this.inModificaPrezzo = true;
@@ -240,7 +243,6 @@ export class DettaglioViaggio implements OnInit {
     if (this.isLoading) return;
     this.isLoading = true;
 
-    // Ricostruiamo l'oggetto includendo i campi obbligatori per evitare errori dal backend
     const viaggioAggiornato = {
       titolo: this.statistiche.titolo,
       descrizione: this.statistiche.descrizione,
@@ -270,7 +272,7 @@ export class DettaglioViaggio implements OnInit {
       }
     });
   }
-  // Ritorna true se i partecipanti attuali hanno raggiunto o superato il massimo consentito
+
   get isTuttoEsaurito(): boolean {
     if (!this.statistiche) return false;
     const attuali = this.statistiche.partecipantiAttuali ?? 0;
