@@ -4,7 +4,7 @@
     <div class="logo">ENTERPRISE Admin</div>
     <div class="user-menu">
       <span class="admin-username">👤 {{ adminUsername }}</span>
-      <button class="btn-logout" (click)="logout()">Logout</button>
+      <button class="btn-logout" (click)="apriModaleLogout()">Logout</button>
     </div>
   </nav>
 
@@ -64,7 +64,7 @@
             </tr>
             </tbody>
           </table>
-          <div *ngIf="richiesteFiltrate.length === 0" style="padding: 20px; text-align: center;">Nessuna richiesta trovata.</div>
+          <div *ngIf="richiesteFiltrate.length === 0" style="padding: 20px; text-align: center;">Nessuna richiesta trouvata.</div>
         </div>
       </ng-container>
 
@@ -199,6 +199,25 @@
 
     <div style="text-align: right;">
       <button (click)="chiudiModaleMessaggio()" style="background: #e5e7eb; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="mostraModaleLogout">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <h3>Disconnessione</h3>
+      <button class="close-btn" (click)="chiudiModaleLogout()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p>Sei sicuro di voler uscire dal tuo account?</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-annulla" (click)="chiudiModaleLogout()">Annulla</button>
+      <button class="btn-esci" (click)="confermaLogout()">Sì, esci</button>
     </div>
 
   </div>

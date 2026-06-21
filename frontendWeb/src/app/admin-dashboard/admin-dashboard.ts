@@ -64,6 +64,7 @@ export class AdminDashboard implements OnInit {
   messaggioInLettura: string = '';
 
   isLoading: boolean = false;
+  mostraModaleLogout: boolean = false;
 
   constructor(
     private adminService: AdminService,
@@ -113,7 +114,7 @@ export class AdminDashboard implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error(err)
+        console.error(err);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -130,7 +131,7 @@ export class AdminDashboard implements OnInit {
           this.caricaRichieste();
         },
         error: () => {
-          alert('Errore.')
+          alert('Errore.');
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -149,7 +150,7 @@ export class AdminDashboard implements OnInit {
           this.caricaRichieste();
         },
         error: () => {
-          alert('Errore.')
+          alert('Errore.');
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -204,7 +205,7 @@ export class AdminDashboard implements OnInit {
         this.caricaSegnalazioni();
       },
       error: (err) => {
-        alert('Errore.')
+        alert('Errore.');
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -230,7 +231,7 @@ export class AdminDashboard implements OnInit {
           }
         },
         error: (err) => {
-          alert('Errore durante la risoluzione.')
+          alert('Errore durante la risoluzione.');
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -248,7 +249,7 @@ export class AdminDashboard implements OnInit {
           this.caricaSegnalazioni();
         },
         error: (err) => {
-          alert('Errore.')
+          alert('Errore.');
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -265,7 +266,7 @@ export class AdminDashboard implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error(err)
+        console.error(err);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -282,7 +283,7 @@ export class AdminDashboard implements OnInit {
           this.caricaUtentiBannati();
         },
         error: () => {
-          alert('Errore.')
+          alert('Errore.');
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -300,7 +301,16 @@ export class AdminDashboard implements OnInit {
     this.messaggioInLettura = '';
   }
 
-  logout() {
+  apriModaleLogout() {
+    this.mostraModaleLogout = true;
+  }
+
+  chiudiModaleLogout() {
+    this.mostraModaleLogout = false;
+  }
+
+  confermaLogout() {
+    this.mostraModaleLogout = false;
     if (isPlatformBrowser(this.platformId)) {
       localStorage.clear();
     }

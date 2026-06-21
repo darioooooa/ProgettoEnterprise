@@ -149,6 +149,10 @@ export class ChatService {
 
   public notificheAmicizia$ = new Subject<void>();
   ascoltaNotificheAmicizia(username: string) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      setTimeout(() => this.ascoltaNotificheAmicizia(username), 1000);
+      return;
+    }
     const canaleAmicizie = `/topic/notifiche/${username}`;
     this.stompClient.subscribe(canaleAmicizie, (messaggio: any) => {
       console.log("Nuova richiesta di amicizia ricevuta in tempo reale!");

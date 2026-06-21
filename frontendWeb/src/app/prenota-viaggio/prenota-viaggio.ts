@@ -24,6 +24,7 @@ export class PrenotaViaggioComponent implements OnInit {
   messaggioSuccesso: string = '';
 
   isLoading: boolean = false;
+  mostraModaleConferma: boolean = false;
 
   constructor(
     private rottaAttuale: ActivatedRoute,
@@ -85,6 +86,13 @@ export class PrenotaViaggioComponent implements OnInit {
       this.prezzoTotale = this.dettagliViaggio.prezzo * this.numeroPersone;
     }
   }
+  apriModale() {
+    this.mostraModaleConferma = true;
+  }
+
+  chiudiModale() {
+    this.mostraModaleConferma = false;
+  }
 
   confermaPrenotazione() {
     if (this.isLoading) return;
@@ -101,12 +109,14 @@ export class PrenotaViaggioComponent implements OnInit {
 
         // Fermiamo il caricamento e saltiamo alla pagina Stripe
         this.isLoading = false;
+        this.mostraModaleConferma = false;
         this.navigatore.navigate(['/pagamento', idPrenotazione]);
 
       },
       error: (errore: any) => {
         this.ngZone.run(() => {
           this.isLoading = false;
+          this.mostraModaleConferma = false;
           let estratto = "Errore durante la prenotazione. Riprova più tardi.";
 
           if (errore.status === 400 || errore.status === 409) {

@@ -37,3 +37,22 @@
     </button>
   </div>
 </div>
+<div class="modal-overlay" *ngIf="mostraModaleInSospeso">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <h3>Richiesta in sospeso</h3>
+      <button class="close-btn" (click)="chiudiModaleInSospeso()">×</button>
+    </div>
+
+
+    <div class="modal-body">
+      <p>Hai già una richiesta in sospeso per diventare Organizzatore o possiedi già un account Amministratore. Attendi l'approvazione da parte dell'amministratore.</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-conferma-azione" (click)="chiudiModaleInSospeso()">OK</button>
+    </div>
+
+  </div>
+</div>

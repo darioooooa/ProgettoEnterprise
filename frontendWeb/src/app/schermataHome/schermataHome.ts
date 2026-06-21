@@ -180,6 +180,11 @@ export class SchermataHomeComponent implements OnInit {
     this.modaleItinerarioAperta = true;
   }
 
+  vaiAPrenotazione(viaggioId: number, event: Event) {
+    event.stopPropagation();
+    this.navigatore.navigate(['/prenota-viaggio', viaggioId]);
+  }
+
   chiudiModaleItinerario() {
     if (this.isLoading) return;
     this.modaleItinerarioAperta = false;

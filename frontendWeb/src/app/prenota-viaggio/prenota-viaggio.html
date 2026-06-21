@@ -43,8 +43,8 @@
         <span class="prezzo-totale">€{{ prezzoTotale }}</span>
       </div>
 
-      <button class="btn-prenota" [disabled]="isLoading" (click)="confermaPrenotazione()">
-        {{ isLoading ? 'Elaborazione... ⏳' : 'Prenota Ora' }}
+      <button class="btn-prenota" [disabled]="isLoading" (click)="apriModale()">
+        Prenota Ora
       </button>
 
       <div *ngIf="messaggioErrore" class="alert-error mt-3">{{ messaggioErrore }}</div>
@@ -52,4 +52,33 @@
     </div>
   </div>
 
+</div>
+
+<div class="modal-overlay" *ngIf="mostraModaleConferma">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <h3>Conferma Prenotazione</h3>
+      <button class="close-btn" [disabled]="isLoading" (click)="chiudiModale()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p>
+        Sei sicuro di voler confermare la prenotazione per
+        <strong>{{ numeroPersone }}</strong> {{ numeroPersone === 1 ? 'persona' : 'persone' }}
+        al costo totale di <strong>€{{ prezzoTotale }}</strong>?
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-annulla" [disabled]="isLoading" (click)="chiudiModale()">
+        Annulla
+      </button>
+
+      <button class="btn-conferma-azione" [disabled]="isLoading" (click)="confermaPrenotazione()">
+        {{ isLoading ? 'Elaborazione... ⏳' : 'Sì, prenota' }}
+      </button>
+    </div>
+
+  </div>
 </div>
