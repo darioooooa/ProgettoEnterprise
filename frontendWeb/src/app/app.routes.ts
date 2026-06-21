@@ -39,10 +39,6 @@ export const routes: Routes = [
     component: MainLayoutComponent,
     children: [
       {
-        path: '',
-        component: PaginaInizialeComponent
-      },
-      {
         path: 'home',
         component: SchermataHomeComponent,
         canActivate: [autenticazioneGuard]

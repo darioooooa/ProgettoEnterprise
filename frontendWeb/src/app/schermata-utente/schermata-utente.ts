@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { ViaggioService } from '../service/viaggio.service';
 import { UtenteService } from '../service/utente.service';
@@ -8,7 +8,7 @@ import { UtenteService } from '../service/utente.service';
 @Component({
   selector: 'app-schermata-utente',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './schermata-utente.html',
   styleUrl: './schermata-utente.css'
 })

@@ -25,7 +25,7 @@ public class ItinerarioPreferitoController {
 
     // CREA UNA NUOVA LISTA
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<ItinerarioPreferitoDTO> creaLista(
             @RequestBody ItinerarioPreferitoDTO richiesta,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
@@ -39,7 +39,7 @@ public class ItinerarioPreferitoController {
 
     // RECUPERA LE MIE LISTE PERSONALI
     @GetMapping("/mie-liste")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<List<ItinerarioPreferitoDTO>> getMieListe(
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
@@ -49,7 +49,7 @@ public class ItinerarioPreferitoController {
 
     // RECUPERA LE LISTE CONDIVISE CON ME
     @GetMapping("/condivise-con-me")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<List<ItinerarioPreferitoDTO>> getListeCondivise(
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
@@ -59,7 +59,7 @@ public class ItinerarioPreferitoController {
 
     // RICERCA LISTE PUBBLICHE PER NOME
     @GetMapping("/ricerca-pubblica")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<List<ItinerarioPreferitoDTO>> cercaListePubbliche(@RequestParam String nome) {
         log.info("Ricerca pubblica per liste con nome: {}", nome);
         return ResponseEntity.ok(itinerarioService.cercaListePubbliche(nome));
@@ -75,7 +75,7 @@ public class ItinerarioPreferitoController {
 
     // CAMBIA VISIBILITÀ
     @PatchMapping("/{id}/visibilita")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<ItinerarioPreferitoDTO> cambiaVisibilita(
             @PathVariable Long id,
             @RequestParam String nuovaVisibilita,
@@ -89,7 +89,7 @@ public class ItinerarioPreferitoController {
 
     // ELIMINA LISTA
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<?> eliminaLista(
             @PathVariable Long id,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
@@ -100,7 +100,7 @@ public class ItinerarioPreferitoController {
     }
 
     @PostMapping("/{idLista}/viaggi/{idViaggio}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<?> aggiungiViaggio(
             @PathVariable Long idLista,
             @PathVariable Long idViaggio,
@@ -111,7 +111,7 @@ public class ItinerarioPreferitoController {
     }
 
     @DeleteMapping("/{idLista}/viaggi/{idViaggio}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<?> rimuoviViaggio(
             @PathVariable Long idLista,
             @PathVariable Long idViaggio,
@@ -122,7 +122,7 @@ public class ItinerarioPreferitoController {
     }
 
     @PostMapping("/{idSorgente}/sposta-in/{idDestinazione}/viaggi/{idViaggio}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('VIAGGIATORE')")
     public ResponseEntity<?> spostaViaggio(
             @PathVariable Long idSorgente,
             @PathVariable Long idDestinazione,

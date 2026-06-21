@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -215,5 +216,14 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         }
 
         return prenotazionePage.map(p -> modelMapper.map(p, PrenotazioneDTO.class));
+    }
+
+    // Incolla questo metodo all'interno di PrenotazioneServiceImpl.java
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<PrenotazioneDTO> ottieniStatoPrenotazioneUtente(Long viaggioId, Long utenteId) {
+        log.debug("Verifica prenotazione utente ID {} per il viaggio ID {}", utenteId, viaggioId);
+        return prenotazioneRepository.findByViaggioIdAndViaggiatoreId(viaggioId, utenteId)
+                .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class));
     }
 }

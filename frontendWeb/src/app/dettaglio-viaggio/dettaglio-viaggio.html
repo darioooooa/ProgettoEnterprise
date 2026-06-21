@@ -20,15 +20,34 @@
             {{ isEliminazioneInCorso ? '⏳ Rimborsi in corso...' : '🗑️ Elimina Viaggio' }}
           </button>
 
-          <button *ngIf="!isMioViaggio()"
-                  type="button"
-                  [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]"
-                  class="btn-prenota-top"
-                  [disabled]="isLoading">
-            Prenota Ora
-          </button>
+          <ng-container *ngIf="!isMioViaggio() && isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'">
 
-          <button type="button" (click)="scaricaFileIcs()" class="btn-ics-calendar-nuovo" [disabled]="isLoading">
+            <ng-container *ngIf="isGiaAcquistato">
+              <span *ngIf="statoSvolgimentoIscrizione === 'PRENOTATO'" class="badge-stato-utente futuro">✅ Sei già prenotato</span>
+              <span *ngIf="statoSvolgimentoIscrizione === 'IN_CORSO'" class="badge-stato-utente corso">✈️ Viaggio in corso</span>
+              <span *ngIf="statoSvolgimentoIscrizione === 'COMPLETATO'" class="badge-stato-utente completato">🏁 Viaggio completato</span>
+            </ng-container>
+
+            <button *ngIf="!isGiaAcquistato && statistiche?.stato === 'APERTO' && !isTuttoEsaurito"
+                    type="button"
+                    [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]"
+                    class="btn-prenota-top"
+                    [disabled]="isLoading">
+              Prenota Ora
+            </button>
+
+            <span *ngIf="!isGiaAcquistato && statistiche?.stato === 'APERTO' && isTuttoEsaurito" class="badge-stato-utente chiuso" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">
+              ⚠️ Tutto Esaurito
+            </span>
+
+            <span *ngIf="!isGiaAcquistato && statistiche?.stato !== 'APERTO'" class="badge-stato-utente chiuso">
+              🔒 Iscrizioni Chiuse
+            </span>
+
+          </ng-container>
+
+          <button *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'"
+                  type="button" (click)="scaricaFileIcs()" class="btn-ics-calendar-nuovo" [disabled]="isLoading">
             {{ isLoading ? '⏳ ...' : '📅 Esporta (.ics)' }}
           </button>
         </div>
@@ -172,12 +191,33 @@
                      (richiestaRefreshPadre)="onSincronizzaRichiesta()">
       </app-community>
 
-      <div class="sezione-prenota-basso" *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'">
-        <h3>Ti piace questo itinerario?</h3>
-        <p>Assicurati il tuo posto prima che i posti si esauriscano!</p>
-        <button type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-basso" [disabled]="isLoading">
-          Prenota il tuo posto ora
-        </button>
+      <div class="sezione-prenota-basso" *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE' && !isMioViaggio()">
+
+        <ng-container *ngIf="!isGiaAcquistato && statistiche?.stato === 'APERTO' && !isTuttoEsaurito">
+          <h3>Ti piace questo itinerario?</h3>
+          <p>Assicurati il tuo posto prima che i posti si esauriscano!</p>
+          <button type="button" [routerLink]="isLoading ? null : ['/prenota-viaggio', viaggioId]" class="btn-prenota-basso" [disabled]="isLoading">
+            Prenota il tuo posto ora
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="isGiaAcquistato">
+          <h3>La tua avventura è confermata!</h3>
+          <p *ngIf="statoSvolgimentoIscrizione === 'PRENOTATO'">Hai un posto regolarmente confermato per questo viaggio. Prepara i bagagli! 🧳</p>
+          <p *ngIf="statoSvolgimentoIscrizione === 'IN_CORSO'">Sei attualmente in viaggio! Consulta la tab "Programma" per vedere le tappe odierne. 🗺️</p>
+          <p *ngIf="statoSvolgimentoIscrizione === 'COMPLETATO'">Questo viaggio si è concluso. Speriamo ti sia piaciuto! Lascia un messaggio nella tab Community! 💬</p>
+        </ng-container>
+
+        <ng-container *ngIf="!isGiaAcquistato && statistiche?.stato === 'APERTO' && isTuttoEsaurito">
+          <h3>Posti esauriti! 👥</h3>
+          <p>Siamo spiacenti, tutti i posti per questo itinerario sono stati occupati. Torna alla home per scoprire nuove mete disponibili!</p>
+        </ng-container>
+
+        <ng-container *ngIf="!isGiaAcquistato && statistiche?.stato !== 'APERTO'">
+          <h3>Iscrizioni chiuse</h3>
+          <p>Purtroppo non è più possibile prenotarsi a questo itinerario. Torna alla home per scoprire nuove mete!</p>
+        </ng-container>
+
       </div>
 
     </div>

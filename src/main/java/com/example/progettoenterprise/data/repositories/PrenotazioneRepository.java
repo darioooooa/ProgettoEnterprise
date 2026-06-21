@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PrenotazioneRepository extends JpaRepository<Prenotazione,Long>, JpaSpecificationExecutor<Prenotazione> {
@@ -40,5 +41,7 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione,Long>
     );
 
     List<Prenotazione> findByViaggioIdAndStato(Long viaggioId, Prenotazione.StatoPrenotazione stato);
+
+    Optional<Prenotazione> findByViaggioIdAndViaggiatoreId(Long viaggioId, Long viaggiatoreId);
 }
 

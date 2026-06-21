@@ -2,6 +2,7 @@ import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink,Router} from '@angular/router';
 import {ViaggioService} from '../service/viaggio.service';
+import { AutenticazioneService } from '../service/autenticazione.service';
 
 import {MapComponent} from '../map/map';
 import { PrenotazioneService } from '../service/prenotazione.service';
@@ -30,7 +31,8 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     private viaggioService: ViaggioService,
     private prenotazioneService: PrenotazioneService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private servAuth: AutenticazioneService
   ) {
   }
 
@@ -43,7 +45,12 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     this.isLoading = true;
     this.paginaCorrente = pagina;
 
-    this.viaggioService.getViaggi(this.paginaCorrente).subscribe({
+    const mioId = this.servAuth.ottieniId();
+    const filtriDashboard = {
+      organizzatoreId: mioId
+    };
+
+    this.viaggioService.getViaggi(this.paginaCorrente, filtriDashboard).subscribe({
       next: (data) => {
         this.listaDeiViaggi = data.content;
         this.totalePagine = data.totalPages;
@@ -59,31 +66,49 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     });
   }
 
+  vaiAlDettaglioViaggio(viaggio: any) {
+    if (this.isLoading) return;
+    const viaggioId = viaggio.id || viaggio.idViaggio;
+    console.log("Navigazione da tabella al dettaglio del viaggio id:", viaggioId);
+    this.router.navigate(['/viaggi', viaggioId]);
+  }
+
+  // Calcolo dello stato di svolgimento del viaggio
+  getBadgeStatoSvolgimento(viaggio: any): { testo: string, classe: string } {
+    if (!viaggio.dataInizio || !viaggio.dataFine) {
+      return { testo: 'Dati non validi', classe: 'badge badge-grigio' };
+    }
+
+    const oggi = new Date();
+    // Azzera l'orario per fare un confronto preciso sul giorno solare
+    oggi.setHours(0, 0, 0, 0);
+
+    const inizio = new Date(viaggio.dataInizio);
+    inizio.setHours(0, 0, 0, 0);
+
+    const fine = new Date(viaggio.dataFine);
+    fine.setHours(0, 0, 0, 0);
+
+    if (oggi < inizio) {
+      return { testo: '📅 Non ancora iniziato', classe: 'badge badge-futuro' };
+    } else if (oggi >= inizio && oggi <= fine) {
+      return { testo: '✈️ In Corso', classe: 'badge badge-in-corso' };
+    } else {
+      return { testo: '🏁 Completato', classe: 'badge badge-completato' };
+    }
+  }
+
   paginaSuccessiva() {
+    if (this.isLoading) return;
     if (this.paginaCorrente < this.totalePagine - 1 && !this.isLoading) {
       this.caricaViaggi(this.paginaCorrente + 1);
     }
   }
 
   paginaPrecedente() {
+    if (this.isLoading) return;
     if (this.paginaCorrente > 0 && !this.isLoading) {
       this.caricaViaggi(this.paginaCorrente - 1);
-    }
-  }
-
-  modifica(viaggio: any) {
-    if (this.isLoading) return;
-    const viaggioId = viaggio.id || viaggio.idViaggio;
-
-    this.router.navigate(['/viaggi', viaggioId]);
-  }
-
-  elimina(viaggio: any) {
-    if (this.isLoading) return;
-
-    if (confirm("Sei sicuro di voler eliminare " + viaggio.destinazione + "?")) {
-      console.log("Elimino il viaggio con ID:", viaggio.id);
-      this.listaDeiViaggi = this.listaDeiViaggi.filter(v => v !== viaggio);
     }
   }
 

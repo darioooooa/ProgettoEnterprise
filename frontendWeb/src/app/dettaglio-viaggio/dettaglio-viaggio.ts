@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // <-- IMPORTANTE per l'input del prezzo
+import { FormsModule } from '@angular/forms';
 import { ViaggioService } from '../service/viaggio.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
 import { GalleriaComponent } from './components/galleria/galleria';
@@ -16,7 +16,7 @@ import { forkJoin } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule, // <-- Aggiunto per il binding sul nuovoPrezzo
+    FormsModule, // Aggiunto per il binding sul nuovoPrezzo
     GalleriaComponent,
     ProgrammaComponent,
     CommunityComponent,
@@ -40,6 +40,7 @@ export class DettaglioViaggio implements OnInit {
     maxPartecipanti: 0,
     mediaRecensioni: 0,
     numeroRecensioni: 0,
+    stato: 'APERTO',
     latitudine: 0,
     longitudine: 0
   };
@@ -47,7 +48,8 @@ export class DettaglioViaggio implements OnInit {
   organizzatoreUsername: string = '';
   mioUsername: string = '';
 
-  tabAttivo: 'galleria' | 'programma' | 'community' = 'programma';
+  // Stato del tab attivo
+  tabAttivo: 'galleria' | 'programma' | 'community' = 'programma'  ;
 
   isLoading: boolean = false;
   isEliminazioneInCorso: boolean = false;
@@ -59,6 +61,9 @@ export class DettaglioViaggio implements OnInit {
   // Variabili per la modifica in linea
   inModificaPrezzo: boolean = false;
   nuovoPrezzo: number = 0;
+
+  isGiaAcquistato: boolean = false;
+  statoSvolgimentoIscrizione: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -91,13 +96,20 @@ export class DettaglioViaggio implements OnInit {
   caricaStatistichePadre() {
     this.isLoading = true;
 
-    forkJoin({
+    const chiamate: any = {
       datiViaggio: this.viaggioService.getViaggioById(this.viaggioId),
       stats: this.viaggioService.getStatisticheRecensioni(this.viaggioId)
-    }).subscribe({
-      next: ({ datiViaggio, stats }: { datiViaggio: any, stats: any }) => {
+    };
+    if (this.isLoggato() && this.ottieniRuolo() === 'ROLE_VIAGGIATORE') {
+      chiamate.infoPrenotazione = this.prenotazioneService.verificaPrenotazioneUtente(this.viaggioId);
+    }
 
+    // Chiamate parallele simultanee per la massima efficienza
+    forkJoin(chiamate).subscribe({
+      next: (risultati: any) => {
         setTimeout(() => {
+          const { datiViaggio, stats, infoPrenotazione } = risultati;
+
           this.statistiche = {
             ...this.statistiche,
             ...stats,
@@ -114,9 +126,20 @@ export class DettaglioViaggio implements OnInit {
           this.statistiche.mediaRecensioni = stats?.mediaRecensioni ?? 0;
           this.statistiche.numeroRecensioni = stats?.numeroRecensioni ?? 0;
 
-          this.organizzatoreUsername = stats?.organizzatoreUsername || datiViaggio?.organizzatoreUsername || '';
-          this.isLoading = false;
+          this.statistiche.stato = datiViaggio?.stato || 'APERTO';
 
+          this.organizzatoreUsername = stats?.organizzatoreUsername || datiViaggio?.organizzatoreUsername || '';
+
+          // Blocca l'utente e assegna lo stato temporale solo se "acquistata" è true (stato CONFERMATA)
+          if (infoPrenotazione && infoPrenotazione.acquistata) {
+            this.isGiaAcquistato = true;
+            this.statoSvolgimentoIscrizione = this.calcolaSvolgimentoReale(datiViaggio);
+          } else {
+            this.isGiaAcquistato = false;
+            this.statoSvolgimentoIscrizione = '';
+          }
+
+          this.isLoading = false;
           this.cdr.markForCheck();
           this.cdr.detectChanges();
         }, 50);
@@ -130,6 +153,20 @@ export class DettaglioViaggio implements OnInit {
     });
   }
 
+  // Calcola lo svolgimento temporale reale basandosi sulle date
+  private calcolaSvolgimentoReale(viaggio: any): string {
+    if (!viaggio?.dataInizio || !viaggio?.dataFine) return 'PRENOTATO';
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const inizio = new Date(viaggio.dataInizio);
+    const fine = new Date(viaggio.dataFine);
+
+    if (oggi < inizio) return 'PRENOTATO';
+    if (oggi >= inizio && oggi <= fine) return 'IN_CORSO';
+    return 'COMPLETATO';
+  }
+
+  // Invocato tramite @Output dai figli se un'azione richiede di aggiornare i voti in cima
   onSincronizzaRichiesta() {
     this.caricaStatistichePadre();
   }
@@ -232,5 +269,12 @@ export class DettaglioViaggio implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+  // Ritorna true se i partecipanti attuali hanno raggiunto o superato il massimo consentito
+  get isTuttoEsaurito(): boolean {
+    if (!this.statistiche) return false;
+    const attuali = this.statistiche.partecipantiAttuali ?? 0;
+    const max = this.statistiche.maxPartecipanti ?? 0;
+    return max > 0 && attuali >= max;
   }
 }

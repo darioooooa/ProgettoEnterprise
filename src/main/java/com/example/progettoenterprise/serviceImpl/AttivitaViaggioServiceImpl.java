@@ -40,6 +40,11 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
         Viaggio viaggio = viaggioRepository.findById(viaggioId)
                 .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("viaggio.notexist", viaggioId)));
 
+        // Il viaggio non deve essere terminato o annullato
+        if (viaggio.getStato() == Viaggio.StatoViaggio.COMPLETATO || viaggio.getStato() == Viaggio.StatoViaggio.ANNULLATO) {
+            throw new IllegalStateException(messageLang.getMessage("attivita.unmodifieble"));
+        }
+
         // Controlla se l'utente loggato è il proprietario del viaggio
         if (!viaggio.getOrganizzatore().getId().equals(organizzatoreId)) {
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
@@ -56,6 +61,7 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AttivitaViaggioDTO getAttivitaById(Long id, Long viaggioId, Long utenteId) {
             AttivitaViaggio attivita=attivitaViaggioRepository.findById(id).orElseThrow(()->
                     new EntityNotFoundException(messageLang.getMessage("attivita.notexist",id)));
@@ -68,12 +74,6 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
                 throw new EntityNotFoundException(messageLang.getMessage("attivita.notexist", id));
             }
 
-            // Controlla, se è l'organizzatore del viaggio, che possa vedere solo le sue attività
-            if(utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)){
-                if(!attivita.getViaggio().getOrganizzatore().getId().equals(utenteId)){
-                    throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
-                }
-            }
             return modelMapper.map(attivita,AttivitaViaggioDTO.class);
     }
 
@@ -82,6 +82,12 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
     public AttivitaViaggioDTO modificaAttivitaViaggio(Long id,AttivitaViaggioDTO dto, Long organizzatoreId) {
         // Cerca l'attività esistente. Se non c'è, lancia l'errore
         return attivitaViaggioRepository.findById(id).map(entityEsistente -> {
+
+            // Il viaggio non deve essere terminato o annullato
+            Viaggio viaggio = entityEsistente.getViaggio();
+            if (viaggio.getStato() == Viaggio.StatoViaggio.COMPLETATO || viaggio.getStato() == Viaggio.StatoViaggio.ANNULLATO) {
+                throw new IllegalStateException(messageLang.getMessage("attivita.unmodifieble"));
+            }
 
             if (!entityEsistente.getViaggio().getOrganizzatore().getId().equals(organizzatoreId)) {
                 throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
@@ -117,8 +123,15 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
             throw new IllegalArgumentException("Errore: l'attività non appartiene a questo viaggio!");
         }
 
+        Viaggio viaggio = attivita.getViaggio();
+
+        // Il viaggio non deve essere terminato o annullato
+        if (viaggio.getStato() == Viaggio.StatoViaggio.COMPLETATO || viaggio.getStato() == Viaggio.StatoViaggio.ANNULLATO) {
+            throw new IllegalStateException(messageLang.getMessage("attivita.unmodifieble"));
+        }
+
         // Controlla che l'organizzatore del viaggio sia l'utente loggato
-        if (!attivita.getViaggio().getOrganizzatore().getId().equals(organizzatoreId)) {
+        if (!viaggio.getOrganizzatore().getId().equals(organizzatoreId)) {
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
         }
 
@@ -135,13 +148,6 @@ public class AttivitaViaggioServiceImpl implements AttivitaViaggioService {
 
         Utente utente = utenteRepository.findById(utenteId)
                 .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("utente.notexist", utenteId)));
-
-        // Se è un organizzatore, deve essere l'organizzatore del viaggio per vederne le attività
-        if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)){
-            if (!viaggio.getOrganizzatore().getId().equals(utenteId)){
-                throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
-            }
-        }
 
         attivitaFilter.setViaggioId(viaggioId);
 

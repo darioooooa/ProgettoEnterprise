@@ -16,11 +16,15 @@ import { ItinerarioService } from '../service/itinerario.service';
 export class SchermataHomeComponent implements OnInit {
   titolo = 'Benvenuti in TravelBooking';
 
+  mostraAvanzati: boolean = false;
+
   filtriViaggio = {
     destinazione: '',
     dataInizioMin: '',
+    dataFineMax: '',
     maxPartecipanti: '',
-    prezzoMax: ''
+    prezzoMin: '0',
+    prezzoMax: '10000'
   };
   viaggiTrovati: any[] = [];
   haCercato = false;
@@ -68,6 +72,7 @@ export class SchermataHomeComponent implements OnInit {
   }
 
   isLoggato(): boolean { return this.servAuth.isLoggato(); }
+  ottieniRuolo(): string | null { return this.servAuth.ottieniRuolo(); }
 
   caricaItinerariUtente() {
     this.itinerarioService.getMieListe().subscribe({
@@ -93,10 +98,15 @@ export class SchermataHomeComponent implements OnInit {
     this.isLoading = true;
 
     const filtriPuliti: any = {};
-    if (this.filtriViaggio.destinazione) filtriPuliti.destinazione = this.filtriViaggio.destinazione;
+    if (this.filtriViaggio.destinazione) filtriPuliti.destinazione = this.filtriViaggio.destinazione.trim();
+
     if (this.filtriViaggio.dataInizioMin) filtriPuliti.dataInizioMin = this.filtriViaggio.dataInizioMin + 'T00:00:00';
-    if (this.filtriViaggio.maxPartecipanti) filtriPuliti.maxPartecipanti = this.filtriViaggio.maxPartecipanti;
-    if (this.filtriViaggio.prezzoMax) filtriPuliti.prezzoMax = this.filtriViaggio.prezzoMax;
+    if (this.filtriViaggio.dataFineMax) filtriPuliti.dataFineMax = this.filtriViaggio.dataFineMax + 'T23:59:59';
+
+    if (this.filtriViaggio.maxPartecipanti) filtriPuliti.maxPartecipanti = Number(this.filtriViaggio.maxPartecipanti);
+
+    if (this.filtriViaggio.prezzoMin) filtriPuliti.prezzoMin = Number(this.filtriViaggio.prezzoMin);
+    if (this.filtriViaggio.prezzoMax) filtriPuliti.prezzoMax = Number(this.filtriViaggio.prezzoMax);
 
     this.zone.run(() => {
       this.viaggioService.getViaggi(this.paginaCorrente, filtriPuliti).subscribe({
@@ -206,5 +216,39 @@ export class SchermataHomeComponent implements OnInit {
   calcolaPostiRimanenti(viaggio: any): number {
     if (!viaggio.maxPartecipanti) return 999;
     return viaggio.maxPartecipanti - (viaggio.partecipantiAttuali || 0);
+  }
+
+  // Viaggi che devono ancora iniziare
+  get viaggiFuturi(): any[] {
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    return this.viaggiTrovati.filter(v => v.dataInizio && new Date(v.dataInizio) > oggi);
+  }
+
+  // Viaggi attualmente in corso
+  get viaggiInCorso(): any[] {
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    return this.viaggiTrovati.filter(v => {
+      if (!v.dataInizio || !v.dataFine) return false;
+      const inizio = new Date(v.dataInizio);
+      const fine = new Date(v.dataFine);
+      return oggi >= inizio && oggi <= fine;
+    });
+  }
+
+  // Viaggi storici terminati
+  get viaggiTerminati(): any[] {
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    return this.viaggiTrovati.filter(v => v.dataFine && new Date(v.dataFine) < oggi);
+  }
+
+  isViaggioFuturo(viaggio: any): boolean {
+    if (!viaggio || !viaggio.dataInizio) return false;
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const dataPartenza = new Date(viaggio.dataInizio);
+    return dataPartenza > oggi;
   }
 }
