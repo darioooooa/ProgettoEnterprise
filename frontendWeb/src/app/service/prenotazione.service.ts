@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Prenotazione } from '../models/prenotazioni.model';
 import { AutenticazioneService } from './autenticazione.service';
@@ -15,8 +15,17 @@ export class PrenotazioneService {
   constructor(private http: HttpClient, private authService: AutenticazioneService) {
   }
 
-  getListaPrenotazioni(): Observable<Prenotazione[]> {
-    return this.http.get<any[]>(this.API_URL);
+  getListaPrenotazioni(page: number = 0, filtri: any = {}): Observable<any> {
+    let params = new HttpParams().set('page', page.toString());
+
+    if (filtri) {
+      Object.keys(filtri).forEach(key => {
+        if (filtri[key] !== null && filtri[key] !== undefined && filtri[key] !== '') {
+          params = params.set(key, filtri[key].toString());
+        }
+      });
+    }
+    return this.http.get<any>(this.API_URL, { params: params });
   }
 
   scaricaFileIcs(idPrenotazione: number): Observable<Blob> {

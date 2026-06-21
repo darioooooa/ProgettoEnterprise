@@ -14,9 +14,12 @@ import { AutenticazioneService } from '../service/autenticazione.service';
 })
 export class SchermataPrenotazioni implements OnInit {
 
-  listaPrenotazioni: Prenotazione[] = [];
-
+  listaPrenotazioni: any[] = [];
   isLoading: boolean = false;
+  tabAttivo: 'attivi' | 'storico' = 'attivi';
+
+  paginaCorrente: number = 0;
+  totalePagine: number = 0;
 
   constructor(
     private prenotazioneService: PrenotazioneService,
@@ -41,13 +44,15 @@ export class SchermataPrenotazioni implements OnInit {
     }
   }
 
-  caricaPrenotazioniDalDB(): void {
+  caricaPrenotazioniDalDB(pagina: number = 0): void {
     this.isLoading = true;
+    this.paginaCorrente = pagina;
     this.cdr.detectChanges();
 
-    this.prenotazioneService.getListaPrenotazioni().subscribe({
+    this.prenotazioneService.getListaPrenotazioni(this.paginaCorrente, {}).subscribe({
       next: (rispostaPaginata: any) => {
-        this.listaPrenotazioni = rispostaPaginata.content;
+        this.listaPrenotazioni = rispostaPaginata.content || [];
+        this.totalePagine = rispostaPaginata.totalPages || 0;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -57,6 +62,60 @@ export class SchermataPrenotazioni implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  paginaPrecedente() {
+    if (this.paginaCorrente > 0 && !this.isLoading) {
+      this.caricaPrenotazioniDalDB(this.paginaCorrente - 1);
+    }
+  }
+
+  paginaSuccessiva() {
+    if (this.paginaCorrente < this.totalePagine - 1 && !this.isLoading) {
+      this.caricaPrenotazioniDalDB(this.paginaCorrente + 1);
+    }
+  }
+
+  // Filtra i viaggi in programma o attualmente in corso
+  get prenotazioniAttive(): any[] {
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    return this.listaPrenotazioni.filter(p => {
+      if (!p.viaggioDataFine) return true; // Fallback di sicurezza
+      const fineViaggio = new Date(p.viaggioDataFine);
+      fineViaggio.setHours(0, 0, 0, 0);
+      return fineViaggio >= oggi;
+    });
+  }
+
+  // Filtra i viaggi storici interamente completati
+  get prenotazioniPassate(): any[] {
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    return this.listaPrenotazioni.filter(p => {
+      if (!p.viaggioDataFine) return false;
+      const fineViaggio = new Date(p.viaggioDataFine);
+      fineViaggio.setHours(0, 0, 0, 0);
+      return fineViaggio < oggi;
+    });
+  }
+
+  // Calcola lo stato temporale del viaggio per inserire un testo descrittivo
+  getTestoStatoViaggio(dataInizio: string, dataFine: string): { testo: string, classe: string } {
+    if (!dataInizio || !dataFine) return { testo: 'Confermato', classe: 'badge-grigio' };
+
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const inizio = new Date(dataInizio);
+    const fine = new Date(dataFine);
+
+    if (oggi < inizio) {
+      return { testo: '📅 In Programma', classe: 'badge-futuro' };
+    } else if (oggi >= inizio && oggi <= fine) {
+      return { testo: '✈️ In Corso', classe: 'badge-in-corso' };
+    } else {
+      return { testo: '🏁 Completato', classe: 'badge-completato' };
+    }
   }
 
   vaiAlDettaglioViaggio(viaggioId: number) {
@@ -97,4 +156,5 @@ export class SchermataPrenotazioni implements OnInit {
       });
     }
   }
+
 }

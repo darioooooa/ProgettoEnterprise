@@ -65,7 +65,7 @@
         📊 Le mie Statistiche
       </a>
 
-      <a *ngIf="isViaggiatore()" routerLink="/prenotazioni" [style.pointer-events]="isLoading ? 'none' : 'auto'" class="voce-laterale">
+      <a *ngIf="isViaggiatore()" routerLink="/prenotazioni" [style.pointer-events]="isLoading ? 'none' : 'auto'" (click)="toggleMenu()" class="voce-laterale">
         Le mie prenotazioni
       </a>
 

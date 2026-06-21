@@ -6,98 +6,111 @@
       <p>Gestisci le tue avventure e i dettagli delle prenotazioni</p>
     </div>
 
+    <nav class="itinerary-nav-tabs" style="margin-bottom: 35px;">
+      <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'attivi'" (click)="tabAttivo = 'attivi'">
+        🎒 In programma / In corso ({{ prenotazioniAttive.length }})
+      </button>
+      <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'storico'" (click)="tabAttivo = 'storico'">
+        🏁 Viaggi Completati ({{ prenotazioniPassate.length }})
+      </button>
+    </nav>
+
     <div class="lista-cards" [style.pointer-events]="isLoading ? 'none' : 'auto'">
 
-      <div class="card-prenotazione"
-           *ngFor="let p of listaPrenotazioni"
-           (click)="vaiAlDettaglioViaggio(p.viaggioId)"
-           style="cursor: pointer;">
-
-        <div class="area-notifica-imminente">
-
-          <span class="badge-imminente"
-                *ngIf="calcolaGiorniMancanti(p.viaggioDataInizio) > 0 && calcolaGiorniMancanti(p.viaggioDataInizio) <= 30">
-
-            <span class="icona-alert">✈</span>
-            Il tuo viaggio parte tra {{ calcolaGiorniMancanti(p.viaggioDataInizio) }} giorni
-          </span>
-
-          <span class="badge-imminente oggi"
-                *ngIf="calcolaGiorniMancanti(p.viaggioDataInizio) === 0">
-
-            <span class="icona-alert">🔥</span>
-            Si parte OGGI!
-
-          </span>
-
+      <ng-container *ngIf="tabAttivo === 'attivi'">
+        <div class="messaggio-vuoto" *ngIf="prenotazioniAttive.length === 0">
+          <p>Non hai viaggi imminenti o in corso in questo momento.</p>
+          <button routerLink="/home" [disabled]="isLoading" class="btn-esplora">Trova un viaggio</button>
         </div>
 
-        <div class="info-viaggio">
+        <ng-container *ngFor="let p of prenotazioniAttive">
+          <ng-container *ngTemplateOutlet="cardPrenotazioneTemplate; context: { $implicit: p, visualizzaAzioni: true }"></ng-container>
+        </ng-container>
+      </ng-container>
 
-          <div class="sopra-titolo">
-            <span class="codice">#PREN-{{ p.id }}</span>
-
-            <span class="stato-tag"
-                  [ngClass]="{'attesa': p.stato === 'IN_ATTESA', 'confermata': p.stato === 'CONFERMATA'}">
-              {{ p.stato === 'IN_ATTESA' ? 'In Elaborazione' : 'Attiva' }}
-            </span>
-          </div>
-
-          <h3>{{ p.viaggioTitolo }}</h3>
-
-          <p class="data">
-            <i class="icona-calendario">📅</i>
-            Prenotato il: {{ p.dataPrenotazione | date:'dd MMMM yyyy' }}
-          </p>
-
-          <p class="passeggeri">
-            👥 Persone: {{ p.numeroPersone }}
-          </p>
-
-          <p class="data-partenza">
-            🛫 Partenza: <strong>{{ p.viaggioDataInizio | date:'dd/MM/yyyy' }}</strong>
-          </p>
-
-          <p class="data-ritorno">
-            🛬 Ritorno: <strong>{{ p.viaggioDataFine | date:'dd/MM/yyyy' }}</strong>
-          </p>
-
+      <ng-container *ngIf="tabAttivo === 'storico'">
+        <div class="messaggio-vuoto" *ngIf="prenotazioniPassate.length === 0">
+          <p>Non hai ancora completato nessun viaggio.</p>
         </div>
 
-        <div class="zona-azioni-laterali">
-
-          <div class="prezzo-sezione">
-            <label>Stato Pagamento</label>
-            <p class="valore-prezzo" [style.color]="p.stato === 'IN_ATTESA' ? '#f39c12' : '#2ecc71'">
-              {{ p.stato === 'IN_ATTESA' ? 'In Attesa' : 'Confermato' }}
-            </p>
-          </div>
-
-          <button class="btn-annulla"
-                  *ngIf="p.stato === 'IN_ATTESA'"
-                  (click)="annullaPrenotazione($event, p.id)">
-            ✖ Annulla
-          </button>
-
-        </div>
-
-      </div>
-
-      <div class="messaggio-vuoto" *ngIf="listaPrenotazioni.length === 0">
-        <p>Non hai ancora prenotato nessun viaggio. Che aspetti a partire?</p>
-
-        <button routerLink="/esplora" [disabled]="isLoading" class="btn-esplora">
-          Esplora i Viaggi
-        </button>
-      </div>
+        <ng-container *ngFor="let p of prenotazioniPassate">
+          <ng-container *ngTemplateOutlet="cardPrenotazioneTemplate; context: { $implicit: p, visualizzaAzioni: false }"></ng-container>
+        </ng-container>
+      </ng-container>
 
     </div>
+  </div>
+</div>
 
-    <div class="azioni-finali">
-      <button routerLink="/home" [disabled]="isLoading" class="btn-ritorno">
-        {{ isLoading ? 'Caricamento...' : 'Torna alla Home' }}
+<ng-template #cardPrenotazioneTemplate let-p let-visualizzaAzioni="visualizzaAzioni">
+  <div class="card-prenotazione" (click)="vaiAlDettaglioViaggio(p.viaggioId)">
+
+    <div class="area-notifica-imminente" *ngIf="visualizzaAzioni">
+      <span class="badge-imminente" *ngIf="calcolaGiorniMancanti(p.viaggioDataInizio) > 0 && calcolaGiorniMancanti(p.viaggioDataInizio) <= 30">
+        <span class="icona-alert">✈</span> Il tuo viaggio parte tra {{ calcolaGiorniMancanti(p.viaggioDataInizio) }} giorni
+      </span>
+      <span class="badge-imminente oggi" *ngIf="calcolaGiorniMancanti(p.viaggioDataInizio) === 0">
+        <span class="icona-alert">🔥</span> Si parte oggi!
+      </span>
+    </div>
+
+    <div class="info-viaggio">
+      <div class="sopra-titolo">
+        <span class="codice">#PREN-{{ p.id }}</span>
+
+        <span class="stato-tag" [ngClass]="p.stato === 'IN_ATTESA' ? 'attesa' : 'confermata'">
+          {{ p.stato === 'IN_ATTESA' ? 'In Elaborazione' : 'Attiva' }}
+        </span>
+
+        <span class="stato-tag" [ngClass]="getTestoStatoViaggio(p.viaggioDataInizio, p.viaggioDataFine).classe">
+          {{ getTestoStatoViaggio(p.viaggioDataInizio, p.viaggioDataFine).testo }}
+        </span>
+      </div>
+
+      <h3>{{ p.viaggioTitolo }}</h3>
+
+      <p class="data">
+        <i class="icona-calendario">📅</i> Prenotato il: {{ p.dataPrenotazione | date:'dd MMMM yyyy' }}
+      </p>
+      <p class="passeggeri">👥 Persone: {{ p.numeroPersone }}</p>
+      <p class="data-partenza">🛫 Partenza: <strong>{{ p.viaggioDataInizio | date:'dd/MM/yyyy' }}</strong></p>
+      <p class="data-ritorno">🛬 Ritorno: <strong>{{ p.viaggioDataFine | date:'dd/MM/yyyy' }}</strong></p>
+
+      <p *ngIf="!visualizzaAzioni" style="margin-top: 12px; color: #90caf9; font-size: 0.85rem; font-weight: 500;">
+        ⭐ Clicca sulla scheda per visualizzare l'itinerario e lasciare una recensione
+      </p>
+    </div>
+
+    <div class="zona-azioni-laterali">
+      <div class="prezzo-sezione">
+        <label>Stato Pagamento</label>
+        <p class="valore-prezzo" [style.color]="p.stato === 'IN_ATTESA' ? '#f39c12' : '#2ecc71'">
+          {{ p.stato === 'IN_ATTESA' ? 'In Attesa' : 'Confermato' }}
+        </p>
+      </div>
+
+      <button class="btn-annulla" *ngIf="visualizzaAzioni && p.stato === 'IN_ATTESA'" (click)="annullaPrenotazione($event, p.id)">
+        ✖ Annulla
       </button>
     </div>
 
+  </div> <div class="pagination-bar" *ngIf="totalePagine > 1 && !isLoading" style="margin-top: 30px; text-align: center;">
+  <div class="pagination-info" style="font-size: 1rem; margin-bottom: 12px; color: rgba(255,255,255,0.7);">
+    Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
+  </div>
+
+  <div class="pagination-buttons" style="display: flex; justify-content: center; gap: 15px;">
+    <button class="btn-pagination" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 24px; border-radius: 40px; cursor: pointer; font-weight: 600;"
+            (click)="paginaPrecedente()"
+            [disabled]="paginaCorrente === 0 || isLoading">
+      &larr; Precedente
+    </button>
+
+    <button class="btn-pagination" style="background: #ffffff; border: none; color: #0f2042; padding: 10px 24px; border-radius: 40px; cursor: pointer; font-weight: 600;"
+            (click)="paginaSuccessiva()"
+            [disabled]="paginaCorrente === totalePagine - 1 || isLoading">
+      Successiva &rarr;
+    </button>
   </div>
 </div>
+</ng-template>
