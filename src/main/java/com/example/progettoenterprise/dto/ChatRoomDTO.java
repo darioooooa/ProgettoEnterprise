@@ -13,4 +13,5 @@ public class ChatRoomDTO {
     private String titoloViaggio;
     private String viaggiatoreUsername;
     private String organizzatoreUsername;
+    private int messaggiNonLetti;
 }

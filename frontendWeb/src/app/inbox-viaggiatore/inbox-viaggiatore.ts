@@ -25,7 +25,6 @@ export class InboxViaggiatoreComponent implements OnInit, OnDestroy {
   nuovoMessaggioTesto: string = '';
   mioUsername: string = '';
 
-  // Gestione avvisi del tuo file originale
   messaggioAvviso: string | null = null;
   tipoAvviso: 'successo' | 'errore' = 'errore';
   isLoading: boolean = false;
@@ -45,35 +44,56 @@ export class InboxViaggiatoreComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.mioUsername = this.auth.ottieniUsername() || '';
     if (this.isLoggato()) {
+      this.chatService.InizializzaWebSocketGlobale();
+      this.chatService.ascoltaNotificheGlobali(this.mioUsername);
+
+
+      if (this.chatSubscription) { this.chatSubscription.unsubscribe(); }
+
+      this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe(nuovoMsg => {
+        // Se abbiamo una chat aperta a schermo e il messaggio è per lei
+        if (this.stanzaSelezionata && nuovoMsg.chatRoomId === this.stanzaId) {
+          this.messaggiChat.push(nuovoMsg);
+          this.gestisciScrollChat();
+          this.cdr.detectChanges();
+        } else {
+
+          const stanzaDaAggiornare = this.listaStanze.find(s => s.id === nuovoMsg.chatRoomId);
+          if (stanzaDaAggiornare) {
+            stanzaDaAggiornare.messaggiNonLetti = (stanzaDaAggiornare.messaggiNonLetti || 0) + 1;
+            this.cdr.detectChanges();
+          }
+        }
+      });
+
       this.caricaListaStanze();
     }
   }
-
   caricaListaStanze() {
     this.isLoading = true;
     this.chatService.ottieniStanzePerViaggiatore(this.mioUsername).subscribe({
       next: (stanze) => {
+
         this.listaStanze = stanze;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Errore recupero stanze:", err);
-        this.tipoAvviso = 'errore';
-        this.messaggioAvviso = "Impossibile caricare l'elenco delle chat.";
         this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
   }
-
-
   selezionaChat(stanza: any) {
     this.stanzaSelezionata = stanza;
     this.stanzaId = stanza.id;
     this.messaggiChat = [];
     this.messaggioAvviso = null;
     this.isLoading = true;
+
+    // Azzera il contatore della riga cliccata
+    stanza.messaggiNonLetti = 0;
 
     this.chatService.ottieniCronologia(this.stanzaId).subscribe({
       next: (storico) => {
@@ -82,13 +102,11 @@ export class InboxViaggiatoreComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.cdr.detectChanges();
 
-
         this.chatService.segnaComeLetti(this.stanzaId, this.mioUsername).subscribe({
           next: () => {
-            // Dopo aver letto i messaggi, chiediamo al servizio di ricalcolare il totale aggiornato
             this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe(nuovoTotale => {
               this.chatService.aggiornaContatoreNotifiche(nuovoTotale);
-              this.cdr.detectChanges(); // Forza la Navbar a nascondere o diminuire il badge
+              this.cdr.detectChanges();
             });
           },
           error: (err) => console.error("Errore nell'aggiornamento notifiche letti:", err)
@@ -101,21 +119,9 @@ export class InboxViaggiatoreComponent implements OnInit, OnDestroy {
       }
     });
 
-    if (this.chatSubscription) {
-      this.chatSubscription.unsubscribe();
-    }
-
+    // Connette il canale live per inviare i messaggi su questa stanza
     this.chatService.connettiEIniziaAscolto(this.stanzaId);
-
-    this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe(nuovoMsg => {
-      if (nuovoMsg.chatRoomId === this.stanzaId) {
-        this.messaggiChat.push(nuovoMsg);
-        this.gestisciScrollChat();
-        this.cdr.detectChanges();
-      }
-    });
   }
-
 
   inviaMessaggioCommunity() {
     if (!this.nuovoMessaggioTesto.trim() || !this.stanzaId || this.isLoading) return;
@@ -136,7 +142,6 @@ export class InboxViaggiatoreComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }, 150);
   }
-
 
   private gestisciScrollChat() {
     try {

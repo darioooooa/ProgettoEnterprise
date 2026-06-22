@@ -19,9 +19,15 @@
           [class.attiva]="stanzaSelezionata?.id === stanza.id"
           (click)="selezionaChat(stanza)">
           <div class="avatar-organizzatore"><span>👤</span></div>
-          <div class="stanza-info">
+          <div class="stanza-info" style="flex-grow: 1;">
             <span class="username-contatto">{{ stanza.organizzatoreUsername }}</span>
             <span class="titolo-viaggio-tag">✈️ {{ stanza.titoloViaggio }}</span>
+          </div>
+
+          <div *ngIf="stanza.messaggiNonLetti > 0 && stanzaSelezionata?.id !== stanza.id"
+               class="badge-notifica-stanza"
+               style="background-color: #10b981; color: white; min-width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; padding: 0 4px; margin-left: 10px;">
+            {{ stanza.messaggiNonLetti }}
           </div>
         </div>
       }

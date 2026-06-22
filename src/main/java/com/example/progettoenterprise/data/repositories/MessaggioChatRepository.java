@@ -27,4 +27,14 @@ public interface MessaggioChatRepository extends JpaRepository<MessaggioChat, Lo
     @Query("UPDATE MessaggioChat m SET m.letto = true WHERE m.chatRoom.id = :roomId AND m.mittenteUsername != :username AND m.letto = false")
     void segnaComeLetti(@Param("roomId") Long roomId, @Param("username") String username);
 
+
+    @Query("""
+    SELECT COUNT(m) FROM MessaggioChat m 
+    WHERE m.chatRoom.id = :roomId 
+    AND m.letto = false 
+    AND m.mittenteUsername != :username
+""")
+    int countNotifichePerStanza(@Param("roomId") Long roomId, @Param("username") String username);
+
+
 }

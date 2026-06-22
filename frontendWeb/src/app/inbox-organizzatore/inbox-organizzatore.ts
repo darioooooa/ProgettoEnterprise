@@ -42,7 +42,46 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.mioUsername = this.authService.ottieniUsername() || '';
-    this.caricaListaStanze();
+
+    if (this.mioUsername) {
+      this.chatService.InizializzaWebSocketGlobale();
+      this.chatService.ascoltaNotificheGlobali(this.mioUsername);
+
+
+      if (this.chatSubscription) {
+        this.chatSubscription.unsubscribe();
+      }
+
+      this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe({
+        next: (nuovoMsg) => {
+
+          if (this.stanzaSelezionata && nuovoMsg.chatRoomId === this.stanzaSelezionata.id) {
+            this.messaggiChat.push(nuovoMsg);
+            this.autoscroll();
+            this.chatService.segnaComeLetti(this.stanzaSelezionata.id, this.mioUsername).subscribe();
+            this.cdr.detectChanges();
+          } else {
+
+            const stanzaDaAggiornare = this.stanze.find(s => s.id === nuovoMsg.chatRoomId);
+            if (stanzaDaAggiornare) {
+              stanzaDaAggiornare.messaggiNonLetti = (stanzaDaAggiornare.messaggiNonLetti || 0) + 1;
+              this.cdr.detectChanges();
+            }
+
+
+            this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
+              next: (totale) => {
+                this.chatService.aggiornaContatoreNotifiche(totale);
+                this.cdr.detectChanges();
+              }
+            });
+          }
+        },
+        error: (err) => console.error("Errore ricezione live:", err)
+      });
+
+      this.caricaListaStanze();
+    }
   }
 
   caricaListaStanze(): void {
@@ -58,24 +97,20 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
   selezionaChat(stanza: any): void {
     if (this.isLoading) return;
 
-    this.disconnettiChatCorrente();
-
     this.isLoading = true;
     this.stanzaSelezionata = stanza;
     this.messaggiChat = [];
 
 
+    stanza.messaggiNonLetti = 0;
+
     this.chatService.segnaComeLetti(stanza.id, this.mioUsername).subscribe({
       next: () => {
-        stanza.messaggiNonLetti = 0; // Azzera localmente il contatore della stanza
-
-
         this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
           next: (totale) => {
             this.chatService.aggiornaContatoreNotifiche(totale);
           }
         });
-
 
         this.chatService.ottieniCronologia(stanza.id).subscribe({
           next: (storico) => {
@@ -98,37 +133,8 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
       }
     });
 
-
-    // Attivazione WebSocket e ascolto in tempo reale per la stanza selezionata
+    // Connette il canale  specifico per inviare messaggi su questa stanza
     this.chatService.connettiEIniziaAscolto(stanza.id);
-
-    this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe({
-      next: (nuovoMsg) => {
-
-        if (this.stanzaSelezionata && nuovoMsg.chatRoomId === this.stanzaSelezionata.id) {
-          this.messaggiChat.push(nuovoMsg);
-          this.autoscroll();
-
-
-          this.chatService.segnaComeLetti(stanza.id, this.mioUsername).subscribe();
-          this.cdr.detectChanges();
-        }
-
-        else {
-
-          this.caricaListaStanze();
-
-          // Aggiorna subito il contatore generale delle notifiche nella Navbar in alto
-          this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
-            next: (totale) => {
-              this.chatService.aggiornaContatoreNotifiche(totale);
-              this.cdr.detectChanges();
-            }
-          });
-        }
-      },
-      error: (err) => console.error("Errore nella ricezione del messaggio live:", err)
-    });
   }
 
   inviaMessaggio(): void {
@@ -170,12 +176,12 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
 
   private disconnettiChatCorrente(): void {
     this.chatService.disconnetti();
-    if (this.chatSubscription) {
-      this.chatSubscription.unsubscribe();
-    }
   }
 
   ngOnDestroy(): void {
     this.disconnettiChatCorrente();
+    if (this.chatSubscription) {
+      this.chatSubscription.unsubscribe();
+    }
   }
 }

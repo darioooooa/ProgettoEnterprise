@@ -7,6 +7,7 @@ import com.example.progettoenterprise.data.service.ChatRoomService;
 import com.example.progettoenterprise.dto.ChatRoomDTO;
 import com.example.progettoenterprise.dto.MessaggioChatDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -25,7 +26,7 @@ public class ChatRoomController {
     private final ChatRoomService chatService;
     private final SimpMessagingTemplate messagingTemplate;
     private final UtenteRepository utenteRepository;
-
+    private final com.example.progettoenterprise.data.repositories.MessaggioChatRepository messaggioRepository;
 
     @GetMapping("/api/chat/stanza")
     public ResponseEntity<Long> ottieniOCreaStanza(
@@ -58,6 +59,13 @@ public class ChatRoomController {
             @RequestParam String organizzatoreUsername) {
 
         List<ChatRoomDTO> stanze = chatService.ottieniStanzePerOrganizzatore(organizzatoreUsername);
+
+
+        for (ChatRoomDTO stanza : stanze) {
+            int nonLetti = messaggioRepository.countNotifichePerStanza(stanza.getId(), organizzatoreUsername);
+            stanza.setMessaggiNonLetti(nonLetti);
+        }
+
         return ResponseEntity.ok(stanze);
     }
 
@@ -84,26 +92,25 @@ public class ChatRoomController {
                         .ifPresent(utente -> messaggioDTO.setMittenteId(utente.getId()));
             }
 
-            // 1. Spedizione standard sul topic della chat room
+           // Spedizione standard sul topic della chat room
             messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, messaggioDTO);
             System.out.println("🚀 [WEBSOCKET] Messaggio inoltrato sui canali live della stanza!");
 
-            // 2. SPEDIZIONE DELLA NOTIFICA LIVE SENZA CRASH
+
             ChatRoom stanza = chatService.ottieniStanzaPerId(roomId);
 
             if (stanza != null) {
-                // CONTROLLO DIFENSIVO: Adattiamo i getter in base a come si chiamano nel tuo oggetto ChatRoom.
-                // Se getOrganizzatore() restituisce un oggetto Utente, usiamo .getUsername() su di esso.
+
                 String organizzatoreUsername = (stanza.getOrganizzatore() != null) ? stanza.getOrganizzatore().getUsername() : "";
                 String viaggiatoreUsername = (stanza.getViaggiatore() != null) ? stanza.getViaggiatore().getUsername() : "";
 
-                // Capiamo chi deve ricevere la notifica
+
                 String destinatarioUsername = organizzatoreUsername.equals(messaggioDTO.getMittenteUsername())
                         ? viaggiatoreUsername
                         : organizzatoreUsername;
 
                 if (!destinatarioUsername.isEmpty()) {
-                    // Spediamo il DTO sul canale privato del destinatario
+
                     messagingTemplate.convertAndSend("/topic/notifiche/" + destinatarioUsername, messaggioDTO);
                     System.out.println("🔔 [NOTIFICA LIVE] Segnale inviato al canale personale di: " + destinatarioUsername);
                 }
@@ -131,11 +138,19 @@ public class ChatRoomController {
         return ResponseEntity.ok().build();
     }
 
+
     @GetMapping("/api/chat/viaggiatore")
     public ResponseEntity<List<ChatRoomDTO>> ottieniStanzePerViaggiatore(
             @RequestParam String viaggiatoreUsername) {
 
         List<ChatRoomDTO> stanze = chatService.ottieniStanzePerViaggiatore(viaggiatoreUsername);
+
+
+        for (ChatRoomDTO stanza : stanze) {
+            int nonLetti = messaggioRepository.countNotifichePerStanza(stanza.getId(), viaggiatoreUsername);
+            stanza.setMessaggiNonLetti(nonLetti);
+        }
+
         return ResponseEntity.ok(stanze);
     }
 }

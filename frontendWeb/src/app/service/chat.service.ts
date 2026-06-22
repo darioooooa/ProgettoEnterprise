@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { Client, Message } from '@stomp/stompjs';
+import { Client, Message, StompSubscription } from '@stomp/stompjs';
 import { MessaggioChatDTO } from '../models/messaggio-chat.model';
 import { AutenticazioneService } from './autenticazione.service';
 
@@ -13,24 +13,25 @@ export class ChatService {
   private apiUrl = '/api/chat';
   private stompClient!: Client;
 
-  // Canale interno ad Angular per trasmettere i messaggi in tempo reale ai componenti
+
   private messaggioInArrivoSource = new Subject<MessaggioChatDTO>();
   messaggioInArrivo$ = this.messaggioInArrivoSource.asObservable();
 
-  // Centralino (BehaviorSubject) per notificare la Navbar superiore in tempo reale
+
   private notificheTotaliSource = new BehaviorSubject<number>(0);
   notificheTotali$ = this.notificheTotaliSource.asObservable();
+
+  // 🟢 Mantiene traccia della sottoscrizione attiva alla stanza singola per poterla rimuovere in modo mirato
+  private stanzaSubscription: StompSubscription | null = null;
 
   constructor(
     private http: HttpClient,
     private authService: AutenticazioneService
   ) {}
 
-
   aggiornaContatoreNotifiche(nuovoConteggio: number): void {
     this.notificheTotaliSource.next(nuovoConteggio);
   }
-
 
   ottieniOCreaStanza(viaggioId: number, viaggiatoreUsername: string): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/stanza`, {
@@ -41,20 +42,16 @@ export class ChatService {
     });
   }
 
-  /**
-   * Recupera lo storico di tutti i messaggi di una specifica chat room
-   */
-  ottieniCronologia(roomId: number): Observable<MessaggioChatDTO[]> {
-    return this.http.get<MessaggioChatDTO[]>(`${`${this.apiUrl}/stanza/${roomId}`}/cronologia`);
-  }
 
+  ottieniCronologia(roomId: number): Observable<MessaggioChatDTO[]> {
+    return this.http.get<MessaggioChatDTO[]>(`${this.apiUrl}/stanza/${roomId}/cronologia`);
+  }
 
   ottieniStanzaPerOrganizzatore(organizzatoreUsername: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/organizzatore`, {
       params: { organizzatoreUsername: organizzatoreUsername }
     });
   }
-
 
   ottieniNotificheTotali(username: string): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/notifiche-totali`, {
@@ -70,7 +67,9 @@ export class ChatService {
   }
 
 
-  connettiEIniziaAscolto(roomId: number): void {
+  InizializzaWebSocketGlobale(): void {
+    if (this.stompClient && this.stompClient.connected) return;
+
     const token = this.authService.ottieniToken();
 
     this.stompClient = new Client({
@@ -84,52 +83,60 @@ export class ChatService {
       heartbeatOutgoing: 4000
     });
 
-    this.stompClient.onConnect = (frame) => {
-      console.log('Connesso e autenticato su WebSocket con Keycloak!');
-
-      this.stompClient.subscribe(`/topic/chatroom/${roomId}`, (message: Message) => {
-        if (message.body) {
-          const nuovoMessaggio: MessaggioChatDTO = JSON.parse(message.body);
-          this.messaggioInArrivoSource.next(nuovoMessaggio);
-        }
-      });
-    };
-
     this.stompClient.onStompError = (frame) => {
       console.error('Errore di sicurezza STOMP/Keycloak:', frame.headers['message']);
-      const messaggioErrore = frame.headers['message'];
-      if (messaggioErrore && messaggioErrore.includes('velocemente')) {
-        alert(`💬 CHAT LIMIT: ${messaggioErrore}`);
-      }
     };
 
     this.stompClient.activate();
   }
 
-  /**
-   * Ascolta il canale di notifiche globale per l'utente loggato.
-   * Aggiorna il contatore della Navbar in tempo reale senza fare chiamate HTTP di polling.
-   */
+  connettiEIniziaAscolto(roomId: number): void {
+
+    this.InizializzaWebSocketGlobale();
+
+    const effettuaSottoscrizioneStanza = () => {
+      // Rimuoviamo una sottoscrizione precedente se attiva per evitare duplicati
+      if (this.stanzaSubscription) {
+        this.stanzaSubscription.unsubscribe();
+      }
+
+      this.stanzaSubscription = this.stompClient.subscribe(`/topic/chatroom/${roomId}`, (message: Message) => {
+        if (message.body) {
+          const nuovoMessaggio: MessaggioChatDTO = JSON.parse(message.body);
+          this.messaggioInArrivoSource.next(nuovoMessaggio);
+        }
+      });
+      console.log(`Sottoscritto con successo ai messaggi della stanza: ${roomId}`);
+    };
+
+
+    if (this.stompClient.connected) {
+      effettuaSottoscrizioneStanza();
+    } else {
+      this.stompClient.onConnect = () => {
+        console.log('Connesso su WebSocket!');
+        effettuaSottoscrizioneStanza();
+      };
+    }
+  }
+
+
   ascoltaNotificheGlobali(mioUsername: string): void {
-    // Controllo difensivo: se il client STOMP non è ancora pronto o connesso,
-    // rimanda l'ascolto di un secondo per evitare eccezioni di blocco
-    if (!this.stompClient || !this.stompClient.connected) {
+    this.InizializzaWebSocketGlobale();
+
+    if (!this.stompClient.connected) {
       setTimeout(() => this.ascoltaNotificheGlobali(mioUsername), 1000);
       return;
     }
 
-    // Ci iscriviamo al topic privato delle notifiche dell'utente loggato
     this.stompClient.subscribe(`/topic/notifiche/${mioUsername}`, (message: Message) => {
       if (message.body) {
         console.log("🔔 [WEBSOCKET] Nuova notifica ricevuta sul canale globale!");
-
-        // Estraiamo il valore corrente del BehaviorSubject, incrementiamo e notifichiamo
         const contatoreAttuale = this.notificheTotaliSource.value;
         this.aggiornaContatoreNotifiche(contatoreAttuale + 1);
       }
     });
   }
-
 
   inviaMessaggio(roomId: number, messaggio: MessaggioChatDTO): void {
     if (this.stompClient && this.stompClient.connected) {
@@ -141,6 +148,7 @@ export class ChatService {
       console.error('Impossibile inviare il messaggio: WebSocket non connesso!');
     }
   }
+
   ottieniStanzePerViaggiatore(viaggiatoreUsername: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/viaggiatore`, {
       params: { viaggiatoreUsername: viaggiatoreUsername }
@@ -153,19 +161,26 @@ export class ChatService {
       setTimeout(() => this.ascoltaNotificheAmicizia(username), 1000);
       return;
     }
+    this.InizializzaWebSocketGlobale();
+
+    if (!this.stompClient.connected) {
+      setTimeout(() => this.ascoltaNotificheAmicizia(username), 1000);
+      return;
+    }
+
     const canaleAmicizie = `/topic/notifiche/${username}`;
     this.stompClient.subscribe(canaleAmicizie, (messaggio: any) => {
       console.log("Nuova richiesta di amicizia ricevuta in tempo reale!");
-      this.notificheAmicizia$.next(); // Suona il megafono!
+      this.notificheAmicizia$.next();
     });
   }
 
+
   disconnetti(): void {
-    if (this.stompClient) {
-      this.stompClient.deactivate();
-      console.log('WebSocket disconnesso.');
+    if (this.stanzaSubscription) {
+      this.stanzaSubscription.unsubscribe();
+      this.stanzaSubscription = null;
+      console.log('Disiscritto dalla stanza singola. Il WebSocket globale rimane ACCESO per le notifiche della Navbar.');
     }
   }
-
-
 }
