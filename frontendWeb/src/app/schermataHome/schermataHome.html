@@ -1,30 +1,69 @@
 <section [class.search-header-full]="!haCercato" [class.search-header-compact]="haCercato">
   <div class="overlay"></div>
+
   <div class="search-container">
     <h2>Trova la tua prossima destinazione</h2>
 
-    <div class="search-bar">
-      <input type="text" placeholder="Località (es. Bali, Indonesia)" [(ngModel)]="filtriViaggio.destinazione" [disabled]="isLoading">
-      <input type="date" [(ngModel)]="filtriViaggio.dataInizioMin" [disabled]="isLoading">
-      <div class="price-wrapper">
-        <label>Prezzo Max</label>
-        <input type="range" min="0" max="5000" step="50" [(ngModel)]="filtriViaggio.prezzoMax" [disabled]="isLoading" class="price-slider">
+    <div class="search-card-wrapper">
 
-        <div class="price-display">
-          <input type="number" [(ngModel)]="filtriViaggio.prezzoMax" [disabled]="isLoading">
-          <span>€</span>
+      <div class="main-search-row">
+
+        <div class="input-container-glass">
+          <label>Destinazione</label>
+          <input type="text" placeholder="Bali, Indonesia, Parigi..." [(ngModel)]="filtriViaggio.destinazione" [disabled]="isLoading">
         </div>
+
+        <div class="input-container-glass">
+          <label>Dal (data inizio minima)</label>
+          <input type="date" [(ngModel)]="filtriViaggio.dataInizioMin" [disabled]="isLoading">
+        </div>
+
+        <div class="input-container-glass">
+          <label>Al (data fine massima)</label>
+          <input type="date" [(ngModel)]="filtriViaggio.dataFineMax" [disabled]="isLoading">
+        </div>
+
+        <div class="input-container-glass">
+          <label>Posti richiesti (minimi liberi)</label>
+          <input type="number" min="1" max="100" placeholder="Es. 10" [(ngModel)]="filtriViaggio.maxPartecipanti" [disabled]="isLoading">
+        </div>
+
+        <button type="button" class="btn-toggle-advanced" (click)="mostraAvanzati = !mostraAvanzati">
+          {{ mostraAvanzati ? '🔼 Nascondi filtri prezzo' : '🔽 Mostra filtri prezzo' }}
+        </button>
+
+        <div class="advanced-filters-panel" *ngIf="mostraAvanzati">
+
+          <div class="input-container-glass slider-group-box">
+            <div class="slider-row-flex">
+              <label>Prezzo minimo</label>
+              <div class="badge-valore-slider-input">
+                <input type="number" min="0" max="5000" [(ngModel)]="filtriViaggio.prezzoMin" [disabled]="isLoading">
+                <span>€</span>
+              </div>
+            </div>
+            <input type="range" min="0" max="5000" step="50" [(ngModel)]="filtriViaggio.prezzoMin" [disabled]="isLoading" class="price-slider-nuovo">
+          </div>
+
+          <div class="input-container-glass slider-group-box">
+            <div class="slider-row-flex">
+              <label>Prezzo massimo</label>
+              <div class="badge-valore-slider-input">
+                <input type="number" min="0" max="10000" [(ngModel)]="filtriViaggio.prezzoMax" [disabled]="isLoading">
+                <span>€</span>
+              </div>
+            </div>
+            <input type="range" min="0" max="10000" step="50" [(ngModel)]="filtriViaggio.prezzoMax" [disabled]="isLoading" class="price-slider-nuovo">
+          </div>
+
+        </div>
+
+        <button type="button" class="btn-cercata btn-cercao btn-cerca-main" [disabled]="isLoading" (click)="avviaRicercaViaggi($event)">
+          {{ isLoading ? '...' : 'Cerca' }}
+        </button>
+
       </div>
-      <select [(ngModel)]="filtriViaggio.maxPartecipanti" [disabled]="isLoading">
-        <option value="">Qualsiasi numero di persone</option>
-        <option value="1">1 Persona</option>
-        <option value="2">2 Persone</option>
-        <option value="3">3 Persone</option>
-        <option value="4">4+ Persone</option>
-      </select>
-      <button type="button" class="btn" [disabled]="isLoading" (click)="avviaRicercaViaggi($event)">
-        {{ isLoading ? '...' : 'Cerca' }}
-      </button>
+
     </div>
   </div>
 </section>
@@ -32,50 +71,62 @@
 <section class="destinations" *ngIf="haCercato" style="background-color: #f9f9f9; padding-top: 40px;">
   <h2>Risultati della tua ricerca</h2>
 
-  <p *ngIf="viaggiTrovati.length === 0" style="text-align: center; font-size: 1.2rem;">
-    Nessun viaggio trovato con questi filtri. Prova a cambiare destinazione o date!
-  </p>
-
-  <div class="cards-container" *ngIf="viaggiTrovati.length > 0" [style.pointer-events]="isLoading ? 'none' : 'auto'">
-    <div class="card" *ngFor="let viaggio of viaggiTrovati">
-
-      <img [routerLink]="['/viaggi', viaggio.id]" style="cursor: pointer;" src="/assets/cammelli-che-attraversa-il-deserto-del-Sahara.jpg" [alt]="viaggio.destinazione">
-
-      <button class="plus-icon-button" [disabled]="isLoading" (click)="toggleItineraryMenu(viaggio.id, $event)">+</button>
-
-      <div class="card-info" [routerLink]="['/viaggi', viaggio.id]" style="cursor: pointer;">
-        <h3>{{ viaggio.titolo }}</h3>
-        <p>📍 {{ viaggio.destinazione }}</p>
-        <p><strong>{{ viaggio.prezzo }}€ / persona</strong></p>
-        <p>Partenza: {{ viaggio.dataInizio | date:'dd/MM/yyyy' }}</p>
-        <button class="btn-prenota-card" (click)="vaiAPrenotazione(viaggio.id, $event)">
-          Prenota Ora
-        </button>
-
-        <p class="scarsita-posti" *ngIf="calcolaPostiRimanenti(viaggio) > 0 && calcolaPostiRimanenti(viaggio) <= 3">
-          ⚠️ Solo {{ calcolaPostiRimanenti(viaggio) }} {{ calcolaPostiRimanenti(viaggio) === 1 ? 'posto rimanente' : 'posti rimanenti' }}!
-        </p>
-
-      </div>
-
-      <div class="itinerary-dropdown" *ngIf="openItineraryMenuId === viaggio.id" (click)="$event.stopPropagation()">
-
-        <div class="dropdown-header">
-          <div class="btn-nuovo-itinerario" (click)="apriModaleItinerario()">
-            + Crea nuovo itinerario
-          </div>
-        </div>
-
-        <ul class="dropdown-list">
-          <li *ngFor="let it of mieiItinerari" (click)="selezionaItinerario(it.idItinerario, viaggio.id)">
-            {{ it.nome }}
-          </li>
-        </ul>
-      </div>
-    </div>
+  <div *ngIf="isLoading" class="loading-results-container">
+    <div class="spinner-nuovo"></div>
+    <p>Ricerca dei viaggi in corso...</p>
   </div>
 
-  <div class="pagination-bar" *ngIf="totalePagine > 0" style="margin-top: 30px; padding-bottom: 30px; text-align: center;">
+  <ng-container *ngIf="!isLoading">
+
+    <div *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_ORGANIZZATORE'" style="text-align: left; width: 100%;">
+
+      <div class="blocco-categoria-ricerca" style="margin-bottom: 40px;">
+        <h3 class="titolo-categoria-home">📅 Prossime Partenze ({{ viaggiFuturi.length }})</h3>
+        <p *ngIf="viaggiFuturi.length === 0" class="testo-vuoto-categoria">Nessun viaggio programmato trovato con questi filtri.</p>
+        <div class="cards-container" *ngIf="viaggiFuturi.length > 0">
+          <div class="card" *ngFor="let viaggio of viaggiFuturi">
+            <ng-container *ngTemplateOutlet="cardTemplate; context: { $implicit: viaggio }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="blocco-categoria-ricerca" style="margin-bottom: 40px;">
+        <h3 class="titolo-categoria-home">✈️ Viaggi Attualmente in Corso ({{ viaggiInCorso.length }})</h3>
+        <p *ngIf="viaggiInCorso.length === 0" class="testo-vuoto-categoria">Nessun viaggio attualmente in corso trovato.</p>
+        <div class="cards-container" *ngIf="viaggiInCorso.length > 0">
+          <div class="card" *ngFor="let viaggio of viaggiInCorso">
+            <ng-container *ngTemplateOutlet="cardTemplate; context: { $implicit: viaggio }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="blocco-categoria-ricerca" style="margin-bottom: 40px;">
+        <h3 class="titolo-categoria-home">🏁 Storico Viaggi Conclusi ({{ viaggiTerminati.length }})</h3>
+        <p *ngIf="viaggiTerminati.length === 0" class="testo-vuoto-categoria">Nessun viaggio archiviato/concluso trovato.</p>
+        <div class="cards-container" *ngIf="viaggiTerminati.length > 0">
+          <div class="card" *ngFor="let viaggio of viaggiTerminati" style="opacity: 0.8; filter: grayscale(15%);">
+            <ng-container *ngTemplateOutlet="cardTemplate; context: { $implicit: viaggio }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div *ngIf="!isLoggato() || ottieniRuolo() !== 'ROLE_ORGANIZZATORE'">
+      <p *ngIf="viaggiTrovati.length === 0" class="no-results-msg" style="text-align: center; font-size: 1.2rem;">
+        Nessun viaggio trovato con questi filtri. Prova a cambiare destinazione o date!
+      </p>
+
+      <div class="cards-container" *ngIf="viaggiTrovati.length > 0">
+        <div class="card" *ngFor="let viaggio of viaggiTrovati">
+          <ng-container *ngTemplateOutlet="cardTemplate; context: { $implicit: viaggio }"></ng-container>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <div class="pagination-bar" *ngIf="totalePagine > 0 && !isLoading" style="margin-top: 30px; padding-bottom: 30px; text-align: center;">
     <div class="pagination-info" style="font-size: 1.1rem; margin-bottom: 15px;">
       Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
     </div>
@@ -86,7 +137,6 @@
               [disabled]="paginaCorrente === 0 || isLoading">
         &larr; Precedente
       </button>
-
       <button class="btn" style="margin-left: 10px;"
               (click)="paginaSuccessiva()"
               [disabled]="paginaCorrente === totalePagine - 1 || isLoading">
@@ -111,3 +161,49 @@
     </div>
   </div>
 </section>
+
+<ng-template #cardTemplate let-viaggio>
+  <img [routerLink]="['/viaggi', viaggio.id]" style="cursor: pointer;" src="/assets/cammelli-che-attraversa-il-deserto-del-Sahara.jpg" [alt]="viaggio.destinazione">
+
+  <button *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'"
+          class="plus-icon-button"
+          [disabled]="isLoading"
+          (click)="toggleItineraryMenu(viaggio.id, $event)">
+    +
+  </button>
+
+  <div class="card-info" [routerLink]="['/viaggi', viaggio.id]" style="cursor: pointer;">
+    <h3>{{ viaggio.titolo }}</h3>
+    <p>📍 {{ viaggio.destinazione }}</p>
+    <p><strong>{{ viaggio.prezzo }}€ / persona</strong></p>
+    <p>Partenza: {{ viaggio.dataInizio | date:'dd/MM/yyyy' }}</p>
+
+    <p class="scarsita-posti" *ngIf="isViaggioFuturo(viaggio) && calcolaPostiRimanenti(viaggio) > 0 && calcolaPostiRimanenti(viaggio) <= 3">
+      ⚠️ Solo {{ calcolaPostiRimanenti(viaggio) }} {{ calcolaPostiRimanenti(viaggio) === 1 ? 'posto rimanente' : 'posti rimanenti' }}!
+    </p>
+
+    <p class="scarsita-posti" *ngIf="isViaggioFuturo(viaggio) && calcolaPostiRimanenti(viaggio) <= 0" style="background-color: rgba(245, 158, 11, 0.08); color: #d97706; border-color: rgba(245, 158, 11, 0.2);">
+      🚫 Tutto Esaurito
+    </p>
+
+    <button class="btn-prenota-card"
+            *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE' && isViaggioFuturo(viaggio) && calcolaPostiRimanenti(viaggio) > 0"
+            [disabled]="isLoading"
+            (click)="vaiAPrenotazione(viaggio.id, $event)">
+      Prenota Ora
+    </button>
+  </div>
+
+  <div class="itinerary-dropdown" *ngIf="openItineraryMenuId === viaggio.id" (click)="$event.stopPropagation()">
+    <div class="dropdown-header">
+      <div class="btn-nuovo-itinerario" (click)="apriModaleItinerario()">
+        + Crea nuovo itinerario
+      </div>
+    </div>
+    <ul class="dropdown-list">
+      <li *ngFor="let it of mieiItinerari" (click)="selezionaItinerario(it.idItinerario, viaggio.id)">
+        {{ it.nome }}
+      </li>
+    </ul>
+  </div>
+</ng-template>
