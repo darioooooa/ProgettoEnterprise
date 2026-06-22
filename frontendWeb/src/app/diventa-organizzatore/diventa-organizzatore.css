@@ -72,6 +72,10 @@
   transition: all 0.3s ease;
 }
 
+.form-group textarea {
+  resize: none;
+}
+
 .form-group textarea::placeholder,
 .form-group input::placeholder {
   color: rgba(255, 255, 255, 0.6);
@@ -211,5 +215,42 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-background {
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+
+  .container-richiesta {
+    width: 95%;
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .titolo {
+    font-size: 26px;
+  }
+
+  .sottotitolo {
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group textarea,
+  .form-group input {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .btn-invia {
+    padding: 14px;
+    font-size: 15px;
   }
 }

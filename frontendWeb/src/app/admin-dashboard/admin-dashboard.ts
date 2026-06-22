@@ -64,7 +64,6 @@ export class AdminDashboard implements OnInit {
   messaggioInLettura: string = '';
 
   isLoading: boolean = false;
-  mostraModaleLogout: boolean = false;
 
   constructor(
     private adminService: AdminService,
@@ -299,21 +298,5 @@ export class AdminDashboard implements OnInit {
   chiudiModaleMessaggio() {
     this.mostraModaleMessaggio = false;
     this.messaggioInLettura = '';
-  }
-
-  apriModaleLogout() {
-    this.mostraModaleLogout = true;
-  }
-
-  chiudiModaleLogout() {
-    this.mostraModaleLogout = false;
-  }
-
-  confermaLogout() {
-    this.mostraModaleLogout = false;
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.clear();
-    }
-    this.navigatore.navigate(['/login']);
   }
 }

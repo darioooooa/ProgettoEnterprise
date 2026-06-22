@@ -23,7 +23,7 @@ import { ChatComponent } from './components/chat/chat';
     ProgrammaComponent,
     CommunityComponent,
     RouterLink,
-    ChatComponent, // 👈 Collegato correttamente ai metadati standalone
+    ChatComponent,
     ModaleSegnalazione
   ],
   templateUrl: './dettaglio-viaggio.html',
@@ -278,5 +278,14 @@ export class DettaglioViaggio implements OnInit {
     const attuali = this.statistiche.partecipantiAttuali ?? 0;
     const max = this.statistiche.maxPartecipanti ?? 0;
     return max > 0 && attuali >= max;
+  }
+
+  // Intercetta la richiesta inviata dal componente delle recensioni
+  onRiceviSegnalazioneFiglio(evento: { id: number, tipo: string }) {
+    if (this.isLoading) return;
+    this.idDaSegnalare = evento.id;
+    this.tipoDaSegnalare = evento.tipo;
+    this.mostraSegnalazione = true;
+    this.cdr.detectChanges();
   }
 }

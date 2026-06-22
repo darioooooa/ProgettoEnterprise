@@ -1,7 +1,6 @@
 import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { Prenotazione } from '../models/prenotazioni.model';
 import { PrenotazioneService } from '../service/prenotazione.service';
 import { AutenticazioneService } from '../service/autenticazione.service';
 
@@ -16,10 +15,13 @@ export class SchermataPrenotazioni implements OnInit {
 
   listaPrenotazioni: any[] = [];
   isLoading: boolean = false;
-  tabAttivo: 'attivi' | 'storico' = 'attivi';
+  tabAttivo: 'attivi' | 'storico' | 'timeline' = 'attivi';
 
   paginaCorrente: number = 0;
   totalePagine: number = 0;
+
+  attiveInCorso: any[] = [];
+  passateTerminate: any[] = [];
 
   constructor(
     private prenotazioneService: PrenotazioneService,
@@ -53,7 +55,27 @@ export class SchermataPrenotazioni implements OnInit {
       next: (rispostaPaginata: any) => {
         this.listaPrenotazioni = rispostaPaginata.content || [];
         this.totalePagine = rispostaPaginata.totalPages || 0;
+
+        const oggi = new Date();
+        oggi.setHours(0, 0, 0, 0);
+
+        // Popola l'array delle attive
+        this.attiveInCorso = this.listaPrenotazioni.filter(p => {
+          if (!p.viaggioDataFine) return true;
+          const fineViaggio = new Date(p.viaggioDataFine);
+          fineViaggio.setHours(0, 0, 0, 0);
+          return fineViaggio >= oggi;
+        });
+
+        // Popola l'array dello storico
+        this.passateTerminate = this.listaPrenotazioni.filter(p => {
+          if (!p.viaggioDataFine) return false;
+          const fineViaggio = new Date(p.viaggioDataFine);
+          fineViaggio.setHours(0, 0, 0, 0);
+          return fineViaggio < oggi;
+        });
         this.isLoading = false;
+        this.cdr.markForCheck();
         this.cdr.detectChanges();
       },
       error: (errore) => {
@@ -155,6 +177,62 @@ export class SchermataPrenotazioni implements OnInit {
         }
       });
     }
+  }
+
+  get timelineImpegni(): any[] {
+    if (!this.listaPrenotazioni || this.listaPrenotazioni.length === 0) return [];
+
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+
+    // Prende solo i viaggi futuri o in corso e vengono ordinati cronologicamente
+    const viaggiFuturi = this.listaPrenotazioni
+      .filter(p => p.viaggioDataInizio && p.viaggioDataFine && new Date(p.viaggioDataFine) >= oggi)
+      .sort((a, b) => new Date(a.viaggioDataInizio).getTime() - new Date(b.viaggioDataInizio).getTime());
+
+    if (viaggiFuturi.length === 0) return [];
+
+    const timelineMista: any[] = [];
+
+    // Cicla i viaggi e calcola i periodi liberi intermedi
+    for (let i = 0; i < viaggiFuturi.length; i++) {
+      const viaggioCorrente = viaggiFuturi[i];
+
+      timelineMista.push({
+        tipoElemento: 'IMPEGNO',
+        ...viaggioCorrente
+      });
+
+      // Se c'è un viaggio successivo, controlla se c'è un periodo libero in mezzo
+      if (i < viaggiFuturi.length - 1) {
+        const viaggioSuccessivo = viaggiFuturi[i + 1];
+
+        const fineCorrente = new Date(viaggioCorrente.viaggioDataFine);
+        const inizioSuccessivo = new Date(viaggioSuccessivo.viaggioDataInizio);
+
+        // Calcola la differenza in giorni
+        const diffTempo = inizioSuccessivo.getTime() - fineCorrente.getTime();
+        const giorniLiberi = Math.floor(diffTempo / (1000 * 60 * 60 * 24)) - 1;
+
+        // Se c'è almeno 1 giorno libero tra i due viaggi, inserisce il blocco 'LIBERO'
+        if (giorniLiberi > 0) {
+          const dataInizioLibero = new Date(fineCorrente);
+          dataInizioLibero.setDate(dataInizioLibero.getDate() + 1);
+
+          const dataFineLibero = new Date(inizioSuccessivo);
+          dataFineLibero.setDate(dataFineLibero.getDate() - 1);
+
+          timelineMista.push({
+            tipoElemento: 'LIBERO',
+            viaggioTitolo: 'Periodo disponibile per nuove mete',
+            viaggioDataInizio: dataInizioLibero.toISOString(),
+            viaggioDataFine: dataFineLibero.toISOString(),
+            giorniDurata: giorniLiberi
+          });
+        }
+      }
+    }
+    return timelineMista;
   }
 
 }

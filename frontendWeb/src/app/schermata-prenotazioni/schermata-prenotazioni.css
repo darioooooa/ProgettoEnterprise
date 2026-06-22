@@ -13,14 +13,14 @@
 .contenitore-prenotazioni-vetro {
   background: rgba(15, 32, 66, 0.75);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
-  width: 100%;
+  width: 95%;
   max-width: 850px;
-  padding: 50px;
+  padding: 40px;
   color: white;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
 }
 
 /* --- HEADER --- */
@@ -54,18 +54,15 @@
 .card-prenotazione {
   position: relative;
   overflow: hidden;
-
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-
-  padding: 35px;
+  padding: 25px;
   border-radius: 20px;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
-
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .card-prenotazione:hover {
@@ -155,10 +152,15 @@
   border: 1px solid #f1c40f;
 }
 
+.info-viaggio {
+  flex: 1;
+  min-width: 0;
+  padding-right: 20px;
+}
+
 .info-viaggio h3 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 1.4rem;
-  margin: 5px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .data {
@@ -348,7 +350,149 @@
   background: #e3f2fd !important;
 }
 
-@media (max-width: 600px) {
-  .itinerary-nav-tabs { flex-direction: column; border-radius: 12px; }
-  .tab-link { font-size: 0.8rem; padding: 10px; }
+.timeline-container-vetro {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+}
+
+.timeline-info-testo {
+  font-size: 0.88rem;
+  color: #90caf9;
+  line-height: 1.4;
+  margin-bottom: 5px;
+}
+
+.timeline-riga-impegno {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  position: relative;
+  padding-bottom: 5px;
+}
+
+.timeline-riga-impegno:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 30px;
+  left: 11px;
+  width: 2px;
+  height: calc(100% - 10px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.timeline-punto-orologio {
+  font-size: 1.3rem;
+  z-index: 2;
+  background: rgba(15, 32, 66, 0.9);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-dettaglio-impegno {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.timeline-dettaglio-impegno h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.timeline-periodo-occupato {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 10px;
+}
+
+.badge-stato-timeline {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+@media (max-width: 992px) {
+  .contenitore-prenotazioni-vetro {
+    padding: 30px;
+  }
+
+  .card-prenotazione {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .zona-azioni-laterali {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .sfondo-prenotazioni {
+    padding: 20px 10px;
+  }
+
+  .contenitore-prenotazioni-vetro {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .intestazione-sezione h1 {
+    font-size: 1.5rem;
+  }
+
+  .sopra-titolo {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 500px) {
+
+  .itinerary-nav-tabs {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .tab-link {
+    font-size: 0.75rem !important;
+    padding: 8px !important;
+  }
+
+  .card-prenotazione {
+    padding: 20px;
+  }
+
+  .valore-prezzo {
+    font-size: 1.2rem;
+  }
+
+  .timeline-riga-impegno {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .timeline-riga-impegno:not(:last-child)::after {
+    display: none;
+  }
 }

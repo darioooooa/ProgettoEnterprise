@@ -1,4 +1,4 @@
-<div class="inbox-container">
+<div class="inbox-container" [class.ha-selezione]="stanzaSelezionata">
 
   <aside class="sidebar-stanze">
     <div class="sidebar-header">
@@ -13,7 +13,7 @@
         </div>
       }
 
-      @for (stanza of listaStanze; track stanza.id) {
+      @for (stanza of stanzeOrdinate; track stanza.id) {
         <div
           class="stanza-item"
           [class.attiva]="stanzaSelezionata?.id === stanza.id"
@@ -59,6 +59,9 @@
         @if (isLoggato()) {
           <div class="chat-header">
             <div class="info-destinatario-corrente">
+
+              <button class="btn-back-responsive" (click)="stanzaSelezionata = null">←</button>
+
               <span class="avatar-corrente">👤</span>
               <div>
                 <h4>Stai parlando con: {{ stanzaSelezionata.organizzatoreUsername }}</h4>
@@ -74,7 +77,14 @@
               </div>
             }
 
-            @for (msg of messaggiChat; track msg.id) {
+            @for (msg of messaggiChat; track msg.id; let i = $index) {
+
+              @if (isNuovoGiorno(msg, i > 0 ? messaggiChat[i-1] : null)) {
+                <div class="chat-date-separator">
+                  <span>{{ msg.dataInvio | date:'EEEE dd MMMM yyyy' }}</span>
+                </div>
+              }
+
               <div [class.mio-msg]="msg.mittenteUsername === mioUsername"
                    [class.altro-msg]="msg.mittenteUsername !== mioUsername"
                    class="msg-row">

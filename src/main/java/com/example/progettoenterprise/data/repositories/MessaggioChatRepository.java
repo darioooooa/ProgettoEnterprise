@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -36,5 +37,8 @@ public interface MessaggioChatRepository extends JpaRepository<MessaggioChat, Lo
 """)
     int countNotifichePerStanza(@Param("roomId") Long roomId, @Param("username") String username);
 
+    // Trova la dataInvio del messaggio più recente in una specifica stanza
+    @Query("SELECT MAX(m.dataInvio) FROM MessaggioChat m WHERE m.chatRoom.id = :roomId")
+    LocalDateTime findDataUltimoMessaggioPerStanza(@Param("roomId") Long roomId);
 
 }

@@ -2,6 +2,8 @@ package com.example.progettoenterprise.dto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,4 +16,5 @@ public class ChatRoomDTO {
     private String viaggiatoreUsername;
     private String organizzatoreUsername;
     private int messaggiNonLetti;
+    private LocalDateTime dataUltimoMessaggio;
 }

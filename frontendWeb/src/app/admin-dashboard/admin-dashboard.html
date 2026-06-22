@@ -1,15 +1,12 @@
 <main class="hero-section">
-  <div class="background-overlay"></div>
-  <nav class="admin-navbar">
-    <div class="logo">ENTERPRISE Admin</div>
-    <div class="user-menu">
-      <span class="admin-username">👤 {{ adminUsername }}</span>
-      <button class="btn-logout" (click)="apriModaleLogout()">Logout</button>
-    </div>
-  </nav>
 
   <div class="content-wrapper">
     <div class="glass-form-container dashboard-container">
+
+      <div class="admin-panel-main-header">
+        <h1>Enterprise admin panel</h1>
+        <p class="admin-panel-subtitle">Centro di controllo e moderazione globale della piattaforma</p>
+      </div>
 
       <div class="main-tabs">
         <button [class.active]="sezionePrincipale === 'PROMOZIONI'" (click)="cambiaSezionePrincipale('PROMOZIONI')">
@@ -200,25 +197,5 @@
     <div style="text-align: right;">
       <button (click)="chiudiModaleMessaggio()" style="background: #e5e7eb; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Chiudi</button>
     </div>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="mostraModaleLogout">
-  <div class="modal-box">
-
-    <div class="modal-header">
-      <h3>Disconnessione</h3>
-      <button class="close-btn" (click)="chiudiModaleLogout()">×</button>
-    </div>
-
-    <div class="modal-body">
-      <p>Sei sicuro di voler uscire dal tuo account?</p>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-annulla" (click)="chiudiModaleLogout()">Annulla</button>
-      <button class="btn-esci" (click)="confermaLogout()">Sì, esci</button>
-    </div>
-
   </div>
 </div>

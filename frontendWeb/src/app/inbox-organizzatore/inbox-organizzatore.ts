@@ -28,7 +28,6 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
 
   mostraSegnalazione = false;
   idDaSegnalare = 0;
-
   isLoading: boolean = false;
 
   private chatSubscription!: Subscription;
@@ -47,13 +46,17 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
       this.chatService.InizializzaWebSocketGlobale();
       this.chatService.ascoltaNotificheGlobali(this.mioUsername);
 
-
       if (this.chatSubscription) {
         this.chatSubscription.unsubscribe();
       }
 
       this.chatSubscription = this.chatService.messaggioInArrivo$.subscribe({
         next: (nuovoMsg) => {
+          // Aggiorna l'orario locale della stanza per l'ordinamento istantaneo
+          const stanzaTarget = this.stanze.find(s => s.id === nuovoMsg.chatRoomId);
+          if (stanzaTarget) {
+            stanzaTarget.dataUltimoMessaggio = nuovoMsg.dataInvio;
+          }
 
           if (this.stanzaSelezionata && nuovoMsg.chatRoomId === this.stanzaSelezionata.id) {
             this.messaggiChat.push(nuovoMsg);
@@ -61,14 +64,9 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
             this.chatService.segnaComeLetti(this.stanzaSelezionata.id, this.mioUsername).subscribe();
             this.cdr.detectChanges();
           } else {
-
-            const stanzaDaAggiornare = this.stanze.find(s => s.id === nuovoMsg.chatRoomId);
-            if (stanzaDaAggiornare) {
-              stanzaDaAggiornare.messaggiNonLetti = (stanzaDaAggiornare.messaggiNonLetti || 0) + 1;
-              this.cdr.detectChanges();
+            if (stanzaTarget) {
+              stanzaTarget.messaggiNonLetti = (stanzaTarget.messaggiNonLetti || 0) + 1;
             }
-
-
             this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
               next: (totale) => {
                 this.chatService.aggiornaContatoreNotifiche(totale);
@@ -76,6 +74,9 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
               }
             });
           }
+          // Refresha il riferimento per forzare Angular all'ordinamento
+          this.stanze = [...this.stanze];
+          this.cdr.detectChanges();
         },
         error: (err) => console.error("Errore ricezione live:", err)
       });
@@ -87,10 +88,27 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
   caricaListaStanze(): void {
     this.chatService.ottieniStanzaPerOrganizzatore(this.mioUsername).subscribe({
       next: (lista) => {
-        this.stanze = lista;
+        this.stanze = lista || [];
         this.cdr.detectChanges();
       },
       error: (err) => console.error("Errore nel recupero della inbox:", err)
+    });
+  }
+
+  get stanzeOrdinate(): any[] {
+    return [...this.stanze].sort((a, b) => {
+      const parsingData = (data: any): number => {
+        if (!data) return 0;
+        if (Array.isArray(data)) {
+          return new Date(data[0], data[1] - 1, data[2], data[3], data[4], data[5] || 0).getTime();
+        }
+        const t = new Date(data).getTime();
+        return isNaN(t) ? 0 : t;
+      };
+      const tempoA = parsingData(a.dataUltimoMessaggio);
+      const tempoB = parsingData(b.dataUltimoMessaggio);
+      if (tempoA === 0 && tempoB === 0) return b.id - a.id;
+      return tempoB - tempoA;
     });
   }
 
@@ -100,21 +118,17 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
     this.isLoading = true;
     this.stanzaSelezionata = stanza;
     this.messaggiChat = [];
-
-
     stanza.messaggiNonLetti = 0;
 
     this.chatService.segnaComeLetti(stanza.id, this.mioUsername).subscribe({
       next: () => {
         this.chatService.ottieniNotificheTotali(this.mioUsername).subscribe({
-          next: (totale) => {
-            this.chatService.aggiornaContatoreNotifiche(totale);
-          }
+          next: (totale) => this.chatService.aggiornaContatoreNotifiche(totale)
         });
 
         this.chatService.ottieniCronologia(stanza.id).subscribe({
           next: (storico) => {
-            this.messaggiChat = storico;
+            this.messaggiChat = storico || [];
             this.autoscroll();
             this.isLoading = false;
             this.cdr.detectChanges();
@@ -133,7 +147,6 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
       }
     });
 
-    // Connette il canale  specifico per inviare messaggi su questa stanza
     this.chatService.connettiEIniziaAscolto(stanza.id);
   }
 
@@ -141,7 +154,6 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
     if (!this.nuovoMessaggioTesto.trim() || !this.stanzaSelezionata || this.isLoading) return;
 
     this.isLoading = true;
-
     const dto: MessaggioChatDTO = {
       chatRoomId: this.stanzaSelezionata.id,
       mittenteUsername: this.mioUsername,
@@ -151,10 +163,32 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
     this.chatService.inviaMessaggio(this.stanzaSelezionata.id, dto);
     this.nuovoMessaggioTesto = '';
 
+    // Sposta in cima all'invio
+    this.stanzaSelezionata.dataUltimoMessaggio = new Date().toISOString();
+    this.stanze = [...this.stanze];
+
     setTimeout(() => {
       this.isLoading = false;
       this.cdr.detectChanges();
     }, 150);
+  }
+
+  // Separatore di giorno
+  isNuovoGiorno(msgCorrente: MessaggioChatDTO, msgPrecedente: MessaggioChatDTO | null): boolean {
+    if (!msgCorrente || !msgCorrente.dataInvio) return false;
+    if (!msgPrecedente || !msgPrecedente.dataInvio) return true;
+
+    const converti = (d: any): string => {
+      if (Array.isArray(d)) return new Date(d[0], d[1] - 1, d[2]).toDateString();
+      return new Date(d).toDateString();
+    };
+
+    return converti(msgCorrente.dataInvio) !== converti(msgPrecedente.dataInvio);
+  }
+
+  // Forzatura di spostamento grafico degli elementi
+  tracciaPerData(index: number, item: any) {
+    return item.id + '-' + (item.dataUltimoMessaggio ? item.dataUltimoMessaggio.toString() : '');
   }
 
   apriSegnalazione(id: number) {
@@ -174,12 +208,8 @@ export class InboxOrganizzatore implements OnInit, OnDestroy {
     } catch (err) {}
   }
 
-  private disconnettiChatCorrente(): void {
-    this.chatService.disconnetti();
-  }
-
   ngOnDestroy(): void {
-    this.disconnettiChatCorrente();
+    this.chatService.disconnetti();
     if (this.chatSubscription) {
       this.chatSubscription.unsubscribe();
     }

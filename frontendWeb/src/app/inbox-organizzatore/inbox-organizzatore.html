@@ -1,4 +1,4 @@
-<div class="inbox-container">
+<div class="inbox-container" [class.ha-selezione]="stanzaSelezionata">
 
   <div class="inbox-sidebar">
     <div class="sidebar-header">
@@ -10,7 +10,7 @@
         Nessun messaggio ricevuto finora per i tuoi viaggi.
       </div>
 
-      <div *ngFor="let stanza of stanze"
+      <div *ngFor="let stanza of stanzeOrdinate"
            class="inbox-card"
            [class.active]="stanzaSelezionata?.id === stanza.id"
            [style.pointer-events]="isLoading ? 'none' : 'auto'"
@@ -36,27 +36,38 @@
 
     <ng-container *ngIf="stanzaSelezionata; else nessunaselezione">
       <div class="chat-header-top">
-        <div class="header-user-info">
-          <h3>Chat con &#64;{{ stanzaSelezionata.viaggiatoreUsername }}</h3>
-          <p>Viaggio: <strong>{{ stanzaSelezionata.titoloViaggio }}</strong></p>
+        <div class="header-user-info" style="display: flex; align-items: center; gap: 12px;">
+
+          <button class="btn-back-responsive" (click)="stanzaSelezionata = null">←</button>
+
+          <div>
+            <h3>Chat con &#64;{{ stanzaSelezionata.viaggiatoreUsername }}</h3>
+            <p>Viaggio: <strong>{{ stanzaSelezionata.titoloViaggio }}</strong></p>
+          </div>
         </div>
       </div>
 
       <div class="chat-body-messages" #scrollInboxChat>
-        <div *ngFor="let msg of messaggiChat"
-             [class.mio-msg]="msg.mittenteUsername === mioUsername"
-             [class.altro-msg]="msg.mittenteUsername !== mioUsername"
-             class="msg-row">
+        <ng-container *ngFor="let msg of messaggiChat; let i = index">
 
-          <div class="msg-bubble">
-            <p class="msg-text">{{ msg.testo }}</p>
-            <div class="msg-meta">
-              <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+          <div *ngIf="isNuovoGiorno(msg, i > 0 ? messaggiChat[i-1] : null)" class="chat-date-separator">
+            <span>{{ msg.dataInvio | date:'EEEE dd MMMM yyyy' : 'it'}}</span>
+          </div>
 
-              <button class="btn-report-msg" [disabled]="isLoading" *ngIf="msg.mittenteUsername !== mioUsername" (click)="apriSegnalazione(msg.id!)" title="Segnala messaggio">🚩</button>
+          <div [class.mio-msg]="msg.mittenteUsername === mioUsername"
+               [class.altro-msg]="msg.mittenteUsername !== mioUsername"
+               class="msg-row">
+
+            <div class="msg-bubble">
+              <p class="msg-text">{{ msg.testo }}</p>
+              <div class="msg-meta">
+                <span class="msg-time">{{ msg.dataInvio | date:'HH:mm' }}</span>
+                <button class="btn-report-msg" [disabled]="isLoading" *ngIf="msg.mittenteUsername !== mioUsername" (click)="apriSegnalazione(msg.id!)" title="Segnala messaggio">🚩</button>
+              </div>
             </div>
           </div>
-        </div>
+
+        </ng-container>
       </div>
 
       <div class="chat-footer-input-area">

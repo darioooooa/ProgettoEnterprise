@@ -255,3 +255,82 @@ body {
   border-style: solid;
   background: rgba(255, 255, 255, 0.1);
 }
+
+.booking-form textarea {
+  resize: none;
+}
+
+
+.form-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+
+.itinerary-section div {
+  box-sizing: border-box;
+}
+
+@media (max-width: 992px) {
+  .glass-form-container {
+    padding: 2.5rem;
+  }
+
+  .form-header h1 {
+    font-size: 2.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: 20px;
+    padding-bottom: 30px;
+  }
+
+  .content-wrapper {
+    margin-top: 100px;
+    width: 95%;
+  }
+
+  .glass-form-container {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .form-header h1 {
+    font-size: 1.6rem;
+  }
+
+
+  .form-row .input-group {
+    flex: 1 1 100%;
+  }
+
+
+  .form-row .input-group[style*="visibility: hidden"] {
+    display: none;
+  }
+
+  .itinerary-section {
+    padding: 1.2rem;
+    margin: 1.5rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .booking-form input,
+  .booking-form textarea {
+    padding: 11px 14px;
+    font-size: 0.95rem;
+  }
+
+  .btn-submit {
+    padding: 14px;
+    font-size: 1rem;
+  }
+}

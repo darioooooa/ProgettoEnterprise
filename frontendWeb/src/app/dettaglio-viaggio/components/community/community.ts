@@ -3,12 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ViaggioService } from '../../../service/viaggio.service';
 import { AutenticazioneService } from '../../../service/autenticazione.service';
-import { ModaleSegnalazione } from '../../../modale-segnalazione/modale-segnalazione';
 
 @Component({
   selector: 'app-community',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModaleSegnalazione],
+  imports: [CommonModule, FormsModule],
   templateUrl: './community.html',
   styleUrl: './community.css'
 })
@@ -19,6 +18,7 @@ export class CommunityComponent implements OnInit {
 
   // Notifica il padre di aggiornare la media e i conteggi totali voti
   @Output() richiestaRefreshPadre = new EventEmitter<void>();
+  @Output() richiestaSegnalazioneRecensione = new EventEmitter<{ id: number, tipo: string }>();
 
   recensioni: any[] = [];
   paginaRecensioni = 0;
@@ -35,9 +35,6 @@ export class CommunityComponent implements OnInit {
   tipoAvviso: 'successo' | 'errore' = 'errore';
 
   filtriRecensioni = { votoEsatto: '', votoMin: '', votoMax: '', parolaChiave: '', dataDa: '', dataA: '' };
-
-  mostraSegnalazione = false;
-  idDaSegnalare = 0;
 
   isLoading: boolean = false;
 
@@ -266,7 +263,7 @@ export class CommunityComponent implements OnInit {
 
   apriSegnalazione(id: number) {
     if (this.isLoading) return;
-    this.idDaSegnalare = id;
-    this.mostraSegnalazione = true;
+    this.richiestaSegnalazioneRecensione.emit({ id: id, tipo: 'RECENSIONE' });
+    this.cdr.detectChanges();
   }
 }

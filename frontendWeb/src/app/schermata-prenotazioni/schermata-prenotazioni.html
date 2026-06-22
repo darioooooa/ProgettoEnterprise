@@ -2,42 +2,107 @@
   <div class="contenitore-prenotazioni-vetro">
 
     <div class="intestazione-sezione">
-      <h1>I Miei Viaggi</h1>
+      <h1>I miei viaggi</h1>
       <p>Gestisci le tue avventure e i dettagli delle prenotazioni</p>
     </div>
 
     <nav class="itinerary-nav-tabs" style="margin-bottom: 35px;">
-      <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'attivi'" (click)="tabAttivo = 'attivi'">
-        🎒 In programma / In corso ({{ prenotazioniAttive.length }})
+      <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'attivi'" (click)="tabAttivo = 'attivi'; caricaPrenotazioniDalDB(0)">
+        🎒 In programma / In corso ({{ attiveInCorso.length }})
       </button>
-      <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'storico'" (click)="tabAttivo = 'storico'">
-        🏁 Viaggi Completati ({{ prenotazioniPassate.length }})
+      <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'timeline'" (click)="tabAttivo = 'timeline'; caricaPrenotazioniDalDB(0)">
+        📅 Timeline impegni
+      </button>
+      <button type="button" class="tab-link" [class.attivo]="tabAttivo === 'storico'" (click)="tabAttivo = 'storico'; caricaPrenotazioniDalDB(0)">
+        🏁 Viaggi completati ({{ passateTerminate.length }})
       </button>
     </nav>
 
     <div class="lista-cards" [style.pointer-events]="isLoading ? 'none' : 'auto'">
 
       <ng-container *ngIf="tabAttivo === 'attivi'">
-        <div class="messaggio-vuoto" *ngIf="prenotazioniAttive.length === 0">
+        <div class="messaggio-vuoto" *ngIf="attiveInCorso.length === 0">
           <p>Non hai viaggi imminenti o in corso in questo momento.</p>
           <button routerLink="/home" [disabled]="isLoading" class="btn-esplora">Trova un viaggio</button>
         </div>
 
-        <ng-container *ngFor="let p of prenotazioniAttive">
+        <ng-container *ngFor="let p of attiveInCorso">
           <ng-container *ngTemplateOutlet="cardPrenotazioneTemplate; context: { $implicit: p, visualizzaAzioni: true }"></ng-container>
         </ng-container>
       </ng-container>
 
+      <ng-container *ngIf="tabAttivo === 'timeline'">
+        <div class="messaggio-vuoto" *ngIf="timelineImpegni.length === 0">
+          <p>La tua agenda è libera! Non hai impegni o viaggi prenotati per i prossimi mesi.</p>
+        </div>
+
+        <div class="timeline-container-vetro" *ngIf="timelineImpegni.length > 0">
+          <p class="timeline-info-testo">
+            Visualizza la cronologia dei tuoi impegni e scopri i periodi in cui sei libero di prenotare nuove avventure.
+          </p>
+
+          <div class="timeline-riga-impegno" *ngFor="let item of timelineImpegni">
+
+            <ng-container *ngIf="item.tipoElemento === 'IMPEGNO'">
+              <div class="timeline-punto-orologio">🔴</div>
+              <div class="timeline-dettaglio-impegno">
+                <h4>{{ item.viaggioTitolo }}</h4>
+                <p class="timeline-periodo-occupato">
+                  Occupato dal <strong>{{ item.viaggioDataInizio | date:'dd/MM/yyyy' }}</strong> al <strong>{{ item.viaggioDataFine | date:'dd/MM/yyyy' }}</strong>
+                </p>
+                <span class="badge-stato-timeline" [ngClass]="item.stato === 'IN_ATTESA' ? 'attesa' : 'confermata'">
+                  {{ item.stato === 'IN_ATTESA' ? 'Prenotazione in elaborazione' : 'Prenotazione confermata' }}
+                </span>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="item.tipoElemento === 'LIBERO'">
+              <div class="timeline-punto-orologio verde">🟢</div>
+              <div class="timeline-dettaglio-impegno libero">
+                <h4>{{ item.viaggioTitolo }}</h4>
+                <p class="timeline-periodo-occupato" style="color: #a7f3d0;">
+                  Disponibile dal <strong>{{ item.viaggioDataInizio | date:'dd/MM/yyyy' }}</strong> al <strong>{{ item.viaggioDataFine | date:'dd/MM/yyyy' }}</strong>
+                  (Finestra di <strong>{{ item.giorniDurata }} giorni</strong>)
+                </p>
+                <span class="badge-stato-timeline" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">
+                  Prenotabile
+                </span>
+              </div>
+            </ng-container>
+
+          </div>
+        </div>
+      </ng-container>
+
       <ng-container *ngIf="tabAttivo === 'storico'">
-        <div class="messaggio-vuoto" *ngIf="prenotazioniPassate.length === 0">
+        <div class="messaggio-vuoto" *ngIf="passateTerminate.length === 0">
           <p>Non hai ancora completato nessun viaggio.</p>
         </div>
 
-        <ng-container *ngFor="let p of prenotazioniPassate">
+        <ng-container *ngFor="let p of passateTerminate">
           <ng-container *ngTemplateOutlet="cardPrenotazioneTemplate; context: { $implicit: p, visualizzaAzioni: false }"></ng-container>
         </ng-container>
       </ng-container>
 
+    </div>
+    <div class="pagination-bar" *ngIf="totalePagine > 1 && !isLoading" style="margin-top: 30px; text-align: center;">
+      <div class="pagination-info" style="font-size: 1rem; margin-bottom: 12px; color: rgba(255,255,255,0.7);">
+        Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
+      </div>
+
+      <div class="pagination-buttons" style="display: flex; justify-content: center; gap: 15px;">
+        <button class="btn-pagination" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 24px; border-radius: 40px; cursor: pointer; font-weight: 600;"
+                (click)="paginaPrecedente()"
+                [disabled]="paginaCorrente === 0 || isLoading">
+          &larr; Precedente
+        </button>
+
+        <button class="btn-pagination" style="background: #ffffff; border: none; color: #0f2042; padding: 10px 24px; border-radius: 40px; cursor: pointer; font-weight: 600;"
+                (click)="paginaSuccessiva()"
+                [disabled]="paginaCorrente === totalePagine - 1 || isLoading">
+          Successiva &rarr;
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -81,7 +146,7 @@
       </p>
     </div>
 
-    <div class="zona-azioni-laterali">
+    <div class="zona-azioni-laterali" style="flex-shrink: 0; min-width: 120px;">
       <div class="prezzo-sezione">
         <label>Stato Pagamento</label>
         <p class="valore-prezzo" [style.color]="p.stato === 'IN_ATTESA' ? '#f39c12' : '#2ecc71'">
@@ -94,23 +159,5 @@
       </button>
     </div>
 
-  </div> <div class="pagination-bar" *ngIf="totalePagine > 1 && !isLoading" style="margin-top: 30px; text-align: center;">
-  <div class="pagination-info" style="font-size: 1rem; margin-bottom: 12px; color: rgba(255,255,255,0.7);">
-    Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
   </div>
-
-  <div class="pagination-buttons" style="display: flex; justify-content: center; gap: 15px;">
-    <button class="btn-pagination" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 24px; border-radius: 40px; cursor: pointer; font-weight: 600;"
-            (click)="paginaPrecedente()"
-            [disabled]="paginaCorrente === 0 || isLoading">
-      &larr; Precedente
-    </button>
-
-    <button class="btn-pagination" style="background: #ffffff; border: none; color: #0f2042; padding: 10px 24px; border-radius: 40px; cursor: pointer; font-weight: 600;"
-            (click)="paginaSuccessiva()"
-            [disabled]="paginaCorrente === totalePagine - 1 || isLoading">
-      Successiva &rarr;
-    </button>
-  </div>
-</div>
 </ng-template>

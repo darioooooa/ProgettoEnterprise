@@ -243,11 +243,16 @@
 
 /* BOLLE */
 .msg-bubble {
-  max-width: 65%;
+  width: fit-content;
+  max-width: 550px;
+
   padding: 12px 16px;
   border-radius: 16px;
   position: relative;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .mio-msg .msg-bubble {
@@ -387,4 +392,133 @@
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
   100% { transform: translateY(0px); }
+}
+
+.chat-date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  width: 100%;
+  position: relative;
+}
+
+.chat-date-separator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 1;
+}
+
+.sidebar-stanze ~ .area-chat .chat-date-separator::before {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.chat-date-separator span {
+  background: #111e38;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 2;
+}
+
+.sidebar-stanze ~ .area-chat .chat-date-separator span {
+  background: #ffffff;
+  color: #64748b;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+
+.btn-back-responsive {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #1e293b;
+  cursor: pointer;
+  padding: 0 8px;
+  margin-right: 4px;
+  font-weight: bold;
+}
+
+@media (max-width: 992px) {
+  .sidebar-stanze {
+    width: 280px;
+    min-width: 280px;
+  }
+  .msg-bubble {
+    max-width: 80%;
+  }
+}
+
+@media (max-width: 768px) {
+  .inbox-container {
+    height: calc(100vh - 60px);
+  }
+
+  .inbox-container:not(.ha-selezione) .sidebar-stanze {
+    width: 100%;
+    display: flex;
+  }
+  .inbox-container:not(.ha-selezione) .area-chat {
+    display: none;
+  }
+
+  .inbox-container.ha-selezione .sidebar-stanze {
+    display: none;
+  }
+  .inbox-container.ha-selezione .area-chat {
+    display: flex;
+    width: 100%;
+  }
+
+  .btn-back-responsive {
+    display: inline-block;
+  }
+
+  .sidebar-header {
+    padding: 16px;
+  }
+  .chat-header {
+    padding: 12px 16px;
+  }
+  .chat-body-viaggio {
+    padding: 16px;
+    gap: 12px;
+  }
+  .msg-bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+  }
+  .chat-footer-viaggio {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .chat-footer-viaggio button {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-header h2 {
+    font-size: 1.2rem;
+  }
+  .info-destinatario-corrente h4 {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+  .msg-text {
+    font-size: 0.9rem;
+  }
 }

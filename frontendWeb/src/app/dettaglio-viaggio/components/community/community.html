@@ -133,11 +133,3 @@
     <button [disabled]="paginaRecensioni === totalePagineRecensioni - 1 || isLoading" (click)="cambiaPaginaRecensioni(1)">&rarr;</button>
   </div>
 </div>
-
-<app-modale-segnalazione
-  *ngIf="mostraSegnalazione"
-  [visibile]="mostraSegnalazione"
-  [tipoEntita]="'RECENSIONE'"
-  [idRiferimento]="idDaSegnalare"
-  (chiudiModale)="mostraSegnalazione = false">
-</app-modale-segnalazione>

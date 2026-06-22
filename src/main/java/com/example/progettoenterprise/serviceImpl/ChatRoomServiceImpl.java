@@ -74,12 +74,18 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public List<ChatRoomDTO> ottieniStanzePerOrganizzatore(String organizzatoreUsername) {
         return chatRoomRepository.findByViaggioOrganizzatoreUsernameIgnoreCase(organizzatoreUsername).stream()
-                .map(stanza -> ChatRoomDTO.builder()
-                        .id(stanza.getId())
-                        .viaggioId(stanza.getViaggio().getId())
-                        .titoloViaggio(stanza.getViaggio().getTitolo())
-                        .viaggiatoreUsername(stanza.getViaggiatore().getUsername())
-                        .build())
+                .map(stanza -> {
+                    // Recupera la data dell'ultimo messaggio inviato
+                    LocalDateTime dataUltimo = messaggioChatRepository.findDataUltimoMessaggioPerStanza(stanza.getId());
+
+                    return ChatRoomDTO.builder()
+                            .id(stanza.getId())
+                            .viaggioId(stanza.getViaggio().getId())
+                            .titoloViaggio(stanza.getViaggio().getTitolo())
+                            .viaggiatoreUsername(stanza.getViaggiatore().getUsername())
+                            .dataUltimoMessaggio(dataUltimo)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
     @Override
@@ -97,13 +103,18 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public List<ChatRoomDTO> ottieniStanzePerViaggiatore(String viaggiatoreUsername) {
         return chatRoomRepository.findByViaggiatoreUsernameIgnoreCase(viaggiatoreUsername).stream()
-                .map(stanza -> ChatRoomDTO.builder()
-                        .id(stanza.getId())
-                        .viaggioId(stanza.getViaggio().getId())
-                        .titoloViaggio(stanza.getViaggio().getTitolo())
-                        // Mostriamo il nome dell'organizzatore con cui sta parlando!
-                        .organizzatoreUsername(stanza.getOrganizzatore().getUsername())
-                        .build())
+                .map(stanza -> {
+                    // Recupera la data dell'ultimo messaggio inviato
+                    LocalDateTime dataUltimo = messaggioChatRepository.findDataUltimoMessaggioPerStanza(stanza.getId());
+
+                    return ChatRoomDTO.builder()
+                            .id(stanza.getId())
+                            .viaggioId(stanza.getViaggio().getId())
+                            .titoloViaggio(stanza.getViaggio().getTitolo())
+                            .organizzatoreUsername(stanza.getOrganizzatore().getUsername())
+                            .dataUltimoMessaggio(dataUltimo)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 }

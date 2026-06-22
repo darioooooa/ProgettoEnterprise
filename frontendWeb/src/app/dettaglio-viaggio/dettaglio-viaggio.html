@@ -172,8 +172,10 @@
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'galleria'" (click)="tabAttivo = 'galleria'">🖼️ Galleria</button>
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'community'" (click)="tabAttivo = 'community'">💬 Community</button>
         <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'programma'" (click)="tabAttivo = 'programma'">📅 Programma</button>
-        <!-- 🟢 TAB CHAT REINSERITO NEL LAYOUT AGGIORNATO -->
-        <button type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'chat'" (click)="tabAttivo = 'chat'">✉️ Chat Live</button>
+        <button *ngIf="isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'"
+                type="button" class="tab-link" [disabled]="isLoading" [class.attivo]="tabAttivo === 'chat'" (click)="tabAttivo = 'chat'">
+          ✉️ Chat Live
+        </button>
       </nav>
 
       <app-galleria  *ngIf="tabAttivo === 'galleria'"
@@ -190,11 +192,11 @@
                      [viaggioId]="viaggioId"
                      [mioUsername]="mioUsername"
                      [isMioViaggio]="isMioViaggio()"
-                     (richiestaRefreshPadre)="onSincronizzaRichiesta()">
+                     (richiestaRefreshPadre)="onSincronizzaRichiesta()"
+                     (richiestaSegnalazioneRecensione)="onRiceviSegnalazioneFiglio($event)">
       </app-community>
 
-      <!-- 🟢 COMPONENTE CHAT CONDIZIONATO AL TAB -->
-      <app-chat *ngIf="tabAttivo === 'chat'"
+      <app-chat *ngIf="tabAttivo === 'chat' && isLoggato() && ottieniRuolo() === 'ROLE_VIAGGIATORE'"
                 [viaggioId]="viaggioId"
                 [mioUsername]="mioUsername">
       </app-chat>

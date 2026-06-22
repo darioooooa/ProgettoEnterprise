@@ -43,29 +43,86 @@ export const routes: Routes = [
         component: SchermataHomeComponent,
         canActivate: [autenticazioneGuard]
       },
+      // Schermate organizzatore
       {
         path: 'organizzatore',
         component: SchermataOrganizzatoreComponent,
-        canActivate: [autenticazioneGuard]
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_ORGANIZZATORE', 'ROLE_ADMIN'] }
       },
       {
         path: 'statistiche-organizzatore',
         component: StatisticheOrganizzatore,
-        canActivate: [autenticazioneGuard]
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_ORGANIZZATORE', 'ROLE_ADMIN'] }
       },
       {
         path: 'inbox-organizzatore',
-        component: InboxOrganizzatore
-      },
-
-      {
-        path: 'inbox-viaggiatore',
-        component: InboxViaggiatoreComponent,
-        canActivate: [autenticazioneGuard]
+        component: InboxOrganizzatore,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_ORGANIZZATORE', 'ROLE_ADMIN'] }
       },
       {
         path: 'crea-viaggio',
-        component: CreaViaggio
+        component: CreaViaggio,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_ORGANIZZATORE', 'ROLE_ADMIN'] }
+      },
+      {
+        path: 'lista-viaggi-marker',
+        component: ListaViaggiMarker,
+        canActivate:[autenticazioneGuard],
+        data: { ruoli: ['ROLE_ORGANIZZATORE', 'ROLE_ADMIN'] }
+      },
+      // Schermate viaggiatore
+      {
+        path: 'inbox-viaggiatore',
+        component: InboxViaggiatoreComponent,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_VIAGGIATORE', 'ROLE_ADMIN'] }
+      },
+      {
+        path: 'prenotazioni',
+        component: SchermataPrenotazioni,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_VIAGGIATORE', 'ROLE_ADMIN'] }
+      },
+      {
+        path: 'miei-itinerari',
+        component: MieiItinerari,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_VIAGGIATORE'] }
+      },
+      {
+        path: 'diventa-organizzatore',
+        component: DiventaOrganizzatoreComponent,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_VIAGGIATORE'] }
+      },
+      {
+        path: 'prenota-viaggio/:id',
+        component: PrenotaViaggioComponent,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_VIAGGIATORE'] }
+      },
+      {
+        path:'pagamento/:id',
+        component:SezionePagamentoComponent,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_VIAGGIATORE'] }
+      },
+      // Schermate amministratore
+      {
+        path: 'admin-dashboard',
+        component: AdminDashboard,
+        canActivate: [autenticazioneGuard],
+        data: { ruoli: ['ROLE_ADMIN'] }
+      },
+      // Schermate aperte a tutti i ruoli
+      {
+        path: 'viaggi/:id',
+        component: DettaglioViaggio,
+        canActivate: [autenticazioneGuard]
       },
       {
         path: 'profilo',
@@ -76,43 +133,6 @@ export const routes: Routes = [
         path: 'profilo/:id',
         component: SchermataUtente,
         canActivate: [autenticazioneGuard]
-      },
-      {
-        path: 'prenotazioni',
-        component: SchermataPrenotazioni
-      },
-      {
-        path: 'admin-dashboard',
-        component: AdminDashboard
-      },
-      {
-        path: 'miei-itinerari',
-        component: MieiItinerari,
-        canActivate: [autenticazioneGuard]
-      },
-      {
-        path: 'viaggi/:id',
-        component: DettaglioViaggio,
-        canActivate: [autenticazioneGuard]
-      },
-      {
-        path: 'diventa-organizzatore',
-        component: DiventaOrganizzatoreComponent
-      },
-      {
-        path: 'prenota-viaggio/:id',
-        component: PrenotaViaggioComponent,
-        canActivate: [autenticazioneGuard]
-      },
-      {
-        path:'pagamento/:id',
-        component:SezionePagamentoComponent,
-        canActivate: [autenticazioneGuard]
-      },
-      {
-        path: 'lista-viaggi-marker',
-        component: ListaViaggiMarker,
-        canActivate:[autenticazioneGuard]
       }
       ]
   },
