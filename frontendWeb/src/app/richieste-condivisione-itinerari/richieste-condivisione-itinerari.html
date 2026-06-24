@@ -1,0 +1,44 @@
+<div class="richieste-wrapper">
+  <div class="dark-panel">
+
+    <!-- INTESTAZIONE CENTRATA -->
+    <div class="header-centrato">
+      <h1>🔔 Richieste in sospeso</h1>
+      <p>Gestisci gli inviti di collaborazione ricevuti dai tuoi amici</p>
+    </div>
+
+    <!-- SEZIONE VUOTA: Nessun invito -->
+    <div *ngIf="inviti.length === 0" class="empty-state">
+      <span class="icona-vuoto">☕</span>
+      <h2>Tutto tranquillo!</h2>
+      <p>Non hai nuove richieste di condivisione al momento.</p>
+    </div>
+
+    <!-- LISTA DEGLI INVITI -->
+    <div class="lista-inviti" *ngIf="inviti.length > 0">
+
+      <div *ngFor="let invito of inviti" class="invito-card">
+
+        <div class="invito-info">
+          <h3>📌 {{ invito.nomeItinerario }}</h3>
+          <p>
+            Invitato da: <strong>{{ invito.proprietario }}</strong> <br>
+            <span class="email-muted">{{ invito.emailProprietario }}</span>
+          </p>
+        </div>
+
+        <div class="invito-azioni">
+          <button class="btn-verde" [disabled]="isLoading" (click)="accettaInvito(invito.idItinerario)">
+            ✓ Accetta
+          </button>
+
+          <button class="btn-rosso" [disabled]="isLoading" (click)="rifiutaInvito(invito.idItinerario)">
+            ✕ Rifiuta
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>

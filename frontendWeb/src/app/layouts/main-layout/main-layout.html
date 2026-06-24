@@ -7,6 +7,12 @@
       <ng-container *ngIf="isViaggiatore()">
         <a routerLink="/home">Home</a>
         <a routerLink="/miei-itinerari">I miei itinerari preferiti</a>
+        <a *ngIf="isSezioneItinerari()" routerLink="/richieste-condivisione-itinerari">
+          🔔 Richieste Condivisione
+          <span class="badge-navbar" *ngIf="invitiPendentiCount > 0" style="background-color: #ef4444;">
+            {{ invitiPendentiCount }}
+          </span>
+        </a>
         <a routerLink="/inbox-viaggiatore" style="color: #10b981; display: inline-flex; align-items: center; gap: 6px;">
           💬 I miei Messaggi
           <span class="badge-navbar" *ngIf="notificheTotali > 0" style="background-color: #10b981;">

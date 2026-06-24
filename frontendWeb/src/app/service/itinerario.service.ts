@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {Observable, Subject} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +8,8 @@ import { Observable } from 'rxjs';
 export class ItinerarioService {
 
   private readonly API_URL = '/api/v1/itinerari-preferiti';
+
+  public aggiornaNotifiche = new Subject<void>();
 
   constructor(private http: HttpClient) { }
 
@@ -55,5 +57,23 @@ export class ItinerarioService {
 
   getListePubblicheUtente(username: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.API_URL}/utente/${username}/pubblici`);
+  }
+  //PER ITINERARI CONDIVISI
+  invitaCollaboratore(idItinerario: number, emailAmico: string): Observable<any> {
+    const payload = { email: emailAmico };
+    return this.http.post(`${this.API_URL}/${idItinerario}/invita`, payload);
+  }
+
+  accettaInvito(idItinerario: number): Observable<any> {
+    return this.http.post(`${this.API_URL}/${idItinerario}/accetta-invito`, {});
+  }
+  getInvitiInSospeso(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/inviti`);
+  }
+  getItinerariCondivisiConMe(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/condivisi`);
+  }
+  rifiutaInvito(idItinerario: number): Observable<any> {
+    return this.http.post(`${this.API_URL}/${idItinerario}/rifiuta-invito`, {});
   }
 }

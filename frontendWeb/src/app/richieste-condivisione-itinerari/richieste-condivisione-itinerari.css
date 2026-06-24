@@ -1,0 +1,153 @@
+/* Container principale per centrare tutto nella pagina */
+.richieste-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 50px 20px;
+  min-height: 80vh;
+}
+
+/* Il pannello scuro in stile Enterprise */
+.dark-panel {
+  background-color: #2a3042; /* Colore scuro per staccare dal bianco */
+  border-radius: 15px;
+  padding: 40px;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-align: center; /* Centra i testi principali */
+}
+
+/* Intestazione */
+.header-centrato h1 {
+  font-size: 2.2rem;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.header-centrato p {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+}
+
+/* Stile per quando non ci sono inviti */
+.empty-state {
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.empty-state .icona-vuoto {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+.empty-state h2 {
+  color: #e2e8f0;
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+/* Stile delle card degli inviti */
+.lista-inviti {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left; /* Il testo dentro le card deve stare a sinistra */
+}
+
+.invito-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.invito-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-3px);
+}
+
+.invito-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  color: #ffffff;
+}
+
+.invito-info p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.email-muted {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* Bottoni Azioni Invito */
+.invito-azioni {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-verde, .btn-rosso, .btn-indietro-bello {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.btn-verde {
+  background-color: #10b981;
+  color: white;
+}
+.btn-verde:hover:not([disabled]) {
+  background-color: #059669;
+}
+
+.btn-rosso {
+  background-color: #ef4444;
+  color: white;
+}
+.btn-rosso:hover:not([disabled]) {
+  background-color: #dc2626;
+}
+
+/* Bottone Indietro sistemato */
+.footer-azioni {
+  margin-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 25px;
+}
+
+.btn-indietro-bello {
+  background-color: transparent;
+  color: #cbd5e1;
+  border: 2px solid #cbd5e1;
+}
+
+.btn-indietro-bello:hover:not([disabled]) {
+  background-color: #cbd5e1;
+  color: #1e293b;
+}

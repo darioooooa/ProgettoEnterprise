@@ -21,5 +21,12 @@ public class ListaUtente {
     @JoinColumn(name = "lista_id")
     private ItinerarioPreferito lista;
 
-    //Altri campi
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatoInvito stato = StatoInvito.IN_ATTESA;
+
+    public enum StatoInvito {
+        IN_ATTESA,
+        ACCETTATO
+    }
 }

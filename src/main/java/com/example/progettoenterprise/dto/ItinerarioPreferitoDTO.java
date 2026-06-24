@@ -17,6 +17,10 @@ public class ItinerarioPreferitoDTO {
     @NotBlank
     private String nome;
 
+    private Boolean inCondivisione;
+
+    private String proprietarioUsername;;
+
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDate dataCreazione;
 

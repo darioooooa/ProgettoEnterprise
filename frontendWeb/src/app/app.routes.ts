@@ -20,6 +20,7 @@ import {PrenotaViaggioComponent} from './prenota-viaggio/prenota-viaggio';
 import {SezionePagamentoComponent} from './sezione-pagamento/sezione-pagamento';
 import {ListaViaggiMarker} from './lista-viaggi-marker/lista-viaggi-marker';
 import {InboxViaggiatoreComponent} from './inbox-viaggiatore/inbox-viaggiatore';
+import {RichiesteCondivisioneItinerari} from './richieste-condivisione-itinerari/richieste-condivisione-itinerari';
 
 export const routes: Routes = [
   {
@@ -133,6 +134,11 @@ export const routes: Routes = [
         path: 'profilo/:id',
         component: SchermataUtente,
         canActivate: [autenticazioneGuard]
+      },
+      {
+        path: 'richieste-condivisione-itinerari',
+        component: RichiesteCondivisioneItinerari,
+        canActivate:[autenticazioneGuard]
       }
       ]
   },

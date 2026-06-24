@@ -141,4 +141,80 @@ public class ItinerarioPreferitoController {
     public ResponseEntity<List<ItinerarioPreferitoDTO>> getListePubblicheUtente(@PathVariable String username) {
         return ResponseEntity.ok(itinerarioService.getListePubblicheDiUtente(username));
     }
+    @PostMapping("/{id}/invita")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> invitaUtente(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        String emailAmico = payload.get("email");
+
+        if (emailAmico == null || emailAmico.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "L'email è obbligatoria per inviare un invito."
+            ));
+        }
+
+        log.info("L'utente {} sta invitando {} all'itinerario {}", utenteLoggato.getUsername(), emailAmico, id);
+
+
+        itinerarioService.invitaCollaboratore(id, emailAmico, utenteLoggato.getId());
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Invito inviato con successo a " + emailAmico
+        ));
+    }
+    @PostMapping("/{id}/accetta-invito")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> accettaInvitoCondivisione(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        log.info("L'utente {} sta accettando l'invito per l'itinerario {}", utenteLoggato.getUsername(), id);
+
+        // Chiamiamo il metodo per confermare l'invito
+        itinerarioService.accettaInvito(id, utenteLoggato.getId());
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Invito accettato! Ora sei un collaboratore ufficiale."
+        ));
+    }
+    @PostMapping("/{id}/rifiuta-invito")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> rifiutaInvitoCondivisione(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        log.info("L'utente {} sta rifiutando l'invito per l'itinerario {}", utenteLoggato.getUsername(), id);
+
+        itinerarioService.rifiutaInvito(id, utenteLoggato.getId());
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Invito rifiutato correttamente."
+        ));
+    }
+    @GetMapping("/condivisi")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ItinerarioPreferitoDTO>> getItinerariCondivisiConMe(
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        log.info("L'utente {} sta richiedendo gli itinerari condivisi accettati", utenteLoggato.getUsername());
+        List<ItinerarioPreferitoDTO> condivisi = itinerarioService.getListeCondiviseConMe(utenteLoggato.getId());
+        return ResponseEntity.ok(condivisi);
+    }
+    @GetMapping("/inviti")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<Map<String, Object>>> getInvitiInSospeso(
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+
+        log.info("L'utente {} sta controllando le richieste di condivisione", utenteLoggato.getUsername());
+        List<Map<String, Object>> inviti = itinerarioService.getInvitiInSospeso(utenteLoggato.getId());
+        return ResponseEntity.ok(inviti);
+    }
+
 }

@@ -14,12 +14,18 @@ import { AutenticazioneService } from '../service/autenticazione.service';
 })
 export class MieiItinerari implements OnInit {
   public itinerari: any[] = [];
+  public itinerariCondivisi: any[] = [];
 
   public menuSpostaAperto: { [key: string]: boolean } = {};
 
   public mostraModaleCreazione = false;
   public nuovoNome = '';
   public nuovaVisibilita = 'PRIVATA';
+
+  public mostraModaleCondivisione= false
+  public emailDaInvitare='';
+  public idItinerarioDaCondividere: number | null = null;
+
 
   public isLoading: boolean = false;
 
@@ -36,6 +42,7 @@ export class MieiItinerari implements OnInit {
       return;
     }
     this.caricaItinerari();
+    this.caricaItinerariCondivisi();
   }
 
   caricaItinerari() {
@@ -131,8 +138,12 @@ export class MieiItinerari implements OnInit {
   }
 
   chiudiModaleCreazione() {
-    if (this.isLoading) return;
     this.mostraModaleCreazione = false;
+    this.nuovoNome = '';
+    this.nuovaVisibilita = 'PRIVATA';
+
+    // Forza la grafica ad aggiornarsi e far sparire la modale
+    this.cdr.detectChanges();
   }
 
   salvaNuovoItinerario() {
@@ -146,7 +157,8 @@ export class MieiItinerari implements OnInit {
     this.isLoading = true;
     const pacchettoDati = {
       nome: this.nuovoNome,
-      visibilita: this.nuovaVisibilita
+      visibilita: this.nuovaVisibilita,
+      inCondivisione:false
     };
 
     this.itinerarioService.creaLista(pacchettoDati).subscribe({
@@ -188,5 +200,54 @@ export class MieiItinerari implements OnInit {
         }
       });
     }
+  }
+  //METODI PER LA CONDIVISIONE DEGLI ITINERARI
+  apriModaleCondivisione(idItinerario: number) {
+    if (this.isLoading) return;
+    this.idItinerarioDaCondividere = idItinerario;
+    this.emailDaInvitare = '';
+    this.mostraModaleCondivisione = true;
+  }
+
+  chiudiModaleCondivisione() {
+    if (this.isLoading) return;
+    this.mostraModaleCondivisione = false;
+    this.idItinerarioDaCondividere = null;
+  }
+
+  inviaInvitoCondivisione() {
+    if (this.isLoading) return;
+    if (!this.emailDaInvitare.trim()) {
+      alert("Inserisci l'email dell'amico da invitare!");
+      return;
+    }
+
+    if (this.idItinerarioDaCondividere !== null) {
+      this.isLoading = true;
+
+      this.itinerarioService.invitaCollaboratore(this.idItinerarioDaCondividere, this.emailDaInvitare).subscribe({
+        next: (response) => {
+          alert('Invito inviato con successo a ' + this.emailDaInvitare);
+          this.chiudiModaleCondivisione();
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Errore durante l'invito", err);
+          alert(err.error?.message || "Errore: impossibile invitare questo utente. Controlla che l'email sia corretta e che non sia già stato invitato.");
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+  caricaItinerariCondivisi() {
+    this.itinerarioService.getItinerariCondivisiConMe().subscribe({
+      next: (data) => {
+        this.itinerariCondivisi = data;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Errore recupero itinerari condivisi", err)
+    });
   }
 }

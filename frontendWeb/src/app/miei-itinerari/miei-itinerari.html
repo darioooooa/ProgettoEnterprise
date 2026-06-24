@@ -14,10 +14,20 @@
             <span class="badge badge-cliccabile" (click)="cambiaVisibilita(it)" title="Clicca per cambiare visibilità">
               {{ it.visibilita }} ✏️
             </span>
+
+            <span class="badge badge-in-condivisione" *ngIf="it.inCondivisione" title="Hai condiviso questo itinerario con altri">
+              👥 In Condivisione
+            </span>
           </div>
-          <button class="btn-elimina-itinerario" [disabled]="isLoading" (click)="eliminaItinerario(it.idItinerario)" title="Elimina intero itinerario">
-            🗑️
-          </button>
+
+          <div class="bottoni-destra">
+            <button class="btn-condividi" [disabled]="isLoading" (click)="apriModaleCondivisione(it.idItinerario)" title="Invita un amico a collaborare">
+              🤝 Condividi
+            </button>
+            <button class="btn-elimina-itinerario" [disabled]="isLoading" (click)="eliminaItinerario(it.idItinerario)" title="Elimina intero itinerario">
+              🗑️
+            </button>
+          </div>
         </div>
 
         <div class="card-main">
@@ -33,21 +43,14 @@
               </div>
 
               <div class="azioni-viaggio">
-                <button class="btn-azione-viaggio" [disabled]="isLoading" (click)="toggleMenuSposta(it.idItinerario, v.id)" title="Sposta in un altro itinerario">
-                  🔄
-                </button>
-
-                <button class="btn-rimuovi-viaggio" [disabled]="isLoading" (click)="rimuoviViaggio(it.idItinerario, v.id)" title="Rimuovi questo viaggio">
-                  ❌
-                </button>
+                <button class="btn-azione-viaggio" [disabled]="isLoading" (click)="toggleMenuSposta(it.idItinerario, v.id)" title="Sposta in un altro itinerario">🔄</button>
+                <button class="btn-rimuovi-viaggio" [disabled]="isLoading" (click)="rimuoviViaggio(it.idItinerario, v.id)" title="Rimuovi questo viaggio">❌</button>
 
                 <div class="tendina-sposta" *ngIf="menuSpostaAperto[it.idItinerario + '-' + v.id]">
                   <p>Sposta in:</p>
                   <div class="opzioni-itinerari">
                     <ng-container *ngFor="let destinazioneIt of itinerari">
-                      <button *ngIf="destinazioneIt.idItinerario !== it.idItinerario"
-                              [disabled]="isLoading"
-                              (click)="eseguiSpostamento(it.idItinerario, destinazioneIt.idItinerario, v.id)">
+                      <button *ngIf="destinazioneIt.idItinerario !== it.idItinerario" [disabled]="isLoading" (click)="eseguiSpostamento(it.idItinerario, destinazioneIt.idItinerario, v.id)">
                         {{ destinazioneIt.nome }}
                       </button>
                     </ng-container>
@@ -63,18 +66,46 @@
       </div>
     </div>
 
+    <h2 class="titolo-sezione-condivisi">🤝 Itinerari Condivisi</h2>
+
+    <div class="lista-itinerari-glass" [style.pointer-events]="isLoading ? 'none' : 'auto'">
+      <p *ngIf="itinerariCondivisi.length === 0" class="testo-vuoto">Nessuno ha ancora condiviso un itinerario con te.</p>
+
+      <div class="card-glass card-condivisa" *ngFor="let condiviso of itinerariCondivisi">
+        <div class="card-top">
+          <div class="info-sinistra">
+            <span class="id-tag badge-condiviso">Condiviso</span>
+            <span class="info-proprietario">Proprietario: <strong>{{ condiviso.proprietarioUsername }}</strong></span>
+          </div>
+        </div>
+
+        <div class="card-main">
+          <h2>{{ condiviso.nome }}</h2>
+        </div>
+
+        <div class="viaggi-contenuti">
+          <ul *ngIf="condiviso.viaggiContenuti?.length > 0; else vuotoCondiviso">
+            <li *ngFor="let v of condiviso.viaggiContenuti" class="riga-viaggio">
+              <div class="testo-viaggio">
+                <strong>{{ v.titolo }}</strong> <span class="destinazione">- {{ v.destinazione }}</span>
+              </div>
+            </li>
+          </ul>
+          <ng-template #vuotoCondiviso><p class="testo-vuoto">Nessun viaggio aggiunto in questa lista.</p></ng-template>
+        </div>
+      </div>
+    </div>
+
     <button class="btn-indietro" [disabled]="isLoading" routerLink="/">← Torna alla Home</button>
   </div>
 
   <div class="modal-overlay" *ngIf="mostraModaleCreazione" (click)="isLoading ? null : chiudiModaleCreazione()">
     <div class="modal-glass" (click)="$event.stopPropagation()">
       <h2>Nuovo Itinerario</h2>
-
       <div class="form-group">
         <label>Nome dell'itinerario</label>
         <input type="text" [(ngModel)]="nuovoNome" [disabled]="isLoading" placeholder="Es. Viaggio estivo 2026...">
       </div>
-
       <div class="form-group">
         <label>Visibilità</label>
         <select [(ngModel)]="nuovaVisibilita" [disabled]="isLoading">
@@ -82,12 +113,24 @@
           <option value="PUBBLICA">Pubblica (Visibile a tutti)</option>
         </select>
       </div>
-
       <div class="modal-actions">
         <button class="btn-annulla" [disabled]="isLoading" (click)="chiudiModaleCreazione()">Annulla</button>
-        <button class="btn-salva" [disabled]="isLoading" (click)="salvaNuovoItinerario()">
-          {{ isLoading ? 'Creazione...' : 'Crea' }}
-        </button>
+        <button class="btn-salva" [disabled]="isLoading" (click)="salvaNuovoItinerario()">{{ isLoading ? 'Creazione...' : 'Crea' }}</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="mostraModaleCondivisione" (click)="isLoading ? null : chiudiModaleCondivisione()">
+    <div class="modal-glass" (click)="$event.stopPropagation()">
+      <h2>Invita Collaboratore</h2>
+      <p class="testo-spiegazione-modale">Inserisci l'email dell'utente con cui vuoi condividere questo itinerario. Potrà aggiungere e rimuovere viaggi!</p>
+      <div class="form-group">
+        <label>Email dell'amico</label>
+        <input class="input-modale" type="email" [(ngModel)]="emailDaInvitare" [disabled]="isLoading" placeholder="es. mario.rossi@email.com">
+      </div>
+      <div class="modal-actions modal-actions-destra">
+        <button class="btn-annulla" [disabled]="isLoading" (click)="chiudiModaleCondivisione()">Annulla</button>
+        <button class="btn-salva btn-verde" [disabled]="isLoading" (click)="inviaInvitoCondivisione()">{{ isLoading ? 'Invio in corso...' : 'Invia Invito' }}</button>
       </div>
     </div>
   </div>

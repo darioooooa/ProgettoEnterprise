@@ -156,6 +156,7 @@ export class CreaViaggio {
     return index;
   }
 
+  // Intercetta il submit in modo interattivo e asincrono
   async onSubmit() {
     // Controlli anagrafica base del viaggio
     if (!this.nuovoViaggio.titolo.trim() || !this.nuovoViaggio.dataInizio || !this.nuovoViaggio.dataFine) {

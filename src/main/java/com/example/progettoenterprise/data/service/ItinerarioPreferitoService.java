@@ -4,6 +4,7 @@ import com.example.progettoenterprise.dto.ItinerarioPreferitoDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ItinerarioPreferitoService {
     ItinerarioPreferitoDTO creaLista(ItinerarioPreferitoDTO dto, Long proprietarioId);
@@ -15,6 +16,10 @@ public interface ItinerarioPreferitoService {
     void rimuoviViaggioDallaLista(Long idLista, Long idViaggio, Long idUtente);
     void eliminaLista(Long id, Long utenteId);
     ItinerarioPreferitoDTO cambiaVisibilita(Long id, String visibilita, Long utenteId);
+    void invitaCollaboratore(Long itinerarioId, String emailInvitato, Long idProprietario);
+    void accettaInvito(Long itinerarioId, Long idUtenteInvitato);
+    void rifiutaInvito(Long itinerarioId, Long idUtenteInvitato);
+    List<Map<String, Object>> getInvitiInSospeso(Long utenteId);
 
     @Transactional(readOnly = true)
     List<ItinerarioPreferitoDTO> getListePubblicheDiUtente(String username);

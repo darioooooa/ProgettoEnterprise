@@ -1,11 +1,9 @@
 package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
-import com.example.progettoenterprise.data.entities.ItinerarioPreferito;
-import com.example.progettoenterprise.data.entities.ListaViaggio;
-import com.example.progettoenterprise.data.entities.Utente;
-import com.example.progettoenterprise.data.entities.Viaggio;
+import com.example.progettoenterprise.data.entities.*;
 import com.example.progettoenterprise.data.repositories.ItinerarioPreferitoRepository;
+import com.example.progettoenterprise.data.repositories.ListaUtenteRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.service.ItinerarioPreferitoService;
@@ -14,10 +12,12 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +30,7 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
     private final ViaggioRepository viaggioRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
+    private final ListaUtenteRepository listaUtenteRepository;
 
     @Override
     @Transactional
@@ -50,9 +51,16 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
     @Override
     @Transactional(readOnly = true)
     public List<ItinerarioPreferitoDTO> getMieListe(Long proprietarioId) {
-        return itinerarioRepository.findByProprietarioId(proprietarioId).stream()
-                .map(l -> modelMapper.map(l, ItinerarioPreferitoDTO.class))
-                .collect(Collectors.toList());
+        List<ItinerarioPreferito> liste = itinerarioRepository.findByProprietarioId(proprietarioId);
+
+        return liste.stream().map(lista -> {
+            ItinerarioPreferitoDTO dto = modelMapper.map(lista, ItinerarioPreferitoDTO.class);
+
+            boolean condiviso = listaUtenteRepository.existsByListaIdAndStato(lista.getId(), ListaUtente.StatoInvito.ACCETTATO);
+            dto.setInCondivisione(condiviso);
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -84,6 +92,54 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
     }
 
     @Override
+    @Transactional
+    public void invitaCollaboratore(Long itinerarioId, String emailInvitato, Long idProprietario) {
+        ItinerarioPreferito itinerario = itinerarioRepository.findById(itinerarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Itinerario non trovato"));
+
+        if (!itinerario.getProprietario().getId().equals(idProprietario)) {
+            throw new AccessDeniedException("Solo il proprietario può invitare amici.");
+        }
+
+        Utente utenteInvitato = utenteRepository.findByEmail(emailInvitato)
+                .orElseThrow(() -> new EntityNotFoundException("Utente non trovato con email: " + emailInvitato));
+
+        // Controlla che non stia invitando se stesso
+        if (utenteInvitato.getId().equals(idProprietario)) {
+            throw new IllegalArgumentException("Non puoi invitare te stesso!");
+        }
+
+        // Evita doppioni
+        boolean giaPresente = itinerario.getUtentiAutorizzati().stream()
+                .anyMatch(lu -> lu.getUtente().getId().equals(utenteInvitato.getId()));
+        if (giaPresente) {
+            throw new IllegalStateException("Utente già invitato o già presente.");
+        }
+
+        // Crea il biglietto d'invito
+        ListaUtente invito = new ListaUtente();
+        invito.setId(new ListaUtenteKey(utenteInvitato.getId(), itinerario.getId()));
+        invito.setUtente(utenteInvitato);
+        invito.setLista(itinerario);
+        invito.setStato(ListaUtente.StatoInvito.IN_ATTESA);
+
+        itinerario.getUtentiAutorizzati().add(invito);
+        itinerarioRepository.save(itinerario);
+    }
+
+    @Override
+    public void accettaInvito(Long itinerarioId, Long idUtenteInvitato) {
+        ListaUtenteKey key = new ListaUtenteKey(idUtenteInvitato, itinerarioId);
+
+        ListaUtente invito = listaUtenteRepository.findById(key)
+                .orElseThrow(() -> new EntityNotFoundException("Invito non trovato."));
+
+        invito.setStato(ListaUtente.StatoInvito.ACCETTATO);
+        listaUtenteRepository.save(invito);
+
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public ItinerarioPreferitoDTO getListaById(Long id) {
         return itinerarioRepository.findById(id)
@@ -94,9 +150,31 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
     @Override
     @Transactional(readOnly = true)
     public List<ItinerarioPreferitoDTO> getListeCondiviseConMe(Long utenteId) {
-        return itinerarioRepository.findByUtentiAutorizzati_Utente_Id(utenteId).stream()
-                .map(l -> modelMapper.map(l, ItinerarioPreferitoDTO.class))
-                .collect(Collectors.toList());
+        List<ListaUtente> condivise = listaUtenteRepository.findByUtenteIdAndStato(utenteId, ListaUtente.StatoInvito.ACCETTATO);
+
+        return condivise.stream().map(listaUtente -> {
+            ItinerarioPreferito lista = listaUtente.getLista();
+            ItinerarioPreferitoDTO dto = modelMapper.map(lista, ItinerarioPreferitoDTO.class);
+
+            if (lista.getProprietario() != null) {
+                dto.setProprietarioUsername(lista.getProprietario().getUsername());
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getInvitiInSospeso(Long utenteId) {
+        // Peschiamo solo gli inviti in attesa
+        List<ListaUtente> inviti = listaUtenteRepository.findByUtenteIdAndStato(utenteId, ListaUtente.StatoInvito.IN_ATTESA);
+
+        return inviti.stream().map(invito -> Map.<String, Object>of(
+                "idItinerario", invito.getLista().getId(),
+                "nomeItinerario", invito.getLista().getNome(),
+                "proprietario", invito.getLista().getProprietario().getUsername(),
+                "emailProprietario", invito.getLista().getProprietario().getEmail()
+        )).collect(Collectors.toList());
     }
 
     @Override
@@ -114,11 +192,22 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
     @Override
     @Transactional
     public void aggiungiViaggioAllaLista(Long idLista, Long idViaggio, Long idUtente) {
+
         ItinerarioPreferito lista = itinerarioRepository.findById(idLista)
                 .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("itinerario.notexist", idLista)));
-        if (!lista.getProprietario().getId().equals(idUtente)) {
+
+        //controllo nuovo che serve per condividere l'itinerario
+        boolean isProprietario = lista.getProprietario().getId().equals(idUtente);
+
+        boolean isCollaboratoreAutorizzato = lista.getUtentiAutorizzati().stream()
+                .anyMatch(collaboratore ->
+                        collaboratore.getUtente().getId().equals(idUtente) &&
+                                collaboratore.getStato() == ListaUtente.StatoInvito.ACCETTATO);
+
+        if (!isProprietario && !isCollaboratoreAutorizzato) {
             throw new IllegalArgumentException(messageLang.getMessage("itinerario.unauthorized"));
         }
+
         Viaggio viaggio = viaggioRepository.findById(idViaggio)
                 .orElseThrow(() -> new EntityNotFoundException("Viaggio non trovato con ID: " + idViaggio));
 
@@ -146,9 +235,17 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
         ItinerarioPreferito lista = itinerarioRepository.findById(idLista)
                 .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("itinerario.notexist", idLista)));
 
-        if (!lista.getProprietario().getId().equals(idUtente)) {
+        boolean isProprietario = lista.getProprietario().getId().equals(idUtente);
+
+        boolean isCollaboratoreAutorizzato = lista.getUtentiAutorizzati().stream()
+                .anyMatch(collaboratore ->
+                        collaboratore.getUtente().getId().equals(idUtente) &&
+                                collaboratore.getStato() == ListaUtente.StatoInvito.ACCETTATO);
+
+        if (!isProprietario && !isCollaboratoreAutorizzato) {
             throw new IllegalArgumentException(messageLang.getMessage("itinerario.unauthorized"));
         }
+
         boolean rimosso = lista.getContenuti().removeIf(collegamento ->
                 collegamento.getViaggio().getId().equals(idViaggio)
         );
@@ -169,5 +266,17 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
                 .stream()
                 .map(l -> modelMapper.map(l, ItinerarioPreferitoDTO.class))
                 .collect(Collectors.toList());
+    }
+    @Override
+    @Transactional
+    public void rifiutaInvito(Long itinerarioId, Long idUtenteInvitato) {
+        ListaUtenteKey key = new ListaUtenteKey(idUtenteInvitato, itinerarioId);
+
+        ListaUtente invito = listaUtenteRepository.findById(key)
+                .orElseThrow(() -> new EntityNotFoundException("Invito non trovato."));
+
+        // Eliminiamo l'invito per fare pulizia nel database
+        listaUtenteRepository.delete(invito);
+        log.info("Invito per l'itinerario {} rifiutato ed eliminato dall'utente {}", itinerarioId, idUtenteInvitato);
     }
 }

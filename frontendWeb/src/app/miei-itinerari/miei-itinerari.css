@@ -380,3 +380,80 @@
 .btn-salva:hover {
   background: #ffc133;
 }
+.bottoni-destra {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Bottone per aprire la modale di condivisione */
+.btn-condividi {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-condividi:hover:not([disabled]) {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.btn-condividi[disabled] {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}
+
+/* Testo grigio esplicativo sotto il titolo */
+.testo-spiegazione-modale {
+  font-size: 0.9em;
+  margin-bottom: 15px;
+  color: #555;
+  line-height: 1.4;
+}
+
+/* Input per l'email bello largo e arrotondato */
+.input-modale {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 1em;
+}
+
+.input-modale:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.modal-actions-destra {
+  margin-top: 25px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-verde {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+}
+
+.btn-verde:hover:not([disabled]) {
+  background-color: #45a049;
+}
+.badge-in-condivisione {
+  background-color: #3b82f6;
+  color: white;
+  margin-left: 10px;
+  cursor: help;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
