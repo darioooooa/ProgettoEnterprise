@@ -31,8 +31,19 @@ fun LoginActivity(viewModel: AuthViewModel) {
     LaunchedEffect(key1 = statoUi) {
         if (statoUi is StatoAuth.Successo) {
             val ruolo = (statoUi as StatoAuth.Successo).ruolo
-            Toast.makeText(context, "Login effettuato! Ruolo: $ruolo", Toast.LENGTH_LONG).show()
-            // Qui verrà poi implementata la navigazione in base al ruolo (es. navHostController.navigate)
+
+            // CONTROLLO DEL RUOLO
+            if (ruolo == "ROLE_VIAGGIATORE") {
+                Toast.makeText(context, "Benvenuto Viaggiatore!", Toast.LENGTH_SHORT).show()
+
+                // Navigazione verso la Home del Viaggiatore
+                val intent = android.content.Intent(context, HomeViaggiatoreActivity::class.java)
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                context.startActivity(intent)
+            } else {
+                // Se il login va bene ma non è un viaggiatore, gestisci qui (es. mostra un messaggio)
+                Toast.makeText(context, "Accesso riuscito come: $ruolo, ma questa sezione è riservata ai viaggiatori.", Toast.LENGTH_LONG).show()
+            }
         }
     }
 

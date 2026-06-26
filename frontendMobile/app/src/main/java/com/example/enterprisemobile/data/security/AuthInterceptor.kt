@@ -6,17 +6,21 @@ import okhttp3.Response
 class AuthInterceptor(private val sessionManager: SessionManager) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val richiestaOriginale = chain.request()
-        val builderNuovaRichiesta = richiestaOriginale.newBuilder()
-
-        // Estrae il token crittografato dall'hardware del telefono
         val token = sessionManager.ottieniTokenAccesso()
 
-        // Se l'utente è loggato ed esiste un token valido, inietta l'header HTTP Bearer
+        // DEBUG: Stampa tutto!
+        android.util.Log.d("DEBUG_AUTH", "Token grezzo recuperato: $token")
+
+        val builder = richiestaOriginale.newBuilder()
+
         if (token != null) {
-            builderNuovaRichiesta.addHeader("Authorization", "Bearer $token")
+            // Se il token contiene già "Bearer ", non aggiungerlo di nuovo
+            val headerValue = if (token.startsWith("Bearer ")) token else "Bearer $token"
+
+            android.util.Log.d("DEBUG_AUTH", "Header Authorization inviato: $headerValue")
+            builder.addHeader("Authorization", headerValue)
         }
 
-        // Fa proseguire la chiamata HTTP verso Spring Boot
-        return chain.proceed(builderNuovaRichiesta.build())
+        return chain.proceed(builder.build())
     }
 }

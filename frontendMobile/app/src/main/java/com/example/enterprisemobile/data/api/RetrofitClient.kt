@@ -14,7 +14,7 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
-    private const val CURRENT_IP = "10.0.2.2"
+    private const val CURRENT_IP = "192.168.1.3"
 
     private const val BASE_URL = "https://$CURRENT_IP:8443/api/v1/"
     private const val KEYCLOAK_BASE_URL = "http://$CURRENT_IP:8081/"
@@ -87,5 +87,8 @@ object RetrofitClient {
     // Funzione per istanziare i servizi di autenticazione di Keycloak
     fun ottieniAuthService(context: Context): AuthApiService {
         return ottieniClientKeycloak(context).create(AuthApiService::class.java)
+    }
+    fun ottieniViaggioService(context: Context): ViaggioApiService {
+        return ottieniClientBackend(context).create(ViaggioApiService::class.java)
     }
 }
