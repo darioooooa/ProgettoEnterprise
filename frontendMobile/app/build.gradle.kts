@@ -15,63 +15,41 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    buildFeatures {
-        compose = true
-    }
+    buildFeatures { compose = true }
 }
 
 dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    val room_version = "2.8.4"
-    implementation("androidx.room:room-runtime:$room_version")
-    ksp("androidx.room:room-compiler:$room_version")
-    // Librerie di piattaforma e jetpack compose
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+
+    // Room essenziale
+    implementation("androidx.room:room-runtime:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
+
+    // Compose (Usa solo ciò che ti serve per il layout)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation("androidx.compose.material:material-icons-extended:1.7.0")
 
-    // Viewmodel compose
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    // Librerie di sicurezza
-    implementation(libs.androidx.security.crypto)
-
-    // Architettura di rete retrofit + okhttp
+    // Retrofit (Essenziale per i tuoi itinerari)
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.core)
 
-    // Testing e debugging
-    testImplementation(libs.junit)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    debugImplementation(libs.androidx.compose.ui.tooling)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // Libreria per le icone extra come Place, Email, ecc. (HomeViaggiatoreActivity)
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
     //per Mapbox
     implementation("com.mapbox.maps:android:11.2.2")
     implementation("com.mapbox.extension:maps-compose:11.2.2")

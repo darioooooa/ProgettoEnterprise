@@ -126,3 +126,4 @@ fun LoginActivity(viewModel: AuthViewModel) {
         }
     }
 }
+

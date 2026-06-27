@@ -3,11 +3,14 @@ package com.example.enterprisemobile.data.api
 import android.content.Context
 import com.example.enterprisemobile.data.security.AuthInterceptor
 import com.example.enterprisemobile.data.security.SessionManager
+import com.example.enterprisemobile.utils.LocalDateAdapter
+import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
@@ -15,7 +18,7 @@ import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
     private const val CURRENT_IP = "192.168.1.103"
-
+    //IP PIER: private const val CURRENT_IP="192.168.0.109"
     private const val BASE_URL = "https://$CURRENT_IP:8443/api/v1/"
     private const val KEYCLOAK_BASE_URL = "http://$CURRENT_IP:8081/"
 
@@ -63,10 +66,17 @@ object RetrofitClient {
     // Fornisce l'istanza di Retrofit configurata per parlare con il backend Spring Boot
     fun ottieniClientBackend(context: Context): Retrofit {
         if (retrofit == null) {
+
+
+            val customGson = GsonBuilder()
+                .registerTypeAdapter(LocalDate::class.java, LocalDateAdapter())
+                .create()
+
+
             retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
-                .client(ottieniOkHttpClientSicuro(context, usaInterceptor = true)) //  Usa il client SSL permissivo + Interceptor
-                .addConverterFactory(GsonConverterFactory.create())
+                .client(ottieniOkHttpClientSicuro(context, usaInterceptor = true))
+                .addConverterFactory(GsonConverterFactory.create(customGson))
                 .build()
         }
         return retrofit!!
@@ -90,5 +100,8 @@ object RetrofitClient {
     }
     fun ottieniViaggioService(context: Context): ViaggioApiService {
         return ottieniClientBackend(context).create(ViaggioApiService::class.java)
+    }
+    fun ottieniItinerariService(context: Context): ItinerariApiService {
+        return ottieniClientBackend(context).create(ItinerariApiService::class.java)
     }
 }

@@ -16,10 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.enterprisemobile.data.api.RetrofitClient
+import com.example.enterprisemobile.ui.ItinerariScreen
 import com.example.enterprisemobile.ui.theme.*
+import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
 import com.example.enterprisemobile.viewmodels.ViaggioViewModel
 
 class HomeViaggiatoreActivity : ComponentActivity() {
@@ -35,21 +39,15 @@ class HomeViaggiatoreActivity : ComponentActivity() {
 }
 
 @Composable
-fun HomeViaggiatoreContent(viewModel: ViaggioViewModel) {
-    val listaViaggi by viewModel.viaggiSalvati.collectAsState()
-
-    // Stato Filtri
-    var destinazione by remember { mutableStateOf("") }
-    var dataMin by remember { mutableStateOf("") }
-    var dataMax by remember { mutableStateOf("") }
-    var posti by remember { mutableStateOf("") }
-    var prezzoMin by remember { mutableStateOf("0") }
-    var prezzoMax by remember { mutableStateOf("5000") }
-    var mostraAvanzati by remember { mutableStateOf(false) }
+fun HomeViaggiatoreContent(viaggioViewModel: ViaggioViewModel) {
     var selectedItem by remember { mutableIntStateOf(0) }
-
     val items = listOf("Home", "Itinerari", "Messaggi")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.Place, Icons.Filled.Email)
+    val context = LocalContext.current
+
+    // Inizializzazione sicura con remember
+    val service = remember { RetrofitClient.ottieniItinerariService(context) }
+    val itinerarioViewModel = remember { ItinerarioViewModel(service) }
 
     Scaffold(
         bottomBar = {
@@ -68,92 +66,91 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel) {
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().background(DarkNavy).padding(innerPadding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // TOP BAR
-            item {
-                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("ENTERPRISE", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("${viewModel.nomeUtente}", color = WhiteText, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp))
-                        Icon(Icons.Filled.AccountCircle, contentDescription = "Profilo", tint = WhiteText, modifier = Modifier.size(32.dp))
-                    }
+        Box(modifier = Modifier.fillMaxSize().background(DarkNavy).padding(innerPadding)) {
+            when (selectedItem) {
+                0 -> ListaViaggiContent(viaggioViewModel)
+                1 -> ItinerariScreen(viewModel = itinerarioViewModel) // Passata l'istanza corretta
+                2 -> Text("Pagina Messaggi", color = WhiteText, modifier = Modifier.align(Alignment.Center))
+            }
+        }
+    }
+}
+
+@Composable
+fun ListaViaggiContent(viewModel: ViaggioViewModel) {
+    val listaViaggi by viewModel.viaggiSalvati.collectAsState()
+    var destinazione by remember { mutableStateOf("") }
+    var dataMin by remember { mutableStateOf("") }
+    var dataMax by remember { mutableStateOf("") }
+    var posti by remember { mutableStateOf("") }
+    var prezzoMin by remember { mutableStateOf("0") }
+    var prezzoMax by remember { mutableStateOf("5000") }
+    var mostraAvanzati by remember { mutableStateOf(false) }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("ENTERPRISE", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("${viewModel.nomeUtente}", color = WhiteText, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp))
+                    Icon(Icons.Filled.AccountCircle, contentDescription = "Profilo", tint = WhiteText, modifier = Modifier.size(32.dp))
                 }
             }
+        }
 
-            // CARD RICERCA
-            item {
-                Surface(color = CardOverlay, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        SearchInput("Destinazione", destinazione) { destinazione = it }
-                        Spacer(modifier = Modifier.height(12.dp))
-
+        item {
+            Surface(color = CardOverlay, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    SearchInput("Destinazione", destinazione) { destinazione = it }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SearchInput("Dal", dataMin, Modifier.weight(1f)) { dataMin = it }
+                        SearchInput("Al", dataMax, Modifier.weight(1f)) { dataMax = it }
+                    }
+                    SearchInput("Posti minimi", posti) { posti = it }
+                    TextButton(onClick = { mostraAvanzati = !mostraAvanzati }) {
+                        Text(if (mostraAvanzati) "🔼 Nascondi filtri prezzo" else "🔽 Mostra filtri prezzo", color = Color.Gray)
+                    }
+                    if (mostraAvanzati) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            SearchInput("Dal", dataMin, Modifier.weight(1f)) { dataMin = it }
-                            SearchInput("Al", dataMax, Modifier.weight(1f)) { dataMax = it }
+                            SearchInput("Min €", prezzoMin, Modifier.weight(1f)) { prezzoMin = it }
+                            SearchInput("Max €", prezzoMax, Modifier.weight(1f)) { prezzoMax = it }
                         }
-
-                        SearchInput("Posti minimi", posti) { posti = it }
-
-                        TextButton(onClick = { mostraAvanzati = !mostraAvanzati }) {
-                            Text(if (mostraAvanzati) "🔼 Nascondi filtri prezzo" else "🔽 Mostra filtri prezzo", color = Color.Gray)
-                        }
-
-                        if (mostraAvanzati) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                SearchInput("Min €", prezzoMin, Modifier.weight(1f)) { prezzoMin = it }
-                                SearchInput("Max €", prezzoMax, Modifier.weight(1f)) { prezzoMax = it }
-                            }
-                        }
-
-                        Button(
-                            onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, 0) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                        ) { Text("Cerca", color = DarkNavy, fontWeight = FontWeight.Bold) }
                     }
+                    Button(
+                        onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, 0) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                    ) { Text("Cerca", color = DarkNavy, fontWeight = FontWeight.Bold) }
                 }
             }
+        }
 
-            // LISTA VIAGGI
-            if (viewModel.ricercaEffettuata) {
-                if (listaViaggi.isEmpty()) {
-                    item { Text("Nessun viaggio trovato.", color = Color.Gray, modifier = Modifier.padding(top = 20.dp)) }
-                } else {
-                    items(listaViaggi) { viaggio ->
-                        Surface(color = CardOverlay, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(viaggio.titolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text("🌍 ${viaggio.destinazione}", color = Color.LightGray, fontSize = 14.sp)
-                                Text("💰 ${viaggio.prezzo} €", color = Color.Green, fontSize = 14.sp)
-                            }
+        if (viewModel.ricercaEffettuata) {
+            if (listaViaggi.isEmpty()) {
+                item { Text("Nessun viaggio trovato.", color = Color.Gray, modifier = Modifier.padding(top = 20.dp)) }
+            } else {
+                items(listaViaggi) { viaggio ->
+                    Surface(color = CardOverlay, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(viaggio.titolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("🌍 ${viaggio.destinazione}", color = Color.LightGray, fontSize = 14.sp)
+                            Text("💰 ${viaggio.prezzo} €", color = Color.Green, fontSize = 14.sp)
                         }
                     }
                 }
             }
+        }
 
-            // PAGINAZIONE
-            if (viewModel.ricercaEffettuata) {
-                item {
-                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Button(
-                            onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, viewModel.paginaCorrente - 1) },
-                            enabled = viewModel.paginaCorrente > 0
-                        ) { Text("Prec") }
-
-                        Text(
-                            text = "Pagina ${viewModel.paginaCorrente + 1} di ${viewModel.totalePagine.coerceAtLeast(1)}",
-                            color = WhiteText,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        Button(
-                            onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, viewModel.paginaCorrente + 1) },
-                            enabled = viewModel.paginaCorrente < viewModel.totalePagine - 1
-                        ) { Text("Succ") }
-                    }
+        if (viewModel.ricercaEffettuata) {
+            item {
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Button(onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, viewModel.paginaCorrente - 1) }, enabled = viewModel.paginaCorrente > 0) { Text("Prec") }
+                    Text(text = "Pagina ${viewModel.paginaCorrente + 1}", color = WhiteText)
+                    Button(onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, viewModel.paginaCorrente + 1) }, enabled = viewModel.paginaCorrente < viewModel.totalePagine - 1) { Text("Succ") }
                 }
             }
         }
