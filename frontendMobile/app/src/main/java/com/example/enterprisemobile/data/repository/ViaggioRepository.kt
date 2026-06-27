@@ -1,8 +1,10 @@
 package com.example.enterprisemobile.data.repository
 
+import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.api.ViaggioApiService
 import com.example.enterprisemobile.data.db.ViaggioDAO
 import com.example.enterprisemobile.model.ViaggioEntity
+import com.example.enterprisemobile.model.ViaggioMappaDTO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -32,6 +34,14 @@ class ViaggioRepository(
         withContext(Dispatchers.IO) {
             dao.deleteAll()
             dao.insertAll(viaggiEntity)
+        }
+    }
+    suspend fun getViaggiMappa(): List<ViaggioMappaDTO> {
+        return try {
+            api.getViaggiPerMappa()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
     }
 }

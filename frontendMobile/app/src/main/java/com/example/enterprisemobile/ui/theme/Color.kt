@@ -14,3 +14,10 @@ val CardOverlay = Color(0xCC1A2338) // Trasparente scuro
 val WhiteText = Color(0xFFFFFFFF)
 val ButtonColor = Color(0xFFFFFFFF)
 val TextColor = Color(0xFF101624)
+
+val BluOceano = Color(0xFF1565C0)
+val AzzurroPastello = Color(0xFFBBDEFB)
+val BluScuroTesto = Color(0xFF0D47A1)
+val AzzurroSfondoCard = Color(0xFFE3F2FD)
+val BluNotte = Color(0xFF00305F)
+val Bianco = Color(0xFFFFFFFF)

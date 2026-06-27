@@ -40,6 +40,15 @@ fun LoginActivity(viewModel: AuthViewModel) {
                 val intent = android.content.Intent(context, HomeViaggiatoreActivity::class.java)
                 intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
                 context.startActivity(intent)
+            }
+            else if (ruolo == "ROLE_ORGANIZZATORE" || ruolo == "ORGANIZZATORE") {
+                Toast.makeText(context, "Bentornato Organizzatore!", Toast.LENGTH_SHORT).show()
+
+                // navigazione verso la home organizzatore
+                val intent = android.content.Intent(context, HomeOrganizzatoreActivity::class.java)
+                intent.putExtra("CHIAVE_USERNAME", username)
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                context.startActivity(intent)
             } else {
                 // Se il login va bene ma non è un viaggiatore, gestisci qui (es. mostra un messaggio)
                 Toast.makeText(context, "Accesso riuscito come: $ruolo, ma questa sezione è riservata ai viaggiatori.", Toast.LENGTH_LONG).show()
