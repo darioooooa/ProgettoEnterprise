@@ -4,6 +4,7 @@ import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { AutenticazioneService } from './service/autenticazione.service';
+import {environment} from '../environments/development';
 
 // Si mette in mezzo tra angular e il server
 @Injectable()
@@ -58,9 +59,9 @@ export class AuthInterceptor implements HttpInterceptor {
   private aggiungiToken(request: HttpRequest<any>, token: string | null): HttpRequest<any> {
 
 
-    const isRottaBackend = request.url.includes('localhost:8443') ||
-      request.url.includes('localhost:8080') ||
-      request.url.includes('/api/');
+    const isRottaBackend = request.url.includes('/api/') ||
+      request.url.includes(environment.CURRENT_IP) ||
+      request.url.includes('localhost');
 
     if (token && isRottaBackend) {
       return request.clone({

@@ -1,6 +1,7 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap, throwError, switchMap, map } from 'rxjs';
+import { environment } from '../../environments/development';
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
@@ -9,7 +10,7 @@ import { isPlatformBrowser } from '@angular/common';
 export class AutenticazioneService {
 
   // Endpoint di keycloak per prendere il token
-  private readonly keycloakTokenUrl = 'http://localhost:8081/realms/enterprise-realm/protocol/openid-connect/token';
+  private readonly keycloakTokenUrl = `http://${environment.CURRENT_IP}:8081/realms/enterprise-realm/protocol/openid-connect/token`;
   // Endpoint per il backend
   private readonly backendUrl = '/api/v1';
 

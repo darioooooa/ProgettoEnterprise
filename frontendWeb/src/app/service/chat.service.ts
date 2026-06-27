@@ -4,6 +4,7 @@ import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { Client, Message, StompSubscription } from '@stomp/stompjs';
 import { MessaggioChatDTO } from '../models/messaggio-chat.model';
 import { AutenticazioneService } from './autenticazione.service';
+import { environment } from '../../environments/development';
 
 @Injectable({
   providedIn: 'root'
@@ -72,8 +73,11 @@ export class ChatService {
 
     const token = this.authService.ottieniToken();
 
+    const protocollo = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
     this.stompClient = new Client({
-      brokerURL: 'ws://localhost:4200/ws',
+      webSocketFactory: () => new WebSocket(`${protocollo}//${window.location.host}/ws`),
+
       connectHeaders: {
         'Authorization': token ? `Bearer ${token}` : ''
       },
