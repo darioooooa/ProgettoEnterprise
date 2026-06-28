@@ -5,12 +5,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.enterprisemobile.model.ViaggioEntity
+import com.example.enterprisemobile.model.PrenotazioneEntity
 
 
-@Database(entities = [ViaggioEntity::class], version = 1, exportSchema = false)
+@Database(entities = [ViaggioEntity::class, PrenotazioneEntity::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun viaggioDao(): ViaggioDAO
+    abstract fun prenotazioneDao(): PrenotazioneDAO
+
 
     companion object {
         @Volatile

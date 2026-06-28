@@ -12,6 +12,9 @@ interface ViaggioDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(viaggi: List<ViaggioEntity>)
 
+    @Query("SELECT * FROM viaggi WHERE id = :id")
+    suspend fun getViaggioById(id: Long): ViaggioEntity?
+
     @Query("DELETE FROM viaggi")
     fun deleteAll()
 }

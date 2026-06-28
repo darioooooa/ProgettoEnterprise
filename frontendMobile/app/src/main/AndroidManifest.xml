@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools" >
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -14,7 +13,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.EnterpriseMobile"
-
         android:usesCleartextTraffic="true" >
 
         <activity
@@ -24,12 +22,13 @@
             android:theme="@style/Theme.EnterpriseMobile" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".HomeViaggiatoreActivity" android:exported="false" />
-        <activity android:name=".HomeOrganizzatoreActivity" />
-    </application>
 
+        <activity android:name=".HomeViaggiatoreActivity" android:exported="false" />
+        <activity android:name=".PrenotaViaggioActivity" android:exported="false" />
+        <activity android:name=".MiePrenotazioniActivity" android:exported="false" />
+        <activity android:name=".HomeOrganizzatoreActivity" android:exported="false" />
+    </application>
 </manifest>

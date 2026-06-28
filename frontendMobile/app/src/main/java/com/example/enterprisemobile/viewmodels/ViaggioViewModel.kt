@@ -45,8 +45,12 @@ class ViaggioViewModel(application: Application) : AndroidViewModel(application)
     fun cercaViaggi(destinazione: String, dataMin: String, dataMax: String, posti: String, pMin: String, pMax: String, pagina: Int) {
         viewModelScope.launch {
             try {
-                // Passiamo i dati reali ai filtri
-                repository.refreshViaggiFiltrati(destinazione, dataMin, dataMax, posti, pMin, pMax, pagina)
+                val numPagineRicevute = repository.refreshViaggiFiltrati(destinazione, dataMin, dataMax, posti, pMin, pMax, pagina)
+
+                if (numPagineRicevute > 0) {
+                    totalePagine = numPagineRicevute
+                }
+
                 ricercaEffettuata = true
                 paginaCorrente = pagina
             } catch (e: Exception) {

@@ -1,6 +1,5 @@
 package com.example.enterprisemobile.data.repository
 
-import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.api.ViaggioApiService
 import com.example.enterprisemobile.data.db.ViaggioDAO
 import com.example.enterprisemobile.model.ViaggioEntity
@@ -15,8 +14,7 @@ class ViaggioRepository(
 ) {
     val allViaggi: Flow<List<ViaggioEntity>> = dao.getAllViaggi()
 
-    suspend fun refreshViaggiFiltrati(dest: String, dMin: String, dMax: String, post: String, pMin: String, pMax: String, pag: Int) {
-        // Chiamata all'API con i filtri
+    suspend fun refreshViaggiFiltrati(dest: String, dMin: String, dMax: String, post: String, pMin: String, pMax: String, pag: Int): Int {
         val response = api.getViaggiFiltrati(dest, dMin, dMax, post, pMin, pMax, pag)
 
         val viaggiEntity = response.content.map { dto ->
@@ -27,7 +25,10 @@ class ViaggioRepository(
                 cittaPartenza = dto.cittaPartenza,
                 prezzo = dto.prezzo,
                 dataInizio = dto.dataInizio,
-                dataFine = dto.dataFine
+                dataFine = dto.dataFine,
+                descrizione = dto.descrizione,
+                maxPartecipanti = dto.maxPartecipanti,
+                partecipantiAttuali = dto.partecipantiAttuali
             )
         }
 
@@ -35,7 +36,9 @@ class ViaggioRepository(
             dao.deleteAll()
             dao.insertAll(viaggiEntity)
         }
+        return response.totalPages
     }
+
     suspend fun getViaggiMappa(): List<ViaggioMappaDTO> {
         return try {
             api.getViaggiPerMappa()

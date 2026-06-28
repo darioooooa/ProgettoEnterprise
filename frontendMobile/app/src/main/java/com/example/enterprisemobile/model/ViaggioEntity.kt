@@ -11,5 +11,8 @@ data class ViaggioEntity(
     val cittaPartenza: String,
     val prezzo: Double,
     val dataInizio: String,
-    val dataFine: String
+    val dataFine: String,
+    val maxPartecipanti: Int,
+    val partecipantiAttuali: Int,
+    val descrizione: String?
 )
