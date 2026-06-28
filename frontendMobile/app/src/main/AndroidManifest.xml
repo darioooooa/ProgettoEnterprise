@@ -30,5 +30,7 @@
         <activity android:name=".PrenotaViaggioActivity" android:exported="false" />
         <activity android:name=".MiePrenotazioniActivity" android:exported="false" />
         <activity android:name=".HomeOrganizzatoreActivity" android:exported="false" />
+        <activity android:name=".PagamentoActivity" android:exported="false" />
+        <activity android:name=".AmiciziaActivity" android:exported="false" />
     </application>
 </manifest>

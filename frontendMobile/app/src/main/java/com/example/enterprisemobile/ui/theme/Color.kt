@@ -28,6 +28,7 @@ val StatusPending = Color(0xFFFFA726)
 val AccentBlue = Color(0xFF90caf9)
 val TextSecondary = Color(0xCCFFFFFF)
 
+val WarningOrange = Color(0xFFFFA726)
 
 
 val primaryLight = Color(0xFF535A92)

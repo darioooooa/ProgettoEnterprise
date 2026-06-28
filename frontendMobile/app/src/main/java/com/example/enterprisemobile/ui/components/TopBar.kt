@@ -13,11 +13,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.enterprisemobile.AmiciziaActivity
+import androidx.compose.ui.graphics.Color
 import com.example.enterprisemobile.MainActivity
 import com.example.enterprisemobile.MiePrenotazioniActivity
 import com.example.enterprisemobile.data.security.SessionManager
@@ -84,7 +85,7 @@ fun EnterpriseScaffold(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = WhiteText, modifier = Modifier.size(64.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("$nomeUtente", color = WhiteText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Ciao, $nomeUtente", color = WhiteText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
 
                 HorizontalDivider(color = Color.Gray, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
@@ -110,19 +111,24 @@ fun EnterpriseScaffold(
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
 
+
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Filled.Group, null, tint = WhiteText) },
                     label = { Text("Amici", color = WhiteText, fontSize = 16.sp) },
-                    selected = false,
-                    onClick = { scope.launch { drawerState.close() } },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    selected = titolo == "AMICI",
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        if (titolo != "AMICI") {
+                            context.startActivity(Intent(context, AmiciziaActivity::class.java))
+                        }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = DarkNavy, unselectedContainerColor = Color.Transparent)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
 
-
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = Color(0xFFEF5350)) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = DangerRed) },
                     label = { Text("Disconnetti", color = DangerRed, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
                     selected = false,
                     onClick = {

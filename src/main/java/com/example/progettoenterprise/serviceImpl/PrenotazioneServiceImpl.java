@@ -64,11 +64,9 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
         if (!prenotazioniSovrapposte.isEmpty()) {
             log.warn("Prenotazione bloccata: l'utente {} ha già un viaggio in quelle date", idUtente);
-            throw new IllegalStateException("Non puoi prenotare questo viaggio perché le date si sovrappongono con un'altra tua prenotazione. Cancella prima l'altro viaggio.");
+            throw new IllegalStateException("Non puoi prenotare questo viaggio perché le date si sovrappongono con un'altra tua prenotazione.");
         }
-        // --------------------------------------------------------
 
-        // --- CONTROLLO E AGGIORNAMENTO POSTI ---
         if (viaggio.getPartecipantiAttuali() + numeroPersone > viaggio.getMaxPartecipanti()) {
             log.warn("Tentativo di prenotazione fallito per posti esauriti: Viaggio ID {}", idViaggio);
             throw new IllegalStateException("Non ci sono abbastanza posti disponibili per questo viaggio.");

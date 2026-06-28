@@ -17,7 +17,7 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
-    private const val CURRENT_IP = "192.168.8.150"
+    private const val CURRENT_IP = "192.168.1.3"
     private const val BASE_URL = "https://$CURRENT_IP:8443/api/v1/"
     private const val KEYCLOAK_BASE_URL = "http://$CURRENT_IP:8081/"
 
@@ -111,4 +111,11 @@ object RetrofitClient {
     fun ottieniUtenteService(context: Context): UtenteApiService {
         return ottieniClientBackend(context).create(UtenteApiService::class.java)
     }
+    fun ottieniPagamentoService(context: Context): PagamentoApiService{
+        return ottieniClientBackend(context).create(PagamentoApiService::class.java)
+    }
+    fun ottieniAmiciziaService(context: Context): AmiciziaApiService {
+        return ottieniClientBackend(context).create(AmiciziaApiService::class.java)
+    }
+
 }

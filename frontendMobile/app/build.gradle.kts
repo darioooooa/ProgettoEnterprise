@@ -53,4 +53,6 @@ dependencies {
     //per Mapbox
     implementation("com.mapbox.maps:android:11.2.2")
     implementation("com.mapbox.extension:maps-compose:11.2.2")
+
+    implementation("com.stripe:stripe-android:21.0.0")
 }

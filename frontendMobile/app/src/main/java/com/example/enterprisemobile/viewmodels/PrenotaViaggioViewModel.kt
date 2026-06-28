@@ -29,6 +29,7 @@ class PrenotaViaggioViewModel(application: Application) : AndroidViewModel(appli
     var mostraModaleConferma by mutableStateOf(false)
     var messaggioErrore by mutableStateOf("")
     var prenotazioneCompletata by mutableStateOf(false)
+    var idPrenotazioneCreata by mutableStateOf<Long?>(null)
 
     init {
         val prenotazioneApi = RetrofitClient.ottieniPrenotazioneService(application)
@@ -61,11 +62,29 @@ class PrenotaViaggioViewModel(application: Application) : AndroidViewModel(appli
             isLoading = true
             messaggioErrore = ""
             try {
-                prenotazioneRepository.creaNuovaPrenotazione(viaggioId, numeroPersone)
+                val nuovaPrenotazione = prenotazioneRepository.creaNuovaPrenotazione(viaggioId, numeroPersone)
+                idPrenotazioneCreata = nuovaPrenotazione.id
+
                 prenotazioneCompletata = true
                 mostraModaleConferma = false
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                val testoErrore = try {
+                    val json = org.json.JSONObject(errorBody ?: "")
+                    // Cerchiamo l'etichetta "messaggio" (usata dal tuo ErroreDTO)
+                    if (json.has("messaggio")) {
+                        json.getString("messaggio")
+                    } else if (json.has("message")) {
+                        json.getString("message")
+                    } else {
+                        "Prenotazione rifiutata."
+                    }
+                } catch (jsonEx: Exception) {
+                    "Prenotazione rifiutata dal server."
+                }
+                messaggioErrore = testoErrore
             } catch (e: Exception) {
-                messaggioErrore = "Errore: ${e.message}"
+                messaggioErrore = "Errore di connessione."
             } finally {
                 isLoading = false
             }

@@ -141,7 +141,11 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text("🌍 ${viaggio.destinazione}", color = Color.LightGray, fontSize = 14.sp)
                                                 Spacer(modifier = Modifier.height(2.dp))
-                                                Text("💰 ${viaggio.prezzo} €", color = Color.Green, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                                if (viaggio.dataInizio != null && viaggio.dataFine != null) {
+                                                    Text("📅 ${viaggio.dataInizio} / ${viaggio.dataFine}", color = Color.LightGray, fontSize = 12.sp)
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                }
+                                                Text("💰 ${viaggio.prezzo} €", color = SuccessGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                             }
 
                                             Button(

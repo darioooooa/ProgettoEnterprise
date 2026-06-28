@@ -1,6 +1,7 @@
 package com.example.enterprisemobile
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,14 +33,23 @@ class PrenotaViaggioActivity : ComponentActivity() {
         val viaggioId = intent.getLongExtra("VIAGGIO_ID", -1L)
 
         setContent {
+            val context = LocalContext.current // Ci serve per l'Intent
+
             EnterpriseMobileTheme {
                 LaunchedEffect(viaggioId) {
                     if (viaggioId != -1L) viewModel.caricaDettagliViaggio(viaggioId)
                 }
 
+                // LA MODIFICA È QUI: Invece di chiudere e basta, andiamo al Pagamento
                 if (viewModel.prenotazioneCompletata) {
                     LaunchedEffect(Unit) {
-                        finish()
+                        val intent = Intent(context, PagamentoActivity::class.java).apply {
+                            // Assicurati che nel tuo ViewModel esista una variabile con l'ID della prenotazione appena creata!
+                            putExtra("ID_PRENOTAZIONE", viewModel.idPrenotazioneCreata ?: -1L)
+                            putExtra("IMPORTO", viewModel.prezzoTotale)
+                        }
+                        context.startActivity(intent)
+                        finish() // Chiude questa pagina così non si torna indietro qui durante il pagamento
                     }
                 }
 
@@ -80,6 +90,9 @@ fun PrenotaViaggioContent(viewModel: PrenotaViaggioViewModel, viaggioId: Long) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text(viaggio.titolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 24.sp)
                         Text("📍 ${viaggio.destinazione}", color = AccentBlue, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(top = 8.dp))
+                        if (viaggio.dataInizio != null && viaggio.dataFine != null) {
+                            Text("📅 Dal ${viaggio.dataInizio} al ${viaggio.dataFine}", color = WhiteText, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, modifier = Modifier.padding(top = 8.dp))
+                        }
                         Text(viaggio.descrizione ?: "", color = TextSecondary, fontSize = 15.sp, modifier = Modifier.padding(top = 16.dp))
                     }
                 }
@@ -119,23 +132,35 @@ fun PrenotaViaggioContent(viewModel: PrenotaViaggioViewModel, viaggioId: Long) {
         }
 
         if (viewModel.mostraModaleConferma) {
-            Dialog(onDismissRequest = { viewModel.chiudiModale() }) {
+            Dialog(onDismissRequest = { if (!viewModel.isLoading) viewModel.chiudiModale() }) {
                 Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.padding(16.dp)) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text("Conferma Prenotazione", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Vuoi confermare la prenotazione per ${viewModel.numeroPersone} persone?", color = Color.DarkGray)
+
+                        // MOSTRA L'ERRORE SE IL BACKEND FALLISCE
+                        if (viewModel.messaggioErrore.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(viewModel.messaggioErrore, color = DangerRed, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            TextButton(onClick = { viewModel.chiudiModale() }) {
+                            TextButton(onClick = { viewModel.chiudiModale() }, enabled = !viewModel.isLoading) {
                                 Text("Annulla", color = Color.Gray)
                             }
                             Button(
                                 onClick = { viewModel.confermaPrenotazione(viaggioId) },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10b981))
+                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                                enabled = !viewModel.isLoading // Disabilita i doppi click
                             ) {
-                                Text("Sì, prenota")
+                                if (viewModel.isLoading) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Text("Sì, prenota")
+                                }
                             }
                         }
                     }
