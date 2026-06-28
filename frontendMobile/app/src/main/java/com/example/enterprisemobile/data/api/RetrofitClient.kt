@@ -53,7 +53,7 @@ object RetrofitClient {
             // Aggiunge l'AuthInterceptor solo se richiesto (per il backend, non per Keycloak)
             if (usaInterceptor) {
                 val sessionManager = SessionManager(context)
-                builder.addInterceptor(AuthInterceptor(sessionManager))
+                builder.addInterceptor(AuthInterceptor(context, sessionManager))
             }
 
             return builder.build()
@@ -102,5 +102,13 @@ object RetrofitClient {
     }
     fun ottieniItinerariService(context: Context): ItinerariApiService {
         return ottieniClientBackend(context).create(ItinerariApiService::class.java)
+    }
+
+    fun ottieniPrenotazioneService(context: Context): PrenotazioneApiService {
+        return ottieniClientBackend(context).create(PrenotazioneApiService::class.java)
+    }
+
+    fun ottieniUtenteService(context: Context): UtenteApiService {
+        return ottieniClientBackend(context).create(UtenteApiService::class.java)
     }
 }
