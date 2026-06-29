@@ -32,5 +32,6 @@
         <activity android:name=".HomeOrganizzatoreActivity" android:exported="false" />
         <activity android:name=".PagamentoActivity" android:exported="false" />
         <activity android:name=".AmiciziaActivity" android:exported="false" />
+        <activity android:name=".CreaViaggioActivity" android:exported="false" />
     </application>
 </manifest>

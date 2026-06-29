@@ -3,9 +3,13 @@ package com.example.enterprisemobile.data.api
 import com.example.enterprisemobile.model.PageResponse
 import com.example.enterprisemobile.model.ViaggioDTO
 import com.example.enterprisemobile.model.ViaggioMappaDTO
+import com.example.enterprisemobile.model.CreaViaggioDTO
+import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.POST
 
 interface ViaggioApiService {
     @GET("viaggi") // "api/v1/" è già nel BASE_URL di RetrofitClient
@@ -25,4 +29,8 @@ interface ViaggioApiService {
         @Query("prezzoMax") prezzoMax: String,
         @Query("page") page: Int
     ): PageResponse<ViaggioDTO>
+
+    @POST("viaggi")
+    suspend fun creaViaggio(@Body nuovoViaggio : CreaViaggioDTO): Response<ViaggioDTO>
+
 }

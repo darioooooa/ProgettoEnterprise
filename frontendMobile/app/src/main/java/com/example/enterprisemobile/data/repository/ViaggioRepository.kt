@@ -2,11 +2,13 @@ package com.example.enterprisemobile.data.repository
 
 import com.example.enterprisemobile.data.api.ViaggioApiService
 import com.example.enterprisemobile.data.db.ViaggioDAO
+import com.example.enterprisemobile.model.ViaggioDTO
 import com.example.enterprisemobile.model.ViaggioEntity
 import com.example.enterprisemobile.model.ViaggioMappaDTO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import com.example.enterprisemobile.model.CreaViaggioDTO
 
 class ViaggioRepository(
     private val api: ViaggioApiService,
@@ -45,6 +47,19 @@ class ViaggioRepository(
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
+        }
+    }
+
+    suspend fun creaViaggio(viaggio: CreaViaggioDTO): Result<ViaggioDTO> {
+        return try {
+            val response = api.creaViaggio(viaggio)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Errore dal server: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

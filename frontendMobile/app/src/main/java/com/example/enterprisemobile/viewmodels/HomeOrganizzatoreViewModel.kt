@@ -18,7 +18,6 @@ class HomeOrganizzatoreViewModel(
 
     fun caricaDati() {
         if (!isOnline) {
-            // Offline: Lista vuota, la mappa sarà pulita
             _uiState.value = emptyList()
             return
         }
