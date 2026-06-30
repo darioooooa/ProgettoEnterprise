@@ -20,11 +20,11 @@ public class PromemoriaServiceImpl {
     private final EmailServiceImpl emailService;
     private final NotificaService notificaService;
 
-    @Scheduled(cron = "0 0 8 * * *")
+    @Scheduled(cron = "0 0 12 * * *")
     public void inviaPromemoriaPartenze() {
         System.out.println("PROMEMORIA SCHEDULER PARTITO");
-        LocalDateTime start = LocalDateTime.now();
-        LocalDateTime end = LocalDateTime.now().plusDays(30);
+        LocalDate start = LocalDate.now();
+        LocalDate end = LocalDate.now().plusDays(30);
 
         System.out.println("📅 Intervallo: " + start + " -> " + end);
 

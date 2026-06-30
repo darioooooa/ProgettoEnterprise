@@ -34,5 +34,6 @@
         <activity android:name=".AmiciziaActivity" android:exported="false" />
         <activity android:name=".DettaglioViaggioActivity" android:exported="false" />
         <activity android:name=".CreaViaggioActivity" android:exported="false" />
+        <activity android:name=".ProfiloActivity" android:exported="false" />
     </application>
 </manifest>

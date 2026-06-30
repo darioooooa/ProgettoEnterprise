@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.model.AmiciziaDTO
 import com.example.enterprisemobile.data.security.SessionManager
+import com.example.enterprisemobile.model.ItinerarioPreferitoDTO
 import kotlinx.coroutines.launch
 
 class AmiciziaViewModel(application: Application) : AndroidViewModel(application) {
@@ -23,15 +24,10 @@ class AmiciziaViewModel(application: Application) : AndroidViewModel(application
     var messaggioAvviso by mutableStateOf<String?>(null)
     var utenteCercato by mutableStateOf<String?>(null)
 
-    fun cercaUtente(username: String) {
-        if (username.isNotBlank()) {
-            utenteCercato = username.trim()
-        }
-    }
-
-    fun pulisciRicerca() {
-        utenteCercato = null
-    }
+    // --- GESTIONE ITINERARI AMICO ---
+    var itinerariAmico by mutableStateOf<List<ItinerarioPreferitoDTO>>(emptyList())
+    var isLoadingItinerari by mutableStateOf(false)
+    var amicoSelezionatoPerItinerari by mutableStateOf<String?>(null)
 
     init {
         caricaTutto()
@@ -50,6 +46,16 @@ class AmiciziaViewModel(application: Application) : AndroidViewModel(application
                 isLoading = false
             }
         }
+    }
+
+    fun cercaUtente(username: String) {
+        if (username.isNotBlank()) {
+            utenteCercato = username.trim()
+        }
+    }
+
+    fun pulisciRicerca() {
+        utenteCercato = null
     }
 
     fun inviaRichiesta(usernameDestinatario: String) {
@@ -107,6 +113,28 @@ class AmiciziaViewModel(application: Application) : AndroidViewModel(application
                 messaggioAvviso = "Impossibile rimuovere."
             }
         }
+    }
+
+    // --- FUNZIONI PER GLI ITINERARI DELL'AMICO ---
+    fun caricaItinerariPubbliciAmico(usernameAmico: String) {
+        viewModelScope.launch {
+            isLoadingItinerari = true
+            amicoSelezionatoPerItinerari = usernameAmico
+            try {
+                val apiItinerari = RetrofitClient.ottieniItinerariService(getApplication())
+                itinerariAmico = apiItinerari.getItinerariPubbliciAmico(usernameAmico)
+            } catch (e: Exception) {
+                messaggioAvviso = "Impossibile caricare gli itinerari di $usernameAmico"
+                itinerariAmico = emptyList()
+            } finally {
+                isLoadingItinerari = false
+            }
+        }
+    }
+
+    fun chiudiModaleItinerari() {
+        amicoSelezionatoPerItinerari = null
+        itinerariAmico = emptyList()
     }
 
     fun pulisciMessaggio() {

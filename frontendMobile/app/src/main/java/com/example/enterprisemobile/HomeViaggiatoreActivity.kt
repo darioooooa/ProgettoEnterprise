@@ -59,6 +59,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
 
     val items = listOf("Home", "Itinerari", "Messaggi")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.Place, Icons.Filled.Email)
+    var notificheAmici by remember { mutableIntStateOf(0) }
 
     EnterpriseScaffold(
         titolo = "ENTERPRISE",

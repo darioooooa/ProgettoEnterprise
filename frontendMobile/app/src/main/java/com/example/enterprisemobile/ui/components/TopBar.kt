@@ -9,27 +9,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.enterprisemobile.AmiciziaActivity
-import androidx.compose.ui.graphics.Color
 import com.example.enterprisemobile.MainActivity
 import com.example.enterprisemobile.MiePrenotazioniActivity
+import com.example.enterprisemobile.ProfiloActivity
+import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.security.SessionManager
 import com.example.enterprisemobile.ui.theme.*
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
     titolo: String,
     nomeUtente: String,
     mostraFrecciaIndietro: Boolean = false,
+    notificheMenu: Int = 0, // <-- NUOVO: Conta le notifiche da mostrare sul burger menu
     onBackClick: () -> Unit = {},
     onMenuClick: () -> Unit
 ) {
@@ -55,9 +58,21 @@ fun TopBar(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(nomeUtente, color = WhiteText, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp))
             Icon(Icons.Filled.AccountCircle, "Profilo", tint = WhiteText, modifier = Modifier.size(32.dp))
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+
+
             IconButton(onClick = { onMenuClick() }) {
-                Icon(Icons.Filled.Menu, "Menu", tint = WhiteText)
+                BadgedBox(
+                    badge = {
+                        if (notificheMenu > 0) {
+                            Badge(containerColor = DangerRed, contentColor = WhiteText) {
+                                Text(notificheMenu.toString())
+                            }
+                        }
+                    }
+                ) {
+                    Icon(Icons.Filled.Menu, "Menu", tint = WhiteText)
+                }
             }
         }
     }
@@ -68,6 +83,7 @@ fun EnterpriseScaffold(
     titolo: String,
     nomeUtente: String,
     mostraFrecciaIndietro: Boolean = false,
+    badgeAmiciOverride: Int? = null,
     onBackClick: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
@@ -76,10 +92,36 @@ fun EnterpriseScaffold(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    var notificheAmiciFetch by remember { mutableIntStateOf(0) }
+    val notificheAmici = badgeAmiciOverride ?: notificheAmiciFetch
+
+    // Identifichiamo la pagina attuale
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    // Ogni volta che la pagina "torna in primo piano" (si sveglia), va a ricontrollare le notifiche
+    DisposableEffect(lifecycleOwner, badgeAmiciOverride) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME && badgeAmiciOverride == null) {
+                scope.launch {
+                    try {
+                        val api = RetrofitClient.ottieniAmiciziaService(context)
+                        notificheAmiciFetch = api.getRichiesteRicevute().size
+                    } catch (e: Exception) {
+                    }
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(drawerContainerColor = CardOverlay, modifier = Modifier.width(300.dp)) {
+            ModalDrawerSheet(drawerContainerColor = DarkNavy, modifier = Modifier.width(300.dp)) {
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -100,21 +142,37 @@ fun EnterpriseScaffold(
                             context.startActivity(Intent(context, MiePrenotazioniActivity::class.java))
                         }
                     },
-                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = DarkNavy, unselectedContainerColor = Color.Transparent)
+                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
                 )
 
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Filled.Person, null, tint = WhiteText) },
                     label = { Text("Il Mio Profilo", color = WhiteText, fontSize = 16.sp) },
-                    selected = false,
-                    onClick = { scope.launch { drawerState.close() } },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    selected = titolo == "IL MIO PROFILO",
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        if (titolo != "IL MIO PROFILO") {
+                            context.startActivity(Intent(context, ProfiloActivity::class.java))
+                        }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
                 )
-
 
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Filled.Group, null, tint = WhiteText) },
-                    label = { Text("Amici", color = WhiteText, fontSize = 16.sp) },
+                    label = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Amici", color = WhiteText, fontSize = 16.sp)
+
+                            // PALLINO ROSSO NELLA VOCE DEL MENU
+                            if (notificheAmici > 0) {
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Badge(containerColor = DangerRed, contentColor = WhiteText) {
+                                    Text(notificheAmici.toString(), fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    },
                     selected = titolo == "AMICI",
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -122,7 +180,7 @@ fun EnterpriseScaffold(
                             context.startActivity(Intent(context, AmiciziaActivity::class.java))
                         }
                     },
-                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = DarkNavy, unselectedContainerColor = Color.Transparent)
+                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -154,6 +212,7 @@ fun EnterpriseScaffold(
                     titolo = titolo,
                     nomeUtente = nomeUtente,
                     mostraFrecciaIndietro = mostraFrecciaIndietro,
+                    notificheMenu = notificheAmici, // <-- Passa le notifiche all'intestazione
                     onBackClick = onBackClick,
                     onMenuClick = { scope.launch { drawerState.open() } }
                 )
