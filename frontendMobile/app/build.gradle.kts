@@ -34,6 +34,8 @@ dependencies {
     implementation("androidx.room:room-runtime:2.8.4")
     ksp("androidx.room:room-compiler:2.8.4")
 
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
     // Compose (Usa solo ciò che ti serve per il layout)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

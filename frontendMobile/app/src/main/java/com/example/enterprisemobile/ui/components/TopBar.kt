@@ -85,6 +85,7 @@ fun EnterpriseScaffold(
     mostraFrecciaIndietro: Boolean = false,
     badgeAmiciOverride: Int? = null,
     onBackClick: () -> Unit = {},
+    gesturesEnabled: Boolean = true,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
@@ -120,6 +121,7 @@ fun EnterpriseScaffold(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = gesturesEnabled || drawerState.isOpen,
         drawerContent = {
             ModalDrawerSheet(drawerContainerColor = DarkNavy, modifier = Modifier.width(300.dp)) {
                 Spacer(modifier = Modifier.height(32.dp))

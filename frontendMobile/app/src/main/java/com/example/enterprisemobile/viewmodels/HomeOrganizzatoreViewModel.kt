@@ -8,23 +8,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class HomeOrganizzatoreViewModel(
-    private val repository: ViaggioRepository,
-    private val isOnline: Boolean // Questo lo passeremo dalla Activity
-) : ViewModel() {
+class HomeOrganizzatoreViewModel(private val repository: ViaggioRepository) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<List<ViaggioMappaDTO>>(emptyList())
-    val uiState: StateFlow<List<ViaggioMappaDTO>> = _uiState
+    private val _viaggi = MutableStateFlow<List<ViaggioMappaDTO>>(emptyList())
+    val viaggi: StateFlow<List<ViaggioMappaDTO>> = _viaggi
 
-    fun caricaDati() {
-        if (!isOnline) {
-            _uiState.value = emptyList()
-            return
-        }
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
+    fun caricaDatiMappa() {
         viewModelScope.launch {
-            val dati = repository.getViaggiMappa()
-            _uiState.value = dati ?: emptyList()
+            _isLoading.value = true
+            _viaggi.value = repository.getViaggiMappa() // Delegato al repository
+            _isLoading.value = false
         }
     }
 }

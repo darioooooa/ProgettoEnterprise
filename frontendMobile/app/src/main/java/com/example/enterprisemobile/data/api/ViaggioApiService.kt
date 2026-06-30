@@ -16,11 +16,11 @@ interface ViaggioApiService {
     @GET("viaggi") // "api/v1/" è già nel BASE_URL di RetrofitClient
     suspend fun getViaggi(): PageResponse<ViaggioDTO>
 
-    @GET("api/v1/viaggi/mappa-viaggi")
+    @GET("viaggi/mappa-viaggi")
     suspend fun getViaggiPerMappa(): List<ViaggioMappaDTO>
 
     // Metodo per filtrare i viaggi
-    @GET("viaggi")
+    @GET("viaggi-filtrati")
     suspend fun getViaggiFiltrati(
         @Query("destinazione") destinazione: String,
         @Query("dataMin") dataMin: String,
