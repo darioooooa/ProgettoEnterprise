@@ -1,5 +1,6 @@
 package com.example.enterprisemobile
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,11 +31,20 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp)
+    ) {
         if (statoReg !is StatoRegistrazione.Successo) {
             Text(
-                text = "← Torna alla pagina iniziale", color = Color.LightGray,
-                modifier = Modifier.statusBarsPadding().clickable { if (statoReg !is StatoRegistrazione.Caricamento) onTornaIndietro() }.padding(vertical = 8.dp)
+                text = "← Torna alla pagina iniziale",
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .clickable { if (statoReg !is StatoRegistrazione.Caricamento) onTornaIndietro() }
+                    .padding(vertical = 8.dp)
             )
         }
 
@@ -48,29 +57,73 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
             ) {
                 Text("✉️", fontSize = 64.sp)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Controlla la tua casella di posta!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+
+                Text(
+                    text = "Controlla la tua casella di posta!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Abbiamo inviato un link di verifica all'indirizzo:", color = Color.Gray, textAlign = TextAlign.Center)
-                Text(email, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(vertical = 8.dp))
+
+                Text(
+                    text = "Abbiamo inviato un link di verifica all'indirizzo:",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center
+                )
+
+                Text(
+                    text = email,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
 
                 Text(
                     text = "Per attivare il tuo account e poter accedere, clicca sul link che troverai all'interno del messaggio inviato.\n\nSe non vedi il messaggio, controlla nella cartella Spam.",
-                    color = Color.LightGray, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = { viewModel.resetStatoRegistrazione(); onTornaAlLogin() }, modifier = Modifier.fillMaxWidth().height(50.dp)) {
-                    Text("Torna alla pagina di accesso")
+
+                Button(
+                    onClick = { viewModel.resetStatoRegistrazione(); onTornaAlLogin() },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text("Torna alla pagina di accesso", fontWeight = FontWeight.Bold)
                 }
             }
         } else {
             // Modulo di registrazione
             Column(
-                modifier = Modifier.fillMaxWidth().align(Alignment.Center).verticalScroll(rememberScrollState()).padding(top = 40.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Crea il tuo profilo", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                Text(text = "Entra a far parte della community dei viaggiatori", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp, bottom = 24.dp))
+                Text(
+                    text = "Crea il tuo profilo",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Entra a far parte della community dei viaggiatori",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
+                )
 
                 OutlinedTextField(value = username, onValueChange = { username = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth(), enabled = statoReg !is StatoRegistrazione.Caricamento)
                 Spacer(modifier = Modifier.height(12.dp))
@@ -93,16 +146,28 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                 Spacer(modifier = Modifier.height(24.dp))
 
                 if (statoReg is StatoRegistrazione.Caricamento) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 } else {
-                    Button(onClick = { viewModel.eseguiRegistrazione(context, username, nome, cognome, email, password) }, modifier = Modifier.fillMaxWidth().height(50.dp)) {
-                        Text("Registrati e parti", style = MaterialTheme.typography.titleMedium)
+                    Button(
+                        onClick = { viewModel.eseguiRegistrazione(context, username, nome, cognome, email, password) },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Registrati e parti", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     }
                 }
 
                 Row(modifier = Modifier.padding(top = 24.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Hai già un account? ", color = Color.Gray)
-                    Text("Torna al login", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onTornaAlLogin() })
+                    Text("Hai già un account? ", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                    Text(
+                        text = "Torna al login",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onTornaAlLogin() }
+                    )
                 }
             }
         }

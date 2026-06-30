@@ -1,17 +1,17 @@
-package com.example.enterprisemobile.data.model
+package com.example.enterprisemobile.model
 
 import com.google.gson.annotations.SerializedName
 
 data class PrenotazioneDTO(
-    val id: Long,
-    val dataPrenotazione: String?,
-    val numeroPersone: Int,
-    val viaggiatoreId: Long,
-    val viaggiatoreUsername: String?,
-    val viaggioId: Long,
-    val viaggioTitolo: String,
-    val viaggioDataInizio: String?,
-    val viaggioDataFine: String?,
-    val viaggioDestinazione: String?,
-    val stato: String // "IN_ATTESA", "CONFERMATA", "ANNULLATA"
+    @SerializedName("id") val id: Long,
+    @SerializedName("dataPrenotazione") val dataPrenotazione: String?,
+    @SerializedName("numeroPersone") val numeroPersone: Int,
+    @SerializedName("viaggiatoreId") val viaggiatoreId: Long,
+    @SerializedName("viaggiatoreUsername") val viaggiatoreUsername: String?,
+    @SerializedName("viaggioId") val viaggioId: Long,
+    @SerializedName("viaggioTitolo") val viaggioTitolo: String,
+    @SerializedName("viaggioDataInizio") val viaggioDataInizio: String?,
+    @SerializedName("viaggioDataFine") val viaggioDataFine: String?,
+    @SerializedName("viaggioDestinazione") val viaggioDestinazione: String?,
+    @SerializedName("stato") val stato: String // "IN_ATTESA", "CONFERMATA", "ANNULLATA"
 )

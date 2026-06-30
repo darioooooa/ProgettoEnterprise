@@ -1,7 +1,12 @@
 package com.example.enterprisemobile.model
 
-data class AttivitaViaggioDTO(
-    val id: Long,
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "attivita_viaggio")
+data class AttivitaViaggioEntity(
+    @PrimaryKey val id: Long,
+    val viaggioId: Long,
     val titolo: String,
     val descrizione: String?,
     val orarioInizio: String,

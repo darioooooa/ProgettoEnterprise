@@ -28,7 +28,7 @@ class AuthInterceptor(
         var risposta = chain.proceed(builder.build())
 
         // Se si riceve 401 Unauthorized, il token di accesso potrebbe essere scaduto
-        if (risposta.code() == 401 && token != null) {
+        if (risposta.code == 401 && token != null) {
             // Si chiude la risposta fallita per non lasciare socket appesi
             risposta.close()
 

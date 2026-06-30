@@ -55,4 +55,7 @@ dependencies {
     implementation("com.mapbox.extension:maps-compose:11.2.2")
 
     implementation("com.stripe:stripe-android:21.0.0")
+
+    // Per le immagini dei viaggi
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

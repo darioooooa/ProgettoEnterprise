@@ -6,14 +6,32 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.enterprisemobile.model.ViaggioEntity
 import com.example.enterprisemobile.model.PrenotazioneEntity
+import com.example.enterprisemobile.model.AttivitaViaggioEntity
+import com.example.enterprisemobile.model.ImmagineViaggioEntity
+import com.example.enterprisemobile.model.RecensioneViaggioEntity
 
 
-@Database(entities = [ViaggioEntity::class, PrenotazioneEntity::class], version = 3, exportSchema = false)
+@Database(
+    entities = [
+        ViaggioEntity::class,
+        PrenotazioneEntity::class,
+        AttivitaViaggioEntity::class,
+        ImmagineViaggioEntity::class,
+        RecensioneViaggioEntity::class
+    ],
+    version = 4,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun viaggioDao(): ViaggioDAO
     abstract fun prenotazioneDao(): PrenotazioneDAO
 
+    abstract fun galleriaDao(): GalleriaDAO
+
+    abstract fun dettaglioViaggioDao() : DettaglioViaggioDAO
+    abstract fun programmaDao(): ProgrammaDAO
+    abstract fun communityDao(): CommunityDAO
 
     companion object {
         @Volatile

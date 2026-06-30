@@ -1,6 +1,6 @@
 package com.example.enterprisemobile.data.api
 
-import com.example.enterprisemobile.data.model.PrenotazioneDTO
+import com.example.enterprisemobile.model.PrenotazioneDTO
 import com.example.enterprisemobile.model.PagamentoDTO
 import retrofit2.http.Body
 import retrofit2.http.POST

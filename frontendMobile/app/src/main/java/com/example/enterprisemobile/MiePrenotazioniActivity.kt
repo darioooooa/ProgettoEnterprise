@@ -1,12 +1,15 @@
 package com.example.enterprisemobile
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -100,6 +103,8 @@ fun MiePrenotazioniContent(viewModel: MiePrenotazioniViewModel) {
 
 @Composable
 fun ListaInProgramma(prenotazioni: List<PrenotazioneEntity>) {
+    val context = LocalContext.current
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         items(prenotazioni) { pren ->
             val coloreStato = when (pren.stato) {
@@ -108,7 +113,22 @@ fun ListaInProgramma(prenotazioni: List<PrenotazioneEntity>) {
                 else -> StatusPending
             }
 
-            Surface(color = CardOverlay, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+            Surface(color = CardOverlay,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+                    .clickable {
+                        val idPassato = pren.viaggioId
+                        if (idPassato > 0) {
+                            val intent = Intent(context, DettaglioViaggioActivity::class.java).apply {
+                                putExtra("VIAGGIO_ID", idPassato)
+                            }
+                            context.startActivity(intent)
+                        } else {
+                            android.widget.Toast.makeText(context, "Errore: id viaggio non valido", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .padding(4.dp)
+            ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("#PREN-${pren.id}", color = Color.Gray, fontSize = 12.sp)

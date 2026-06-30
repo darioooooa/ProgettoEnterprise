@@ -129,7 +129,19 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                     Surface(
                                         color = CardOverlay,
                                         shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { }
+                                        modifier = Modifier.fillMaxWidth()
+                                            .clickable {
+                                                val idPassato = viaggio.id
+                                                if (idPassato > 0) {
+                                                    val intent = Intent(context, DettaglioViaggioActivity::class.java).apply {
+                                                        putExtra("VIAGGIO_ID", idPassato)
+                                                    }
+                                                    context.startActivity(intent)
+                                                } else {
+                                                    android.widget.Toast.makeText(context, "Errore: id viaggio non valido", android.widget.Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                            .padding(4.dp)
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
