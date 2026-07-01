@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.enterprisemobile.AmiciziaActivity
+import com.example.enterprisemobile.DiventaOrganizzatoreActivity
 import com.example.enterprisemobile.MainActivity
 import com.example.enterprisemobile.MiePrenotazioniActivity
 import com.example.enterprisemobile.ProfiloActivity
@@ -32,7 +33,7 @@ fun TopBar(
     titolo: String,
     nomeUtente: String,
     mostraFrecciaIndietro: Boolean = false,
-    notificheMenu: Int = 0, // <-- NUOVO: Conta le notifiche da mostrare sul burger menu
+    notificheMenu: Int = 0,
     onBackClick: () -> Unit = {},
     onMenuClick: () -> Unit
 ) {
@@ -59,7 +60,6 @@ fun TopBar(
             Text(nomeUtente, color = WhiteText, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp))
             Icon(Icons.Filled.AccountCircle, "Profilo", tint = WhiteText, modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(16.dp))
-
 
             IconButton(onClick = { onMenuClick() }) {
                 BadgedBox(
@@ -93,13 +93,15 @@ fun EnterpriseScaffold(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    val sessionManager = SessionManager(context)
+    val ruoloUtente = sessionManager.ottieniRuolo() ?: ""
+    val isViaggiatore = ruoloUtente.contains("VIAGGIATORE", ignoreCase = true)
+
     var notificheAmiciFetch by remember { mutableIntStateOf(0) }
     val notificheAmici = badgeAmiciOverride ?: notificheAmiciFetch
 
-    // Identifichiamo la pagina attuale
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
-    // Ogni volta che la pagina "torna in primo piano" (si sveglia), va a ricontrollare le notifiche
     DisposableEffect(lifecycleOwner, badgeAmiciOverride) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME && badgeAmiciOverride == null) {
@@ -134,18 +136,6 @@ fun EnterpriseScaffold(
 
                 HorizontalDivider(color = Color.Gray, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Filled.List, null, tint = WhiteText) },
-                    label = { Text("Le Mie Prenotazioni", color = WhiteText, fontSize = 16.sp) },
-                    selected = titolo == "I MIEI VIAGGI",
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        if (titolo != "I MIEI VIAGGI") {
-                            context.startActivity(Intent(context, MiePrenotazioniActivity::class.java))
-                        }
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
-                )
 
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Filled.Person, null, tint = WhiteText) },
@@ -166,7 +156,6 @@ fun EnterpriseScaffold(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Amici", color = WhiteText, fontSize = 16.sp)
 
-                            // PALLINO ROSSO NELLA VOCE DEL MENU
                             if (notificheAmici > 0) {
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Badge(containerColor = DangerRed, contentColor = WhiteText) {
@@ -184,6 +173,35 @@ fun EnterpriseScaffold(
                     },
                     colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
                 )
+
+
+                if (isViaggiatore) {
+                    NavigationDrawerItem(
+                        icon = { Icon(Icons.Filled.List, null, tint = WhiteText) },
+                        label = { Text("Le Mie Prenotazioni", color = WhiteText, fontSize = 16.sp) },
+                        selected = titolo == "I MIEI VIAGGI",
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            if (titolo != "I MIEI VIAGGI") {
+                                context.startActivity(Intent(context, MiePrenotazioniActivity::class.java))
+                            }
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
+                    )
+
+                    NavigationDrawerItem(
+                        icon = { Icon(Icons.Filled.Work, null, tint = WhiteText) },
+                        label = { Text("Diventa Organizzatore", color = WhiteText, fontSize = 16.sp) },
+                        selected = titolo == "DIVENTA ORGANIZZATORE",
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            if (titolo != "DIVENTA ORGANIZZATORE") {
+                                context.startActivity(Intent(context, DiventaOrganizzatoreActivity::class.java))
+                            }
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
+                    )
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -214,7 +232,7 @@ fun EnterpriseScaffold(
                     titolo = titolo,
                     nomeUtente = nomeUtente,
                     mostraFrecciaIndietro = mostraFrecciaIndietro,
-                    notificheMenu = notificheAmici, // <-- Passa le notifiche all'intestazione
+                    notificheMenu = notificheAmici,
                     onBackClick = onBackClick,
                     onMenuClick = { scope.launch { drawerState.open() } }
                 )

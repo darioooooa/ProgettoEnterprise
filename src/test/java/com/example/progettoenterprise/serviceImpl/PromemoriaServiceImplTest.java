@@ -14,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,7 +52,7 @@ public class PromemoriaServiceImplTest {
     @DisplayName("Nessuna partenza: Il sistema si ferma senza errori")
     void testInviaPromemoria_NessunaPrenotazione() {
         // Diciamo al sistema che la ricerca non trova niente
-        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDateTime.class), any(LocalDateTime.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
+        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDate.class), any(LocalDate.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
                 .thenReturn(Collections.emptyList());
 
         promemoriaService.inviaPromemoriaPartenze();
@@ -80,7 +79,7 @@ public class PromemoriaServiceImplTest {
         when(prenotazioneMock.getViaggiatore()).thenReturn(viaggiatoreMock);
         when(prenotazioneMock.getViaggio()).thenReturn(viaggioMock);
 
-        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDateTime.class), any(LocalDateTime.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
+        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDate.class), any(LocalDate.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
                 .thenReturn(List.of(prenotazioneMock));
 
         promemoriaService.inviaPromemoriaPartenze();
@@ -117,7 +116,7 @@ public class PromemoriaServiceImplTest {
         when(prenotazioneMock.getViaggiatore()).thenReturn(viaggiatoreMock);
         when(prenotazioneMock.getViaggio()).thenReturn(viaggioMock);
 
-        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDateTime.class), any(LocalDateTime.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
+        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDate.class), any(LocalDate.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
                 .thenReturn(List.of(prenotazioneMock));
 
         promemoriaService.inviaPromemoriaPartenze();
@@ -140,7 +139,7 @@ public class PromemoriaServiceImplTest {
         when(prenotazioneMock.getViaggiatore()).thenReturn(viaggiatoreMock);
         when(prenotazioneMock.getViaggio()).thenReturn(viaggioMock);
 
-        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDateTime.class), any(LocalDateTime.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
+        when(prenotazioneRepository.findPrenotazioniPerReminder(any(LocalDate.class), any(LocalDate.class), eq(Prenotazione.StatoPrenotazione.CONFERMATA)))
                 .thenReturn(List.of(prenotazioneMock));
 
         // Diciamo al sistema di posta di bloccarsi improvvisamente

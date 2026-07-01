@@ -11,11 +11,11 @@ import { AutenticazioneService } from '../service/autenticazione.service';
   templateUrl: './diventa-organizzatore.html',
   styleUrl: './diventa-organizzatore.css'
 })
-export class DiventaOrganizzatoreComponent implements OnInit {
+export class DiventaOrganizzatore implements OnInit {
 
   motivazione: string = '';
   biografiaProfessionale: string = '';
-  documentiLink: string = '';
+  documento: File | null = null;
   usernameRichiesto: string = '';
   emailProfessionale: string = '';
   messaggioErrore: string = '';
@@ -36,50 +36,58 @@ export class DiventaOrganizzatoreComponent implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       const idStringa = localStorage.getItem('userId');
       if (idStringa) {
-        this.utenteId = Number(idStringa);
+        this.utenteId = parseInt(idStringa, 10);
       }
     }
   }
 
-  chiudiModaleInSospeso() {
-    this.mostraModaleInSospeso = false;
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.documento = file;
+    }
+  }
+  mostraModaleConferma: boolean = false;
+  inviaRichiesta() {
+    if (!this.motivazione || !this.biografiaProfessionale || !this.usernameRichiesto || !this.emailProfessionale) {
+      this.messaggioErrore = 'Compila tutti i campi.';
+      return;
+    }
+    this.mostraModaleConferma = true;
   }
 
-  inviaRichiesta() {
+  confermaRichiesta() {
+    this.mostraModaleConferma = false;
     if (this.isLoading) return;
-
+    this.isLoading = true;
     this.messaggioErrore = '';
     this.cdr.detectChanges();
 
-    if (!this.motivazione || !this.biografiaProfessionale || !this.documentiLink ||
-      !this.usernameRichiesto || !this.emailProfessionale) {
-      this.messaggioErrore = 'Per favore, compila tutti i campi prima di inviare.';
+    if (!this.motivazione || !this.biografiaProfessionale || !this.usernameRichiesto || !this.emailProfessionale) {
+      this.messaggioErrore = 'Per favore, compila tutti i campi obbligatori prima di inviare.';
       return;
     }
 
-    if (isPlatformBrowser(this.platformId)) {
-      const idStringa = localStorage.getItem('userId');
-      if (idStringa) {
-        this.utenteId = Number(idStringa);
-      }
-    }
-
-    if (!this.utenteId) {
-      this.messaggioErrore = 'Errore: ID utente non trovato in memoria. Effettua nuovamente il login.';
+    if (!this.documento) {
+      this.messaggioErrore = 'È obbligatorio allegare un documento (CV o Portfolio).';
       return;
     }
 
     this.isLoading = true;
 
-    const payload = {
+    const richiestaDto = {
       motivazione: this.motivazione,
       biografiaProfessionale: this.biografiaProfessionale,
-      documentiLink: this.documentiLink,
       emailProfessionale: this.emailProfessionale,
       usernameRichiesto: this.usernameRichiesto,
+      documentiLink: this.documento.name
     };
 
-    this.authService.inviaRichiestaPromozione(this.utenteId, payload).subscribe({
+    const formData = new FormData();
+    formData.append('richiesta', new Blob([JSON.stringify(richiestaDto)], { type: 'application/json' }));
+    formData.append('file', this.documento);
+
+    this.authService.inviaRichiestaPromozione(formData).subscribe({
       next: (risposta) => {
         this.isLoading = false;
         this.navigatore.navigate(['/home']);
@@ -100,31 +108,13 @@ export class DiventaOrganizzatoreComponent implements OnInit {
           return;
         }
 
-        let estratto = 'Si è verificato un errore imprevisto. Controlla i dati e riprova.';
-        let erroreCorpo = errore.error;
-
-        console.log('CORPO ERRORE DAL BACKEND:', erroreCorpo);
-
-        if (erroreCorpo) {
-          if (typeof erroreCorpo === 'string') {
-            try {
-              const parsed = JSON.parse(erroreCorpo);
-              estratto = parsed.messaggio || parsed.message || erroreCorpo;
-            } catch (e) {
-              estratto = erroreCorpo;
-            }
-          } else {
-            estratto = erroreCorpo.messaggio || erroreCorpo.message || estratto;
-          }
-        }
-
-        console.log("MESSAGGIO CHE APPARIRÀ NEL BOX ROSSO:", estratto);
-
-        setTimeout(() => {
-          this.messaggioErrore = estratto;
-          this.cdr.detectChanges();
-        });
+        this.messaggioErrore = 'Si è verificato un errore imprevisto. Controlla i dati e riprova.';
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  chiudiModaleInSospeso() {
+    this.mostraModaleInSospeso = false;
   }
 }

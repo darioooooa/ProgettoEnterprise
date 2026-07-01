@@ -14,4 +14,5 @@ public interface RichiestaPromozioneRepository extends JpaRepository<RichiestaPr
     boolean existsByEmailProfessionale(String emailProfessionale);
     boolean existsByUsernameRichiestoAndStatoNot(String usernameRichiesto, RichiestaPromozione.StatoRichiesta stato);
     boolean existsByEmailProfessionaleAndStatoNot(String emailProfessionale, RichiestaPromozione.StatoRichiesta stato);
+    Optional<RichiestaPromozione> findFirstByViaggiatoreIdAndStatoOrderByDataRichiestaDesc(Long viaggiatoreId, RichiestaPromozione.StatoRichiesta stato);
 }

@@ -48,7 +48,16 @@
               </td>
               <td>{{ richiesta.dataRichiesta | date:'dd/MM/yyyy' }}</td>
               <td class="motivazione-text">
-                <p><strong>Motivazione:</strong> {{ richiesta.motivazione }}</p>
+                <button (click)="apriModaleMessaggio(richiesta.motivazione)" class="btn-sm"
+                        style="margin-top: 10px; background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Motivazione</button>
+                <button (click)="apriModaleBiografia(richiesta.biografiaProfessionale)" class="btn-sm"
+                        style="margin-top: 10px; background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Biografia</button>
+                <button
+                  *ngIf="richiesta.documentiLink"
+                  (click)="apriDocumento(richiesta.id)"
+                  style="margin-top: 10px; background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+                  📄 Scarica Allegato
+                </button>
               </td>
               <td class="actions-cell">
                 <ng-container *ngIf="richiesta.stato === 'IN_ATTESA'">
@@ -182,20 +191,33 @@
   </div>
 </main>
 
+<!-- MODALE 1: Segnalazioni (Quella che avevi già) -->
 <div class="modale-overlay" *ngIf="mostraModaleMessaggio" (click)="chiudiModaleMessaggio()" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;">
   <div class="modale-content" (click)="$event.stopPropagation()" style="background: white; color: black; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-      <h3 style="margin: 0; color: #333;">Dettagli Contenuto Segnalato</h3>
+      <h3 style="margin: 0; color: #333;">Dettagli Contenuto</h3>
       <button (click)="chiudiModaleMessaggio()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888;">&times;</button>
     </div>
-
     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 20px; white-space: pre-wrap;">
       <p style="margin: 0; font-style: italic; color: #444; line-height: 1.5;">{{ messaggioInLettura }}</p>
     </div>
-
     <div style="text-align: right;">
       <button (click)="chiudiModaleMessaggio()" style="background: #e5e7eb; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modale-overlay" *ngIf="mostraModaleBiografia" (click)="chiudiModaleBiografia()" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+  <div class="modale-content" (click)="$event.stopPropagation()" style="background: white; color: black; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+      <h3 style="margin: 0; color: #333;">Biografia Professionale</h3>
+      <button (click)="chiudiModaleBiografia()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888;">&times;</button>
+    </div>
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #9b59b6; margin-bottom: 20px; white-space: pre-wrap;">
+      <p style="margin: 0; color: #444; line-height: 1.5;">{{ biografiaInLettura }}</p>
+    </div>
+    <div style="text-align: right;">
+      <button (click)="chiudiModaleBiografia()" style="background: #e5e7eb; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Chiudi</button>
     </div>
   </div>
 </div>

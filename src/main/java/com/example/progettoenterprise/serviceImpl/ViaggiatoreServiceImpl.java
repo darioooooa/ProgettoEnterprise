@@ -22,8 +22,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.multipart.MultipartFile;
 
-
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -77,10 +82,9 @@ public class ViaggiatoreServiceImpl implements ViaggiatoreService {
                 .collect(Collectors.toList());
     }
 
-
     @Override
     @Transactional
-    public RichiestaPromozioneDTO creaRichiestaPromozione(Long viaggiatoreId, RichiestaPromozioneDTO dto) {
+    public RichiestaPromozioneDTO creaRichiestaPromozione(Long viaggiatoreId, RichiestaPromozioneDTO dto, MultipartFile file) {
 
         Viaggiatore utenteAttuale = viaggiatoreRepository.findById(viaggiatoreId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
@@ -95,30 +99,70 @@ public class ViaggiatoreServiceImpl implements ViaggiatoreService {
         if (richiestaPromozioneRepository.existsByUsernameRichiestoAndStatoNot(dto.getUsernameRichiesto(), RichiestaPromozione.StatoRichiesta.RIFIUTATA)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Questo username è attualmente richiesto da un'altra candidatura in corso.");
         }
-        if (!utenteAttuale.getUsername().equals(dto.getUsernameRichiesto()) &&
-                utenteRepository.existsByUsername(dto.getUsernameRichiesto())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Questo username è già in uso da un altro utente. Scegline un altro.");
+        if (!utenteAttuale.getUsername().equals(dto.getUsernameRichiesto()) && utenteRepository.existsByUsername(dto.getUsernameRichiesto())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Questo username è già in uso.");
         }
-
         if (richiestaPromozioneRepository.existsByEmailProfessionaleAndStatoNot(dto.getEmailProfessionale(), RichiestaPromozione.StatoRichiesta.RIFIUTATA)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Questa email è in fase di valutazione in un'altra richiesta.");
         }
-        if (!utenteAttuale.getEmail().equals(dto.getEmailProfessionale()) &&
-                utenteRepository.existsByEmail(dto.getEmailProfessionale())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Questa email è già associata ad un altro account.");
+
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "È obbligatorio allegare un documento.");
+        }
+        String contentType = file.getContentType();
+
+        List<String> tipiConsentiti = List.of(
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+
+        if (contentType == null || !tipiConsentiti.contains(contentType)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Sono consentiti solo file PDF, DOC e DOCX."
+            );
+        }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Il file non può superare i 5 MB."
+            );
         }
 
-        RichiestaPromozione nuovaRichiesta = new RichiestaPromozione();
-        nuovaRichiesta.setViaggiatore(utenteAttuale);
-        nuovaRichiesta.setUsernameRichiesto(dto.getUsernameRichiesto());
-        nuovaRichiesta.setEmailProfessionale(dto.getEmailProfessionale());
-        nuovaRichiesta.setMotivazione(dto.getMotivazione());
-        nuovaRichiesta.setBiografiaProfessionale(dto.getBiografiaProfessionale());
-        nuovaRichiesta.setDocumentiLink(dto.getDocumentiLink());
-        nuovaRichiesta.setStato(RichiestaPromozione.StatoRichiesta.IN_ATTESA);
-        nuovaRichiesta.setDataRichiesta(LocalDateTime.now());
+        String linkDocumentoSalvato;
+        try {
+            String uploadDir = "uploads/candidature/";
+            File directory = new File(uploadDir);
+            if (!directory.exists()) directory.mkdirs();
 
-        RichiestaPromozione salvata = richiestaPromozioneRepository.save(nuovaRichiesta);
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(uploadDir, fileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            linkDocumentoSalvato = filePath.toString();
+        } catch (Exception e) {
+            log.error("Errore salvataggio file", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Errore salvataggio documento");
+        }
+
+        RichiestaPromozione richiesta = richiestaPromozioneRepository
+                .findFirstByViaggiatoreIdAndStatoOrderByDataRichiestaDesc(viaggiatoreId, RichiestaPromozione.StatoRichiesta.RIFIUTATA)
+                .orElse(new RichiestaPromozione());
+
+        richiesta.setViaggiatore(utenteAttuale);
+        richiesta.setUsernameRichiesto(dto.getUsernameRichiesto());
+        richiesta.setEmailProfessionale(dto.getEmailProfessionale());
+        richiesta.setMotivazione(dto.getMotivazione());
+        richiesta.setBiografiaProfessionale(dto.getBiografiaProfessionale());
+        richiesta.setDocumentiLink(linkDocumentoSalvato); // Usiamo il percorso del file salvato
+        richiesta.setStato(RichiestaPromozione.StatoRichiesta.IN_ATTESA); // Torna in attesa
+        richiesta.setDataRichiesta(LocalDateTime.now());
+
+        // Reset dei campi di valutazione precedenti
+        richiesta.setAdminId(null);
+        richiesta.setDataValutazione(null);
+
+        RichiestaPromozione salvata = richiestaPromozioneRepository.save(richiesta);
 
         return modelMapper.map(salvata, RichiestaPromozioneDTO.class);
     }

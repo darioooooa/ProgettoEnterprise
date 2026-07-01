@@ -19,7 +19,8 @@ export class AutenticazioneService {
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) { }
+  ) {
+  }
 
   effettuaAccesso(datiLogin: any): Observable<any> {
     const headers = new HttpHeaders({
@@ -33,7 +34,7 @@ export class AutenticazioneService {
     body.set('password', datiLogin.password);
 
 
-    return this.http.post<any>(this.keycloakTokenUrl, body.toString(), { headers }).pipe(
+    return this.http.post<any>(this.keycloakTokenUrl, body.toString(), {headers}).pipe(
       tap(rispostaKeycloak => {
         if (rispostaKeycloak && rispostaKeycloak.access_token) {
 
@@ -78,7 +79,7 @@ export class AutenticazioneService {
             'Authorization': `Bearer ${token}`
           });
 
-          return this.http.get<any>(`${this.backendUrl}/utenti/me`, { headers: authHeaders }).pipe(
+          return this.http.get<any>(`${this.backendUrl}/utenti/me`, {headers: authHeaders}).pipe(
             tap(utenteDatabase => {
               if (utenteDatabase && utenteDatabase.id) {
                 localStorage.setItem('userId', utenteDatabase.id.toString());
@@ -106,7 +107,7 @@ export class AutenticazioneService {
     body.set('client_id', this.clientId);
     body.set('refresh_token', refreshToken);
 
-    return this.http.post<any>(this.keycloakTokenUrl, body.toString(), { headers }).pipe(
+    return this.http.post<any>(this.keycloakTokenUrl, body.toString(), {headers}).pipe(
       tap((rispostaKeycloak: any) => {
         if (rispostaKeycloak && rispostaKeycloak.access_token) {
           // Aggiorna i nuovi token
@@ -136,7 +137,7 @@ export class AutenticazioneService {
     return null;
   }
 
-  ottieniRefreshToken(): string | null{
+  ottieniRefreshToken(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('token_refresh');
     }
@@ -149,18 +150,21 @@ export class AutenticazioneService {
     }
     return null;
   }
+
   ottieniNome(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('nome');
     }
     return null;
   }
+
   ottieniCognome(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('cognome');
     }
     return null;
   }
+
   ottieniEmail(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('email');
@@ -191,8 +195,9 @@ export class AutenticazioneService {
     return this.http.get<any>(`${this.backendUrl}/viaggiatori/cerca?query=${username}`);
   }
 
-  inviaRichiestaPromozione(viaggiatoreId: number, datiRichiesta: any): Observable<any> {
+  inviaRichiestaPromozione(formData: FormData): Observable<any> {
     const url = `${this.backendUrl}/viaggiatori/richieste-promozione`;
 
-    return this.http.post(url, datiRichiesta, { responseType: 'text' });
-  }}
+    return this.http.post(url, formData);
+  }
+}

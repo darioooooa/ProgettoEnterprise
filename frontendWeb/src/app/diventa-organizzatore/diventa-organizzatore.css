@@ -110,7 +110,31 @@
   background-color: #ffffff;
   color: #1b3854; /* Diventa scuro quando ci passi sopra */
 }
+.btn-annulla {
+  width: 100%;
+  padding: 18px;
+  background-color: transparent;
+  color: #ffffff;
+  /* Bordo più sottile e leggermente trasparente rispetto al bottone principale */
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px; /* Meno spazio se sta sotto un altro bottone */
+  opacity: 0.8;    /* Leggermente più spento per indicare azione secondaria */
+}
 
+.btn-annulla:hover {
+  /* Al passaggio del mouse diventa una leggera sfumatura rossa */
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ffffff;
+  opacity: 1;
+}
 /* 7. Alert in caso di errore */
 .alert-error {
   background-color: #ff4d4f;

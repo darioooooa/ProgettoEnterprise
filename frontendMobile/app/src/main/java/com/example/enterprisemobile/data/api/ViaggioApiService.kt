@@ -20,7 +20,7 @@ interface ViaggioApiService {
     suspend fun getViaggiPerMappa(): List<ViaggioMappaDTO>
 
     // Metodo per filtrare i viaggi
-    @GET("viaggi-filtrati")
+    @GET("viaggi")
     suspend fun getViaggiFiltrati(
         @Query("destinazione") destinazione: String,
         @Query("dataMin") dataMin: String,

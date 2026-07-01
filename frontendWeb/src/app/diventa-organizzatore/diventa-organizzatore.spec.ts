@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DiventaOrganizzatore } from './diventa-organizzatore';
+import { DiventaOrganizzatore} from './diventa-organizzatore';
 
 describe('DiventaOrganizzatore', () => {
   let component: DiventaOrganizzatore;

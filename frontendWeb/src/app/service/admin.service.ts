@@ -32,4 +32,9 @@ export class AdminService {
   sbannaUtente(idUtente: number): Observable<any> {
     return this.http.put(`/api/admin/richieste/utenti/${idUtente}/riattiva`, {});
   }
+  scaricaDocumento(idRichiesta: number) {
+    return this.http.get(`/api/admin/richieste/promozioni/${idRichiesta}/documento`, {
+      responseType: 'blob'
+    });
+  }
 }

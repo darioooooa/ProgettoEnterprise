@@ -170,7 +170,7 @@ public class ViaggiatoreServiceImplTest {
         when(richiestaPromozioneRepository.save(any(RichiestaPromozione.class))).thenReturn(richiestaSalvata);
         when(modelMapper.map(richiestaSalvata, RichiestaPromozioneDTO.class)).thenReturn(dtoAtteso);
 
-        RichiestaPromozioneDTO risultato = viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato);
+        RichiestaPromozioneDTO risultato = viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato, null);
 
         assertNotNull(risultato);
         verify(richiestaPromozioneRepository, times(1)).save(any(RichiestaPromozione.class));
@@ -188,7 +188,7 @@ public class ViaggiatoreServiceImplTest {
         when(richiestaPromozioneRepository.existsByViaggiatoreIdAndStato(idViaggiatore, RichiestaPromozione.StatoRichiesta.IN_ATTESA)).thenReturn(true);
 
         ResponseStatusException eccezione = assertThrows(ResponseStatusException.class, () -> {
-            viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato);
+            viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato,null);
         });
 
         assertEquals(HttpStatus.CONFLICT, eccezione.getStatusCode());

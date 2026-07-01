@@ -17,7 +17,7 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
-    private const val CURRENT_IP = "192.168.1.34"
+    private const val CURRENT_IP = "192.168.1.3"
     private const val BASE_URL = "https://$CURRENT_IP:8443/api/v1/"
     private const val KEYCLOAK_BASE_URL = "http://$CURRENT_IP:8081/"
 
@@ -30,8 +30,18 @@ object RetrofitClient {
             // Crea un trust manager che si fida di qualsiasi certificato
             val trustAllCerts = arrayOf<TrustManager>(
                 object : X509TrustManager {
-                    override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                    override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+                    override fun checkClientTrusted(
+                        chain: Array<out X509Certificate>?,
+                        authType: String?
+                    ) {
+                    }
+
+                    override fun checkServerTrusted(
+                        chain: Array<out X509Certificate>?,
+                        authType: String?
+                    ) {
+                    }
+
                     override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
                 }
             )
@@ -86,7 +96,12 @@ object RetrofitClient {
         if (retrofitKeycloak == null) {
             retrofitKeycloak = Retrofit.Builder()
                 .baseUrl(KEYCLOAK_BASE_URL)
-                .client(ottieniOkHttpClientSicuro(context, usaInterceptor = false)) // Usa il client SSL permissivo senza Interceptor
+                .client(
+                    ottieniOkHttpClientSicuro(
+                        context,
+                        usaInterceptor = false
+                    )
+                ) // Usa il client SSL permissivo senza Interceptor
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         }
@@ -97,9 +112,11 @@ object RetrofitClient {
     fun ottieniAuthService(context: Context): AuthApiService {
         return ottieniClientKeycloak(context).create(AuthApiService::class.java)
     }
+
     fun ottieniViaggioService(context: Context): ViaggioApiService {
         return ottieniClientBackend(context).create(ViaggioApiService::class.java)
     }
+
     fun ottieniItinerariService(context: Context): ItinerariApiService {
         return ottieniClientBackend(context).create(ItinerariApiService::class.java)
     }
@@ -111,11 +128,17 @@ object RetrofitClient {
     fun ottieniUtenteService(context: Context): UtenteApiService {
         return ottieniClientBackend(context).create(UtenteApiService::class.java)
     }
-    fun ottieniPagamentoService(context: Context): PagamentoApiService{
+
+    fun ottieniPagamentoService(context: Context): PagamentoApiService {
         return ottieniClientBackend(context).create(PagamentoApiService::class.java)
     }
+
     fun ottieniAmiciziaService(context: Context): AmiciziaApiService {
         return ottieniClientBackend(context).create(AmiciziaApiService::class.java)
+    }
+
+    fun ottieniViaggiatoreService(context: Context): ViaggiatoreApiService {
+        return ottieniClientBackend(context).create(ViaggiatoreApiService::class.java)
     }
 
 }

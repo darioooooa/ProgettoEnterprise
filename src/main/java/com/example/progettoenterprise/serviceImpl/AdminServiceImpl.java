@@ -19,6 +19,12 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+// NUOVI IMPORT PER I FILE
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +47,6 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public void approvaRichiesta(Long richiestaId, Long adminIdCorrente) {
-
         RichiestaPromozione richiesta = richiestaRepository.findById(richiestaId)
                 .orElseThrow(() -> {
                     log.warn("Impossibile approvare la richiesta: richiesta ID {} non trovata", richiestaId);
@@ -53,10 +58,8 @@ public class AdminServiceImpl implements AdminService {
             throw new IllegalArgumentException("Impossibile procedere: la richiesta è già stata " + richiesta.getStato().name().toLowerCase() + ".");
         }
 
-
         Viaggiatore viaggiatore = richiesta.getViaggiatore();
 
-        // Creazione dell'organizzatore
         String nuovoUsername = richiesta.getUsernameRichiesto();
         String nuovaEmail = richiesta.getEmailProfessionale();
         Organizzatore nuovoOrg = new Organizzatore();
@@ -68,13 +71,11 @@ public class AdminServiceImpl implements AdminService {
         nuovoOrg.setAttivo(true);
         organizzatoreRepository.save(nuovoOrg);
 
-        // Aggiornamento della richiesta
         richiesta.setStato(RichiestaPromozione.StatoRichiesta.APPROVATA);
         richiesta.setDataValutazione(LocalDateTime.now());
         richiesta.setAdminId(adminIdCorrente);
         richiestaRepository.save(richiesta);
 
-        // Sincronizzazione keycloak
         UserRepresentation keycloakUser = new UserRepresentation();
         keycloakUser.setUsername(nuovoUsername);
         keycloakUser.setEmail(nuovaEmail);
@@ -83,40 +84,32 @@ public class AdminServiceImpl implements AdminService {
         keycloakUser.setEnabled(true);
         keycloakUser.setEmailVerified(true);
 
-        // Impostazione password temporanea
         String passwordTemporanea = UUID.randomUUID().toString().substring(0, 8);
-
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(passwordTemporanea);
         credential.setTemporary(true);
         keycloakUser.setCredentials(Collections.singletonList(credential));
 
-        // Crea il nuovo utente su keycloak
         Response response = keycloak.realm(REALM_NAME).users().create(keycloakUser);
 
         if (response.getStatus() == 201) {
             List<UserRepresentation> searchResult = keycloak.realm(REALM_NAME).users().search(nuovoUsername);
             if (!searchResult.isEmpty()) {
                 String keycloakUserId = searchResult.getFirst().getId();
-
-                // Recupera e assegna il ruolo ORGANIZZATORE da keycloak
                 RoleRepresentation orgRole = keycloak.realm(REALM_NAME).roles().get("ORGANIZZATORE").toRepresentation();
                 keycloak.realm(REALM_NAME).users().get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(orgRole));
-
                 try {
                     keycloak.realm(REALM_NAME).users().get(keycloakUserId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
-                    log.info("Email di aggiornamento password inviata con successo all'organizzatore con email: {}", nuovaEmail);
+                    log.info("Email inviata a: {}", nuovaEmail);
                 }catch (Exception e){
-                    log.error("Impossibile inviare l'email di aggiornamento password per l'utente id: {}", keycloakUserId, e);
+                    log.error("Impossibile inviare email per id: {}", keycloakUserId, e);
                 }
             }
         } else if (response.getStatus() == 409) {
-            log.warn("Sincronizzazione fallita: l'utente {} esiste già su Keycloak", nuovoUsername);
-            throw new IllegalArgumentException("Impossibile promuovere: L'utente " + nuovoUsername + " esiste già nel sistema di sicurezza.");
+            throw new IllegalArgumentException("Impossibile promuovere: L'utente " + nuovoUsername + " esiste già.");
         } else {
-            log.error("Errore durante la creazione su Keycloak: {}", response.readEntity(String.class));
-            throw new RuntimeException("Errore durante la comunicazione con Keycloak. Status: " + response.getStatus());
+            throw new RuntimeException("Errore Keycloak. Status: " + response.getStatus());
         }
     }
 
@@ -133,10 +126,11 @@ public class AdminServiceImpl implements AdminService {
                     dto.setMotivazione(richiesta.getMotivazione());
                     dto.setStato(richiesta.getStato().name());
                     dto.setBiografiaProfessionale(richiesta.getBiografiaProfessionale());
-                    dto.setDocumentiLink(richiesta.getDocumentiLink());
                     dto.setAdminId(richiesta.getAdminId());
                     dto.setUsernameRichiesto(richiesta.getUsernameRichiesto());
                     dto.setEmailProfessionale(richiesta.getEmailProfessionale());
+                    dto.setBiografiaProfessionale(richiesta.getBiografiaProfessionale());
+                    dto.setDocumentiLink(richiesta.getDocumentiLink());
                     return dto;
                 })
                 .toList();
@@ -146,14 +140,10 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public void rifiutaRichiesta(Long richiestaId, String noteAdmin, Long adminIdCorrente) {
         RichiestaPromozione richiesta = richiestaRepository.findById(richiestaId)
-                .orElseThrow(() -> {
-                    log.warn("Impossibile rifiutare la richiesta: richiesta ID {} non trovata", richiestaId);
-                    return new EntityNotFoundException("Richiesta non trovata");
-                });
+                .orElseThrow(() -> new EntityNotFoundException("Richiesta non trovata"));
 
         if (richiesta.getStato() != RichiestaPromozione.StatoRichiesta.IN_ATTESA) {
-            log.warn("Impossibile rifiutare la richiesta: richiesta ID {} non in stato IN_ATTESA", richiestaId);
-            throw new IllegalArgumentException("Impossibile procedere: la richiesta è già stata " + richiesta.getStato().name().toLowerCase() + ".");
+            throw new IllegalArgumentException("La richiesta è già stata " + richiesta.getStato().name().toLowerCase() + ".");
         }
 
         richiesta.setStato(RichiestaPromozione.StatoRichiesta.RIFIUTATA);
@@ -161,6 +151,24 @@ public class AdminServiceImpl implements AdminService {
         richiesta.setDataValutazione(LocalDateTime.now());
         richiesta.setAdminId(adminIdCorrente);
         richiestaRepository.save(richiesta);
+        try {
+            String oggetto = "Esito della tua candidatura come Organizzatore";
+            String testo = "Gentile utente,\n\n" +
+                    "La tua richiesta per diventare Organizzatore su Enterprise è stata valutata dall'amministrazione.\n" +
+                    "Purtroppo la candidatura non è stata accettata per il seguente motivo:\n\n" +
+                    "--------------------------------------------------\n" +
+                    noteAdmin + "\n" +
+                    "--------------------------------------------------\n\n" +
+                    "Ti invitiamo a consultare il nostro regolamento e, se lo ritieni opportuno, correggere le informazioni " +
+                    "per inviare una nuova candidatura in futuro.\n\n" +
+                    "Cordiali saluti,\nIl Team di Enterprise.";
+
+            emailService.sendSimpleEmail(richiesta.getEmailProfessionale(), oggetto, testo);
+            log.info("Email di rifiuto inviata correttamente all'indirizzo: {}", richiesta.getEmailProfessionale());
+
+        } catch (Exception e) {
+            log.error("Errore nell'invio dell'email di rifiuto a {}: {}", richiesta.getEmailProfessionale(), e.getMessage());
+        }
     }
 
     @Override
@@ -170,13 +178,12 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new RuntimeException("Utente non trovato"));
 
         if (utente.getRuolo() == Utente.Ruolo.ROLE_ORGANIZZATORE) {
-            throw new IllegalArgumentException("Azione non consentita: non puoi bannare un account Organizzatore.");
+            throw new IllegalArgumentException("Non puoi bannare un Organizzatore.");
         }
 
         utente.setAttivo(false);
-        utente.setMotivoSospensione("Violazione dei termini di servizio");
+        utente.setMotivoSospensione("Violazione dei termini");
         utenteRepository.save(utente);
-
         emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
     }
 
@@ -198,23 +205,44 @@ public class AdminServiceImpl implements AdminService {
         utente.setMotivoSospensione(null);
         utenteRepository.save(utente);
         riabilitaSuKeycloak(utente.getUsername());
-
-        log.info("L'utente ID {} ({}) è stato riattivato con successo.", utente.getId(), utente.getUsername());
     }
 
     private void riabilitaSuKeycloak(String username) {
         try {
             List<UserRepresentation> users = keycloak.realm(REALM_NAME).users().search(username);
-
             if (!users.isEmpty()) {
                 UserRepresentation kcUser = users.get(0);
                 kcUser.setEnabled(true);
                 keycloak.realm(REALM_NAME).users().get(kcUser.getId()).update(kcUser);
-
-                log.info("Utente {} riabilitato con successo su Keycloak.", username);
             }
         } catch (Exception e) {
-            log.error("Errore durante la riabilitazione su Keycloak dell'utente {}: {}", username, e.getMessage());
+            log.error("Errore Keycloak riabilitazione: {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public Resource scaricaDocumentoCandidatura(Long idRichiesta) {
+        RichiestaPromozione richiesta = richiestaRepository.findById(idRichiesta)
+                .orElseThrow(() -> new EntityNotFoundException("Richiesta non trovata"));
+
+        String percorsoStr = richiesta.getDocumentiLink();
+        if (percorsoStr == null || percorsoStr.isBlank()) {
+            throw new RuntimeException("Nessun documento associato");
+        }
+
+        try {
+            Path filePath = Paths.get(percorsoStr).toAbsolutePath().normalize();
+            log.info("Tentativo di scaricare file dal percorso: {}", filePath);
+
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("Il file non esiste nel percorso: " + filePath);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Errore durante il recupero del documento", e);
         }
     }
 }

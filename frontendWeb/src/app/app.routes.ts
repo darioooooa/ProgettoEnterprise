@@ -11,7 +11,7 @@ import { AdminDashboard } from './admin-dashboard/admin-dashboard';
 import { MieiItinerari } from './miei-itinerari/miei-itinerari';
 import { DettaglioViaggio } from './dettaglio-viaggio/dettaglio-viaggio';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
-import { DiventaOrganizzatoreComponent} from './diventa-organizzatore/diventa-organizzatore';
+import { DiventaOrganizzatore} from './diventa-organizzatore/diventa-organizzatore';
 
 import { InboxOrganizzatore } from './inbox-organizzatore/inbox-organizzatore';
 import { PaginaInizialeComponent } from './pagina-iniziale/pagina-iniziale';
@@ -96,7 +96,7 @@ export const routes: Routes = [
       },
       {
         path: 'diventa-organizzatore',
-        component: DiventaOrganizzatoreComponent,
+        component: DiventaOrganizzatore,
         canActivate: [autenticazioneGuard],
         data: { ruoli: ['ROLE_VIAGGIATORE'] }
       },

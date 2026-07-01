@@ -63,6 +63,9 @@ export class AdminDashboard implements OnInit {
   mostraModaleMessaggio: boolean = false;
   messaggioInLettura: string = '';
 
+  mostraModaleBiografia: boolean = false;
+  biografiaInLettura: string = '';
+
   isLoading: boolean = false;
 
   constructor(
@@ -290,6 +293,17 @@ export class AdminDashboard implements OnInit {
     }
   }
 
+  apriDocumento(idRichiesta: number) {
+    this.adminService.scaricaDocumento(idRichiesta).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      },
+      error: () => {
+        alert("Impossibile recuperare il file. Potrebbe non essere stato allegato correttamente.");
+      }
+    });
+  }
   apriModaleMessaggio(testo?: string) {
     this.messaggioInLettura = testo || 'Testo non disponibile o contenuto già rimosso.';
     this.mostraModaleMessaggio = true;
@@ -298,5 +312,13 @@ export class AdminDashboard implements OnInit {
   chiudiModaleMessaggio() {
     this.mostraModaleMessaggio = false;
     this.messaggioInLettura = '';
+  }
+  apriModaleBiografia(bio: string) {
+    this.biografiaInLettura = bio;
+    this.mostraModaleBiografia = true;
+  }
+
+  chiudiModaleBiografia() {
+    this.mostraModaleBiografia = false;
   }
 }
