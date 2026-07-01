@@ -47,3 +47,8 @@ captures/
 .externalNativeBuild/
 .cxx/
 app/build/
+
+# === CHIAVI SEGRETE BACKEND ===
+firebase-service-account.json
+src/main/resources/firebase-service-account.json
+frontendMobile/app/google-services.json

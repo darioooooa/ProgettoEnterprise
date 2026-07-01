@@ -35,6 +35,7 @@ import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
+import kotlinx.coroutines.launch
 
 class HomeOrganizzatoreActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,11 +58,15 @@ fun SchermataOrganizzatore(nomeUtente: String) {
 
     val context = LocalContext.current
     val apiService = RetrofitClient.ottieniViaggioService(context)
+    val utenteApiService= RetrofitClient.ottieniUtenteService(context)
+
+    // Serve per lanciare la chiamata API in background dopo aver preso il token
+    val scope = rememberCoroutineScope()
 
     //recupero dell'istanza del db e relativo DAO
     val database = AppDatabase.getInstance(context)
     val viaggioDao = database.viaggioDao()
-    val repository = ViaggioRepository(apiService,viaggioDao)
+    val repository = ViaggioRepository(apiService, viaggioDao)
 
     val viewModel: HomeOrganizzatoreViewModel = viewModel(
         factory = ViewModelFactory(repository)
@@ -73,6 +78,43 @@ fun SchermataOrganizzatore(nomeUtente: String) {
     //AVVIO CHIAMATA DI RETE
     LaunchedEffect(Unit) {
         viewModel.caricaDatiMappa()
+
+
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                android.util.Log.w("FCM_ERROR", "Recupero token fallito", task.exception)
+                return@addOnCompleteListener
+            }
+            val tokenRicevuto = task.result
+            // INVIO DEL TOKEN AL BACKEND SPRING BOOT
+            // Usiamo GlobalScope + Dispatchers.IO per metterlo in background al sicuro nonostante subito dopo il login si
+            //cambia schermata e quindi si perde lo scope,questo serve per mantenerlo
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val payload =
+                        mapOf("token" to tokenRicevuto)
+
+                    // Chiamata a Retrofit
+                    val risposta = utenteApiService.aggiornaToken(payload)
+
+                    if (risposta.isSuccessful) {
+                        android.util.Log.d(
+                            "FCM_SUCCESS",
+                            "Token salvato su Spring Boot!"
+                        )
+                    } else {
+                        // Se fallisce, stampiamo anche il corpo dell'errore per capire il VERO motivo
+                        val motivo = risposta.errorBody()?.string()
+                        android.util.Log.e(
+                            "FCM_ERROR",
+                            "Errore dal server: ${risposta.code()} - Motivo: $motivo"
+                        )
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("FCM_API_ERROR", " Errore invio token al server", e)
+                }
+            }
+        }
     }
 
     EnterpriseScaffold(
@@ -106,7 +148,11 @@ fun SchermataOrganizzatore(nomeUtente: String) {
             }
 
             //serve per tenere in memoria il viaggio cliccato per poi spedirci nella schemrata dettaglio
-            var viaggioSelezionato by remember { mutableStateOf<com.example.enterprisemobile.model.ViaggioMappaDTO?>(null) }
+            var viaggioSelezionato by remember {
+                mutableStateOf<com.example.enterprisemobile.model.ViaggioMappaDTO?>(
+                    null
+                )
+            }
 
             // Mappa Mapbox racchiusa in un Box per gestire la grafica sovrapposta
             Box(
@@ -140,7 +186,7 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                 viaggioSelezionato?.let { viaggio ->
                     Card(
                         modifier = Modifier
-                            .align(Alignment.BottomCenter) // Si aggancia in basso al centro della mappa
+                            .align(Alignment.BottomCenter)
                             .padding(16.dp)
                             .fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -154,19 +200,27 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(text = viaggio.titolo, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(
+                                    text = viaggio.titolo,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = "Clicca per i dettagli", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    text = "Clicca per i dettagli",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
 
                             Button(
                                 onClick = {
                                     //quando verrà creato la DettaglioViaggioActivity scommentare questa parte di codice
                                     /*
-                                    val intent = Intent(context, DettaglioViaggioActivity::class.java)
-                                    intent.putExtra("CHIAVE_ID_VIAGGIO", viaggio.id)
-                                    context.startActivity(intent)
-                                    */
+                                val intent = Intent(context, DettaglioViaggioActivity::class.java)
+                                intent.putExtra("CHIAVE_ID_VIAGGIO", viaggio.id)
+                                context.startActivity(intent)
+                                */
 
                                     // Chiudiamo il pop-up pulendo lo stato
                                     viaggioSelezionato = null
@@ -184,7 +238,10 @@ fun SchermataOrganizzatore(nomeUtente: String) {
             Text(text = "Azioni Rapide", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 AzioneCard(
                     titolo = "Nuovo\nItinerario",
                     icona = Icons.Default.Add,
@@ -203,6 +260,7 @@ fun SchermataOrganizzatore(nomeUtente: String) {
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

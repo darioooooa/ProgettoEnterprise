@@ -2,7 +2,7 @@ package com.example.enterprisemobile.data.api
 
 import com.example.enterprisemobile.model.ItinerarioPreferitoDTO
 import retrofit2.http.GET
-Aimport retrofit2.http.Path
+import retrofit2.http.Path
 
 interface ItinerariApiService {
     @GET("itinerari-preferiti/mie-liste")

@@ -9,6 +9,7 @@ import com.example.progettoenterprise.data.repositories.ViaggiatoreRepository;
 import com.example.progettoenterprise.data.service.PagamentoService;
 import com.example.progettoenterprise.dto.PagamentoDTO;
 import com.example.progettoenterprise.dto.PrenotazioneDTO;
+import com.example.progettoenterprise.events.PagamentoConfermatoEvent;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
@@ -21,6 +22,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -35,6 +37,7 @@ public class PagamentoServiceImpl implements PagamentoService {
         private final PrenotazioneRepository prenotazioneRepository;
         private final ModelMapper modelMapper;
         private final MessageLang messageLang;
+        private final ApplicationEventPublisher eventPublisher;
 
     @Value("${stripe.api.key}")
     private String stripeApiKey;
@@ -71,6 +74,19 @@ public class PagamentoServiceImpl implements PagamentoService {
         prenotazione.setStato(Prenotazione.StatoPrenotazione.CONFERMATA);
         Prenotazione aggiornata = prenotazioneRepository.save(prenotazione);
 
+        //grazie al token Firebase arriva solo ai diretti interessati perche
+        //funge proprio da id privato del telefono
+        String tokenViaggiatore = prenotazione.getViaggiatore().getFirebaseToken();
+        String tokenOrganizzatore = prenotazione.getViaggio().getOrganizzatore().getFirebaseToken();
+        String usernameViaggiatore = prenotazione.getViaggiatore().getUsername();
+        String destinazione = prenotazione.getViaggio().getDestinazione();
+
+        eventPublisher.publishEvent(new PagamentoConfermatoEvent(
+                tokenViaggiatore,
+                tokenOrganizzatore,
+                destinazione,
+                usernameViaggiatore
+        ));
         return modelMapper.map(aggiornata, PrenotazioneDTO.class);
     }
 

@@ -1,6 +1,7 @@
 package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
+import com.example.progettoenterprise.data.NotificaPushService;
 import com.example.progettoenterprise.data.entities.Notifica;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.NotificaRepository;
@@ -30,6 +31,7 @@ public class NotificaServiceImpl implements NotificaService {
     private final NotificaRepository notificaRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
+    private final NotificaPushService notificaPushService;
 
     @Override
     @Transactional
@@ -44,8 +46,16 @@ public class NotificaServiceImpl implements NotificaService {
         nuovaNotifica.setMessaggio(messaggio);
         nuovaNotifica.setIdRiferimento(idRiferimento);
         nuovaNotifica.setLetta(false);
-
         Notifica salvata = notificaRepository.save(nuovaNotifica);
+
+        if (destinatario.getFirebaseToken() != null) {
+            notificaPushService.inviaNotificaAUtente(
+                    destinatario.getFirebaseToken(),
+                    "Nuova Notifica",
+                    messaggio
+            );
+        }
+
         return modelMapper.map(salvata, NotificaDTO.class);
 
     }

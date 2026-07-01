@@ -1,18 +1,23 @@
 package com.example.progettoenterprise.controllers;
 
+import com.example.progettoenterprise.data.entities.Utente;
+import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.specifications.UtenteSpecification;
 import com.example.progettoenterprise.data.service.UtenteService;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import com.example.progettoenterprise.security.UtenteLoggato;
 import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
 import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,6 +29,7 @@ import java.util.Map;
 public class UtenteController {
 
     private final UtenteService utenteService;
+    private final UtenteRepository utenteRepository;
 
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
@@ -104,4 +110,33 @@ public class UtenteController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore del server durante l'invio dell'email.");
         }
     }
+    @PostMapping("/aggiorna-token")
+    public ResponseEntity<?> aggiornaToken(
+            @AuthenticationPrincipal UtenteLoggato utenteLoggato, // Intercetta il token JWT di Keycloak
+            @RequestBody Map<String, String> payload) {
+
+        if (utenteLoggato == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non autenticato");
+        }
+
+        //Recuperiamo il token inviato dall'app Android
+        String tokenFirebase = payload.get("token");
+        if (tokenFirebase == null || tokenFirebase.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Errore: Token Firebase mancante nel payload");
+        }
+
+        // Estraiamo lo username
+        String username = utenteLoggato.getUsername();
+
+
+        Utente utente = utenteRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Utente non trovato per lo username: " + username));
+
+        //Aggiorniamo il campo e salviamo
+        utente.setFirebaseToken(tokenFirebase);
+        utenteRepository.save(utente);
+
+        return ResponseEntity.ok().body(Map.of("message", "Token Firebase aggiornato con successo nei sistemi"));
+    }
 }
+

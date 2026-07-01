@@ -1,6 +1,7 @@
 package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
+import com.example.progettoenterprise.data.NotificaPushService;
 import com.example.progettoenterprise.data.entities.Prenotazione;
 import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.entities.Utente;
@@ -10,10 +11,12 @@ import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.repositories.specifications.PrenotazioneSpecification;
 import com.example.progettoenterprise.data.service.PrenotazioneService;
 import com.example.progettoenterprise.dto.PrenotazioneDTO;
+import com.example.progettoenterprise.events.PrenotazioneCancellataEvent;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -37,6 +40,9 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final UtenteRepository utenteRepository;
     private final ModelMapper modelMapper;
     private final MessageLang messageLang;
+
+    private final ApplicationEventPublisher eventPublisher;
+
 
     private String formattaDataIcs(LocalDate data) {
         if (data == null) return "";
@@ -112,6 +118,13 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         viaggio.setPartecipantiAttuali(viaggio.getPartecipantiAttuali() - prenotazione.getNumeroPersone());
         viaggioRepository.save(viaggio);
 
+        // Prima di cancellare definitivamente la prenotazione, viene informato il sistema che è stata cancellata
+        String tokenOrg = viaggio.getOrganizzatore().getFirebaseToken();
+        eventPublisher.publishEvent(new PrenotazioneCancellataEvent(
+                tokenOrg,
+                prenotazione.getViaggiatore().getUsername(),
+                viaggio.getDestinazione()
+        ));
 
         prenotazioneRepository.delete(prenotazione);
     }

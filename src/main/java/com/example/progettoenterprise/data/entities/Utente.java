@@ -91,6 +91,9 @@ public abstract class Utente {
     @Column(name = "ultimo_recupero_password")
     private LocalDateTime ultimoRecuperoPassword;
 
+    @Column(name = "firebase_token")
+    private String firebaseToken;//conterrà il token firebase per le notifiche di android
+
 
 
 }

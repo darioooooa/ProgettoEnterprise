@@ -117,6 +117,7 @@ class AuthViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 // Errore di rete (es. Server Spring Boot o Keycloak spento)
+
                 _statoUi.value = StatoAuth.Errore("Impossibile connettersi al server. Verifica la connessione.")
             }
         }
