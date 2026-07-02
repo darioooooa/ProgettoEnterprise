@@ -14,5 +14,6 @@ data class ViaggioEntity(
     val dataFine: String,
     val maxPartecipanti: Int,
     val partecipantiAttuali: Int,
-    val descrizione: String?
+    val descrizione: String?,
+    val organizzatoreId: Long? = null
 )

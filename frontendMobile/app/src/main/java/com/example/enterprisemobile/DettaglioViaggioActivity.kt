@@ -115,11 +115,7 @@ fun DettaglioViaggioContent(viewModel: DettaglioViaggioViewModel, galleriaViewMo
 
                         if (viewModel.isMioViaggio()) {
                             Button(
-                                onClick = {
-                                    viewModel.eliminaViaggioCorrente {
-                                        (context as? Activity)?.finish()
-                                    }
-                                },
+                                onClick = { viewModel.mostraDialogEliminazione = true },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                                 enabled = !viewModel.isEliminazioneInCorso
                             ) {
@@ -344,7 +340,25 @@ fun DettaglioViaggioContent(viewModel: DettaglioViaggioViewModel, galleriaViewMo
                         Surface(
                             color = MaterialTheme.colorScheme.surface,
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    // Si prende l'id dell'organizzatore dalle statistiche
+                                    val idOrganizzatore = stats.organizzatoreId
+
+                                    if (idOrganizzatore != null && idOrganizzatore > 0L) {
+                                        val intent = Intent(context, ProfiloActivity::class.java).apply {
+                                            putExtra("CHIAVE_DETTAGLIO_UTENTE_ID", idOrganizzatore)
+                                        }
+                                        context.startActivity(intent)
+                                    } else {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Errore: id organizzatore non disponibile",
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
@@ -442,6 +456,46 @@ fun DettaglioViaggioContent(viewModel: DettaglioViaggioViewModel, galleriaViewMo
                 }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
+            }
+            if (viewModel.mostraDialogEliminazione) {
+                AlertDialog(
+                    onDismissRequest = { viewModel.mostraDialogEliminazione = false }, // Chiude cliccando fuori
+                    title = {
+                        Text(
+                            text = "Conferma eliminazione",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "Sei sicuro di voler eliminare definitivamente questo viaggio? Questa azione non può essere annullata e tutti i dati andranno persi.",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                // Chiama l'eliminazione e chiude l'Activity
+                                viewModel.eliminaViaggioCorrente {
+                                    (context as? Activity)?.finish()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Sì, elimina", color = Color.White)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { viewModel.mostraDialogEliminazione = false } // Annulla l'operazione
+                        ) {
+                            Text("Annulla", color = MaterialTheme.colorScheme.primary)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(16.dp)
+                )
             }
         }
     }

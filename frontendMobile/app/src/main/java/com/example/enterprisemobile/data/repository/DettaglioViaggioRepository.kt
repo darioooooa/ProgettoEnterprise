@@ -29,6 +29,11 @@ class DettaglioViaggioRepository(
     }
 
     suspend fun eliminaViaggio(id: Long): Response<ResponseBody> = withContext(Dispatchers.IO) {
-        api.eliminaViaggio(id)
+        val response = api.eliminaViaggio(id)
+        if (response.isSuccessful) {
+            // Rimuove il viaggio dal database Room del telefono
+            dao.deleteById(id)
+        }
+        response
     }
 }

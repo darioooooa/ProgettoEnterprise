@@ -14,5 +14,6 @@ data class ViaggioDTO(
     val dataFine: String,
     val latitudine: Double,
     val longitudine: Double,
+    val mediaRecensioni: Double = 0.0,
     val tappe: List<AttivitaViaggioDTO> = emptyList()
 )

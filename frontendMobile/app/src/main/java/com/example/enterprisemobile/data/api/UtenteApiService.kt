@@ -6,11 +6,18 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface UtenteApiService {
     @GET("utenti/me")
     suspend fun ottieniMioProfilo(): Response<UtenteDTO>
+
+    // Recupera il profilo pubblico di un qualsiasi utente tramite id
+    @GET("utenti/{id}")
+    suspend fun ottieniProfiloPubblico(
+        @Path("id") id: Long
+    ): Response<UtenteDTO>
 
     // Recupero password
     @POST("utenti/recupero-password")

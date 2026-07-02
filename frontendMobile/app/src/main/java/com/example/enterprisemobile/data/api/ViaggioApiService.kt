@@ -19,6 +19,11 @@ interface ViaggioApiService {
     @GET("viaggi/mappa-viaggi")
     suspend fun getViaggiPerMappa(): List<ViaggioMappaDTO>
 
+    @GET("viaggi/organizzatore/{organizzatoreId}")
+    suspend fun getViaggiByOrganizzatore(
+        @Path("organizzatoreId") organizzatoreId: Long
+    ): Response<List<ViaggioDTO>>
+
     // Metodo per filtrare i viaggi
     @GET("viaggi")
     suspend fun getViaggiFiltrati(

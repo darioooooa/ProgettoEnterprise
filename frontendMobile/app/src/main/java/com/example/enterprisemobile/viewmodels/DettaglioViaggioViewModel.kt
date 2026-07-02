@@ -30,6 +30,7 @@ class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(app
     var isEliminazioneInCorso by mutableStateOf(false)
     var messaggioAvviso by mutableStateOf<String?>(null)
     var tipoAvviso by mutableStateOf("errore")
+    var mostraDialogEliminazione by mutableStateOf(false)
 
     // Dati principali del viaggio
     var viaggioEntity by mutableStateOf<ViaggioEntity?>(null)
@@ -182,6 +183,7 @@ class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(app
     fun eliminaViaggioCorrente(onSuccess: () -> Unit) {
         viewModelScope.launch {
             isEliminazioneInCorso = true
+            mostraDialogEliminazione = false
             try {
                 val response = repository.eliminaViaggio(viaggioId)
                 if (response.isSuccessful) {

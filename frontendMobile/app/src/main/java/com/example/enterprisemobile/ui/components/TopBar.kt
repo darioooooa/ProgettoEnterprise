@@ -139,7 +139,7 @@ fun EnterpriseScaffold(
 
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Filled.Person, null, tint = WhiteText) },
-                    label = { Text("Il Mio Profilo", color = WhiteText, fontSize = 16.sp) },
+                    label = { Text("Il mio profilo", color = WhiteText, fontSize = 16.sp) },
                     selected = titolo == "IL MIO PROFILO",
                     onClick = {
                         scope.launch { drawerState.close() }
