@@ -17,13 +17,19 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.modelmapper.ModelMapper;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 
-// NUOVI IMPORT PER I FILE
+
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import io.minio.MinioClient;
+import io.minio.GetObjectArgs;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import java.io.InputStream;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -43,6 +49,10 @@ public class AdminServiceImpl implements AdminService {
     private final ModelMapper modelMapper;
 
     private final String REALM_NAME = "enterprise-realm";
+    private final MinioClient minioClient;
+
+    @Value("${minio.bucket-name}")
+    private String bucketName;
 
     @Override
     @Transactional
@@ -225,24 +235,34 @@ public class AdminServiceImpl implements AdminService {
         RichiestaPromozione richiesta = richiestaRepository.findById(idRichiesta)
                 .orElseThrow(() -> new EntityNotFoundException("Richiesta non trovata"));
 
-        String percorsoStr = richiesta.getDocumentiLink();
-        if (percorsoStr == null || percorsoStr.isBlank()) {
+        String objectName = richiesta.getDocumentiLink();
+        if (objectName == null || objectName.isBlank()) {
             throw new RuntimeException("Nessun documento associato");
         }
 
         try {
-            Path filePath = Paths.get(percorsoStr).toAbsolutePath().normalize();
-            log.info("Tentativo di scaricare file dal percorso: {}", filePath);
+            // Scarica lo stream da MinIO
+            InputStream stream = minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
 
-            Resource resource = new UrlResource(filePath.toUri());
+            // Leggi tutto il contenuto in un array di byte
+            byte[] bytes = stream.readAllBytes();
+            stream.close();
 
-            if (resource.exists() && resource.isReadable()) {
-                return resource;
-            } else {
-                throw new RuntimeException("Il file non esiste nel percorso: " + filePath);
-            }
+            return new ByteArrayResource(bytes) {
+                @Override
+                public String getFilename() {
+                    int underscoreIndex = objectName.indexOf("_");
+                    return underscoreIndex != -1 ? objectName.substring(underscoreIndex + 1) : objectName;
+                }
+            };
         } catch (Exception e) {
+            log.error("Errore recupero file da MinIO", e);
             throw new RuntimeException("Errore durante il recupero del documento", e);
         }
     }
-}
+    }

@@ -32,6 +32,11 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +50,11 @@ public class ViaggiatoreServiceImpl implements ViaggiatoreService {
     private final Keycloak keycloak;
     private final OrganizzatoreRepository organizzatoreRepository;
     private final RichiestaPromozioneRepository richiestaPromozioneRepository;
+    private final MinioClient minioClient;
+
+    @Value("${minio.bucket-name}")
+    private String bucketName;
+
 
     @Override
     @Transactional(readOnly = true)
@@ -132,16 +142,25 @@ public class ViaggiatoreServiceImpl implements ViaggiatoreService {
 
         String linkDocumentoSalvato;
         try {
-            String uploadDir = "uploads/candidature/";
-            File directory = new File(uploadDir);
-            if (!directory.exists()) directory.mkdirs();
+            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            if (!found) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+            }
 
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir, fileName);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            linkDocumentoSalvato = filePath.toString();
+
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(fileName)
+                            .stream(file.getInputStream(), file.getSize(), -1) // -1 per partSize auto
+                            .contentType(file.getContentType())
+                            .build()
+            );
+
+            linkDocumentoSalvato = fileName;
         } catch (Exception e) {
-            log.error("Errore salvataggio file", e);
+            log.error("Errore salvataggio file su MinIO", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Errore salvataggio documento");
         }
 
