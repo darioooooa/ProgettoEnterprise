@@ -74,7 +74,7 @@ logging:
 
 stripe:
   api:
-    key: ${STRIPE_SECRET_KEY}mpoe
+    key: ${STRIPE_SECRET_KEY}
 
 minio:
   url: http://localhost:9000

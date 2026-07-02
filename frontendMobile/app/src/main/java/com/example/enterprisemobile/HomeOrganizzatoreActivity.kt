@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.repository.ViaggioRepository
+import com.example.enterprisemobile.model.ViaggioMappaDTO
 import com.example.enterprisemobile.ui.theme.EnterpriseMobileTheme
 import com.example.enterprisemobile.ui.components.EnterpriseScaffold
 import com.example.enterprisemobile.viewmodels.HomeOrganizzatoreViewModel
@@ -33,6 +34,7 @@ import com.mapbox.common.MapboxOptions
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import kotlinx.coroutines.launch
@@ -52,21 +54,51 @@ class HomeOrganizzatoreActivity : ComponentActivity() {
     }
 }
 
+// Isola il ciclo di vita grafico di Mapbox impedendo recomposition esterne sulla dashboard
+@OptIn(MapboxExperimental::class)
+@Composable
+fun MappaItinerari(
+    viaggi: List<ViaggioMappaDTO>,
+    mapViewportState: MapViewportState,
+    markerIcon: android.graphics.Bitmap?,
+    onMarkerClick: (ViaggioMappaDTO) -> Unit
+) {
+    android.util.Log.d("MAPBOX_PERF", "Rendering  del componente MapboxMap")
+
+    MapboxMap(
+        modifier = Modifier.fillMaxSize(),
+        mapViewportState = mapViewportState
+    ) {
+        android.util.Log.d("MAPBOX_PERF", "Disegno dei marker per ${viaggi.size} viaggi")
+
+        viaggi.forEach { viaggio ->
+            key(viaggio.id) { // Protegge i marker individuali dal ricrearsi inutilmente
+                PointAnnotation(
+                    point = Point.fromLngLat(viaggio.longitudine, viaggio.latitudine),
+                    iconImageBitmap = markerIcon,
+                    onClick = {
+                        onMarkerClick(viaggio)
+                        true
+                    }
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, MapboxExperimental::class)
 @Composable
 fun SchermataOrganizzatore(nomeUtente: String) {
+    android.util.Log.d("MAPBOX_PERF", "Recomposition generale della SchermataOrganizzatore")
 
     val context = LocalContext.current
-    val apiService = RetrofitClient.ottieniViaggioService(context)
-    val utenteApiService= RetrofitClient.ottieniUtenteService(context)
+    val apiService = remember(context) { RetrofitClient.ottieniViaggioService(context) }
+    val utenteApiService = remember(context) { RetrofitClient.ottieniUtenteService(context) }
 
-    // Serve per lanciare la chiamata API in background dopo aver preso il token
-    val scope = rememberCoroutineScope()
-
-    //recupero dell'istanza del db e relativo DAO
-    val database = AppDatabase.getInstance(context)
-    val viaggioDao = database.viaggioDao()
-    val repository = ViaggioRepository(apiService, viaggioDao)
+    val repository = remember(context) {
+        val database = AppDatabase.getInstance(context)
+        ViaggioRepository(apiService, database.viaggioDao())
+    }
 
     val viewModel: HomeOrganizzatoreViewModel = viewModel(
         factory = ViewModelFactory(repository)
@@ -75,10 +107,9 @@ fun SchermataOrganizzatore(nomeUtente: String) {
     val viaggi by viewModel.viaggi.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    //AVVIO CHIAMATA DI RETE
+    // Caricamento asincrono iniziale
     LaunchedEffect(Unit) {
         viewModel.caricaDatiMappa()
-
 
         com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -86,32 +117,19 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                 return@addOnCompleteListener
             }
             val tokenRicevuto = task.result
-            // INVIO DEL TOKEN AL BACKEND SPRING BOOT
-            // Usiamo GlobalScope + Dispatchers.IO per metterlo in background al sicuro nonostante subito dopo il login si
-            //cambia schermata e quindi si perde lo scope,questo serve per mantenerlo
+
             kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
-                    val payload =
-                        mapOf("token" to tokenRicevuto)
-
-                    // Chiamata a Retrofit
+                    val payload = mapOf("token" to tokenRicevuto)
                     val risposta = utenteApiService.aggiornaToken(payload)
-
                     if (risposta.isSuccessful) {
-                        android.util.Log.d(
-                            "FCM_SUCCESS",
-                            "Token salvato su Spring Boot!"
-                        )
+                        android.util.Log.d("FCM_SUCCESS", "Token salvato su Spring Boot!")
                     } else {
-                        // Se fallisce, stampiamo anche il corpo dell'errore per capire il VERO motivo
                         val motivo = risposta.errorBody()?.string()
-                        android.util.Log.e(
-                            "FCM_ERROR",
-                            "Errore dal server: ${risposta.code()} - Motivo: $motivo"
-                        )
+                        android.util.Log.e("FCM_ERROR", "Errore dal server: ${risposta.code()} - Motivo: $motivo")
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("FCM_API_ERROR", " Errore invio token al server", e)
+                    android.util.Log.e("FCM_API_ERROR", "Errore invio token al server", e)
                 }
             }
         }
@@ -131,13 +149,15 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                 .padding(16.dp)
         ) {
 
-            Text(text = "I Tuoi Itinerari", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(text = "I tuoi itinerari", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Mappa Mapbox
-            val mapViewportState = rememberMapViewportState {
-                setCameraOptions {
-                    center(Point.fromLngLat(12.4964, 41.9028)) // Roma centrale
+            val mapViewportState = rememberMapViewportState()
+
+            LaunchedEffect(Unit) {
+                android.util.Log.d("MAPBOX_PERF", "Configurazione iniziale camera")
+                mapViewportState.setCameraOptions {
+                    center(Point.fromLngLat(12.4964, 41.9028)) // Centrato su Roma
                     zoom(5.0)
                 }
             }
@@ -147,38 +167,21 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                 ContextCompat.getDrawable(context, R.drawable.viaggio_marker)?.toBitmap()
             }
 
-            //serve per tenere in memoria il viaggio cliccato per poi spedirci nella schemrata dettaglio
-            var viaggioSelezionato by remember {
-                mutableStateOf<com.example.enterprisemobile.model.ViaggioMappaDTO?>(
-                    null
-                )
-            }
+            var viaggioSelezionato by remember { mutableStateOf<ViaggioMappaDTO?>(null) }
 
-            // Mappa Mapbox racchiusa in un Box per gestire la grafica sovrapposta
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
             ) {
-                MapboxMap(
-                    Modifier.fillMaxSize(),
-                    mapViewportState = mapViewportState
-                ) {
-                    // disegno dei marker
-                    viaggi.forEach { viaggio ->
-                        PointAnnotation(
-                            point = Point.fromLngLat(viaggio.longitudine, viaggio.latitudine),
-                            iconImageBitmap = markerIcon,
-                            onClick = {
-                                //Quando l'utente tocca il segnalino,salviamo il viaggio
-                                viaggioSelezionato = viaggio
-                                true
-                            }
-                        )
-                    }
-                }
+                // Iniezione del componente statico isolato
+                MappaItinerari(
+                    viaggi = viaggi,
+                    mapViewportState = mapViewportState,
+                    markerIcon = markerIcon,
+                    onMarkerClick = { viaggio -> viaggioSelezionato = viaggio }
+                )
 
-                // Rotellina di caricamento mentre scarica da Spring Boot
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
@@ -215,14 +218,10 @@ fun SchermataOrganizzatore(nomeUtente: String) {
 
                             Button(
                                 onClick = {
-                                    //quando verrà creato la DettaglioViaggioActivity scommentare questa parte di codice
-                                    /*
-                                val intent = Intent(context, DettaglioViaggioActivity::class.java)
-                                intent.putExtra("CHIAVE_ID_VIAGGIO", viaggio.id)
-                                context.startActivity(intent)
-                                */
+                                    val intent = Intent(context, DettaglioViaggioActivity::class.java)
+                                    intent.putExtra("VIAGGIO_ID", viaggio.id)
+                                    context.startActivity(intent)
 
-                                    // Chiudiamo il pop-up pulendo lo stato
                                     viaggioSelezionato = null
                                 }
                             ) {
