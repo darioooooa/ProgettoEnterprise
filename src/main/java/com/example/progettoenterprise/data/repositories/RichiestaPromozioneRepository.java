@@ -2,10 +2,13 @@ package com.example.progettoenterprise.data.repositories;
 
 import com.example.progettoenterprise.data.entities.RichiestaPromozione;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
 
-public interface RichiestaPromozioneRepository extends JpaRepository<RichiestaPromozione, Long> {
+public interface RichiestaPromozioneRepository
+        extends JpaRepository<RichiestaPromozione, Long>,
+        JpaSpecificationExecutor<RichiestaPromozione> {
     boolean existsByUsernameRichiestoAndStato(String username, RichiestaPromozione.StatoRichiesta stato);
     boolean existsByEmailProfessionaleAndStato(String email, RichiestaPromozione.StatoRichiesta stato);
     boolean existsByViaggiatoreIdAndStato(Long viaggiatoreId, RichiestaPromozione.StatoRichiesta stato);

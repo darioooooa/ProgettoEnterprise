@@ -53,6 +53,11 @@ export class AdminDashboard implements OnInit {
   richieste: RichiestaPromozione[] = [];
   vistaAttualePromozioni: 'PENDENTI' | 'STORICO' = 'PENDENTI';
 
+  paginaCorrente: number = 0;
+  totalePagine: number = 0;
+  totaleElementi: number = 0;
+  dimensionePagina: number = 10;
+
   segnalazioni: Segnalazione[] = [];
   vistaAttualeSegnalazioni: 'DA_GESTIRE' | 'ARCHIVIO' = 'DA_GESTIRE';
   filtroTipo: string = '';
@@ -97,21 +102,27 @@ export class AdminDashboard implements OnInit {
 
   cambiaVistaPromozioni(vista: 'PENDENTI' | 'STORICO') {
     this.vistaAttualePromozioni = vista;
-  }
-
-  get richiesteFiltrate() {
-    if (this.vistaAttualePromozioni === 'PENDENTI') {
-      return this.richieste.filter(r => r.stato === 'IN_ATTESA');
-    } else {
-      return this.richieste.filter(r => r.stato === 'APPROVATA' || r.stato === 'RIFIUTATA');
-    }
+    this.paginaCorrente = 0;
+    this.caricaRichieste();
   }
 
   caricaRichieste() {
     this.isLoading = true;
-    this.adminService.getRichieste().subscribe({
-      next: (dati) => {
-        this.richieste = dati;
+
+    let statoFiltro: string | undefined;
+    if (this.vistaAttualePromozioni === 'PENDENTI') {
+      statoFiltro = 'IN_ATTESA';
+    }
+
+    this.adminService.getRichiestePaginate(
+      this.paginaCorrente,
+      this.dimensionePagina,
+      statoFiltro
+    ).subscribe({
+      next: (risposta) => {
+        this.richieste = risposta.content || [];
+        this.totalePagine = risposta.totalPages || 0;
+        this.totaleElementi = risposta.totalElements || 0;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -121,6 +132,28 @@ export class AdminDashboard implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  paginaPrecedente() {
+    if (this.paginaCorrente > 0 && !this.isLoading) {
+      this.paginaCorrente--;
+      this.caricaRichieste();
+    }
+  }
+
+  paginaSuccessiva() {
+    if (this.paginaCorrente < this.totalePagine - 1 && !this.isLoading) {
+      this.paginaCorrente++;
+      this.caricaRichieste();
+    }
+  }
+
+  get richiesteFiltrate() {
+    if (this.vistaAttualePromozioni === 'PENDENTI') {
+      return this.richieste;
+    } else {
+      return this.richieste.filter(r => r.stato === 'APPROVATA' || r.stato === 'RIFIUTATA');
+    }
   }
 
   approva(id: number) {
@@ -304,6 +337,7 @@ export class AdminDashboard implements OnInit {
       }
     });
   }
+
   apriModaleMessaggio(testo?: string) {
     this.messaggioInLettura = testo || 'Testo non disponibile o contenuto già rimosso.';
     this.mostraModaleMessaggio = true;
@@ -313,6 +347,7 @@ export class AdminDashboard implements OnInit {
     this.mostraModaleMessaggio = false;
     this.messaggioInLettura = '';
   }
+
   apriModaleBiografia(bio: string) {
     this.biografiaInLettura = bio;
     this.mostraModaleBiografia = true;

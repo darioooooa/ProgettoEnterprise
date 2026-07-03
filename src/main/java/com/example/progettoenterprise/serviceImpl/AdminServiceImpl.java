@@ -4,6 +4,7 @@ import com.example.progettoenterprise.data.entities.*;
 import com.example.progettoenterprise.data.repositories.OrganizzatoreRepository;
 import com.example.progettoenterprise.data.repositories.RichiestaPromozioneRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
+import com.example.progettoenterprise.data.repositories.specifications.RichiestaPromozioneSpecification;
 import com.example.progettoenterprise.data.service.AdminService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import com.example.progettoenterprise.dto.UtenteDTO;
@@ -18,23 +19,21 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Page;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import io.minio.MinioClient;
 import io.minio.GetObjectArgs;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
-import java.io.InputStream;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -69,9 +68,16 @@ public class AdminServiceImpl implements AdminService {
         }
 
         Viaggiatore viaggiatore = richiesta.getViaggiatore();
-
         String nuovoUsername = richiesta.getUsernameRichiesto();
         String nuovaEmail = richiesta.getEmailProfessionale();
+
+
+        List<UserRepresentation> existingUsers = keycloak.realm(REALM_NAME).users().search(nuovoUsername, true);
+        if (!existingUsers.isEmpty()) {
+            log.warn("Impossibile promuovere: l'utente {} esiste già su Keycloak", nuovoUsername);
+            throw new IllegalArgumentException("Impossibile promuovere: l'username '" + nuovoUsername + "' è già in uso su Keycloak.");
+        }
+
         Organizzatore nuovoOrg = new Organizzatore();
         nuovoOrg.setUsername(nuovoUsername);
         nuovoOrg.setEmail(nuovaEmail);
@@ -86,41 +92,68 @@ public class AdminServiceImpl implements AdminService {
         richiesta.setAdminId(adminIdCorrente);
         richiestaRepository.save(richiesta);
 
-        UserRepresentation keycloakUser = new UserRepresentation();
-        keycloakUser.setUsername(nuovoUsername);
-        keycloakUser.setEmail(nuovaEmail);
-        keycloakUser.setFirstName(viaggiatore.getNome());
-        keycloakUser.setLastName(viaggiatore.getCognome());
-        keycloakUser.setEnabled(true);
-        keycloakUser.setEmailVerified(true);
+        CompletableFuture.runAsync(() -> {
+            try {
 
-        String passwordTemporanea = UUID.randomUUID().toString().substring(0, 8);
-        CredentialRepresentation credential = new CredentialRepresentation();
-        credential.setType(CredentialRepresentation.PASSWORD);
-        credential.setValue(passwordTemporanea);
-        credential.setTemporary(true);
-        keycloakUser.setCredentials(Collections.singletonList(credential));
+                UserRepresentation keycloakUser = new UserRepresentation();
+                keycloakUser.setUsername(nuovoUsername);
+                keycloakUser.setEmail(nuovaEmail);
+                keycloakUser.setFirstName(viaggiatore.getNome());
+                keycloakUser.setLastName(viaggiatore.getCognome());
+                keycloakUser.setEnabled(true);
+                keycloakUser.setEmailVerified(true);
 
-        Response response = keycloak.realm(REALM_NAME).users().create(keycloakUser);
+                String passwordTemporanea = UUID.randomUUID().toString().substring(0, 8);
+                CredentialRepresentation credential = new CredentialRepresentation();
+                credential.setType(CredentialRepresentation.PASSWORD);
+                credential.setValue(passwordTemporanea);
+                credential.setTemporary(true);
+                keycloakUser.setCredentials(Collections.singletonList(credential));
 
-        if (response.getStatus() == 201) {
-            List<UserRepresentation> searchResult = keycloak.realm(REALM_NAME).users().search(nuovoUsername);
-            if (!searchResult.isEmpty()) {
-                String keycloakUserId = searchResult.getFirst().getId();
-                RoleRepresentation orgRole = keycloak.realm(REALM_NAME).roles().get("ORGANIZZATORE").toRepresentation();
-                keycloak.realm(REALM_NAME).users().get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(orgRole));
-                try {
-                    keycloak.realm(REALM_NAME).users().get(keycloakUserId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
-                    log.info("Email inviata a: {}", nuovaEmail);
-                }catch (Exception e){
-                    log.error("Impossibile inviare email per id: {}", keycloakUserId, e);
+                Response response = keycloak.realm(REALM_NAME).users().create(keycloakUser);
+
+                if (response.getStatus() == 201) {
+                    List<UserRepresentation> searchResult = keycloak.realm(REALM_NAME).users().search(nuovoUsername);
+                    if (!searchResult.isEmpty()) {
+                        String keycloakUserId = searchResult.getFirst().getId();
+
+                        // Assegna ruolo
+                        RoleRepresentation orgRole = keycloak.realm(REALM_NAME).roles().get("ORGANIZZATORE").toRepresentation();
+                        keycloak.realm(REALM_NAME).users().get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(orgRole));
+
+                        // Invia email di cambio password (Keycloak)
+                        try {
+                            keycloak.realm(REALM_NAME).users().get(keycloakUserId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
+                            log.info("✅ Email Keycloak inviata a: {}", nuovaEmail);
+                        } catch (Exception e) {
+                            log.error("❌ Impossibile inviare email Keycloak per id {}: {}", keycloakUserId, e.getMessage());
+                        }
+
+                        // Invia email di benvenuto personalizzata
+                        try {
+                            String oggetto = "La tua candidatura come Organizzatore è stata approvata!";
+                            String testo = "Gentile " + viaggiatore.getNome() + ",\n\n" +
+                                    "Siamo lieti di informarti che la tua richiesta per diventare Organizzatore su Enterprise è stata approvata!\n\n" +
+                                    "Username: " + nuovoUsername + "\n" +
+                                    "Password temporanea: " + passwordTemporanea + "\n\n" +
+                                    "Al primo accesso ti verrà richiesto di cambiare la password.\n\n" +
+                                    "Benvenuto a bordo!\nIl Team di Enterprise.";
+
+                            emailService.sendSimpleEmail(nuovaEmail, oggetto, testo);
+                            log.info("✅ Email di benvenuto inviata a: {}", nuovaEmail);
+                        } catch (Exception e) {
+                            log.error("❌ Errore nell'invio dell'email di benvenuto a {}: {}", nuovaEmail, e.getMessage());
+                        }
+                    }
+                } else {
+                    log.error("❌ Errore Keycloak. Status: {}", response.getStatus());
                 }
+            } catch (Exception e) {
+                log.error("❌ Errore operazioni asincrone Keycloak per {}: {}", nuovoUsername, e.getMessage());
             }
-        } else if (response.getStatus() == 409) {
-            throw new IllegalArgumentException("Impossibile promuovere: L'utente " + nuovoUsername + " esiste già.");
-        } else {
-            throw new RuntimeException("Errore Keycloak. Status: " + response.getStatus());
-        }
+        });
+
+        log.info("✅ Richiesta {} approvata. Operazioni Keycloak in background.", richiestaId);
     }
 
     @Override
@@ -139,11 +172,37 @@ public class AdminServiceImpl implements AdminService {
                     dto.setAdminId(richiesta.getAdminId());
                     dto.setUsernameRichiesto(richiesta.getUsernameRichiesto());
                     dto.setEmailProfessionale(richiesta.getEmailProfessionale());
-                    dto.setBiografiaProfessionale(richiesta.getBiografiaProfessionale());
                     dto.setDocumentiLink(richiesta.getDocumentiLink());
                     return dto;
                 })
                 .toList();
+    }
+
+    @Override
+    public Page<RichiestaPromozioneDTO> getRichiestePaginate(RichiestaPromozioneSpecification.RichiestaFilter filter, int page, int size) {
+        org.springframework.data.domain.Pageable pageable =
+                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("dataRichiesta").descending());
+
+        org.springframework.data.jpa.domain.Specification<RichiestaPromozione> spec =
+                RichiestaPromozioneSpecification.withFilter(filter);
+
+        org.springframework.data.domain.Page<RichiestaPromozione> richiestePage = richiestaRepository.findAll(spec, pageable);
+
+        return richiestePage.map(richiesta -> {
+            RichiestaPromozioneDTO dto = new RichiestaPromozioneDTO();
+            dto.setId(richiesta.getId());
+            dto.setUsernameViaggiatore(richiesta.getViaggiatore().getUsername());
+            dto.setEmailViaggiatore(richiesta.getViaggiatore().getEmail());
+            dto.setDataRichiesta(richiesta.getDataRichiesta());
+            dto.setMotivazione(richiesta.getMotivazione());
+            dto.setStato(richiesta.getStato().name());
+            dto.setBiografiaProfessionale(richiesta.getBiografiaProfessionale());
+            dto.setAdminId(richiesta.getAdminId());
+            dto.setUsernameRichiesto(richiesta.getUsernameRichiesto());
+            dto.setEmailProfessionale(richiesta.getEmailProfessionale());
+            dto.setDocumentiLink(richiesta.getDocumentiLink());
+            return dto;
+        });
     }
 
     @Override
@@ -161,24 +220,28 @@ public class AdminServiceImpl implements AdminService {
         richiesta.setDataValutazione(LocalDateTime.now());
         richiesta.setAdminId(adminIdCorrente);
         richiestaRepository.save(richiesta);
-        try {
-            String oggetto = "Esito della tua candidatura come Organizzatore";
-            String testo = "Gentile utente,\n\n" +
-                    "La tua richiesta per diventare Organizzatore su Enterprise è stata valutata dall'amministrazione.\n" +
-                    "Purtroppo la candidatura non è stata accettata per il seguente motivo:\n\n" +
-                    "--------------------------------------------------\n" +
-                    noteAdmin + "\n" +
-                    "--------------------------------------------------\n\n" +
-                    "Ti invitiamo a consultare il nostro regolamento e, se lo ritieni opportuno, correggere le informazioni " +
-                    "per inviare una nuova candidatura in futuro.\n\n" +
-                    "Cordiali saluti,\nIl Team di Enterprise.";
 
-            emailService.sendSimpleEmail(richiesta.getEmailProfessionale(), oggetto, testo);
-            log.info("Email di rifiuto inviata correttamente all'indirizzo: {}", richiesta.getEmailProfessionale());
+        CompletableFuture.runAsync(() -> {
+            try {
+                String oggetto = "Esito della tua candidatura come Organizzatore";
+                String testo = "Gentile utente,\n\n" +
+                        "La tua richiesta per diventare Organizzatore su Enterprise è stata valutata dall'amministrazione.\n" +
+                        "Purtroppo la candidatura non è stata accettata per il seguente motivo:\n\n" +
+                        "--------------------------------------------------\n" +
+                        noteAdmin + "\n" +
+                        "--------------------------------------------------\n\n" +
+                        "Ti invitiamo a consultare il nostro regolamento e, se lo ritieni opportuno, correggere le informazioni " +
+                        "per inviare una nuova candidatura in futuro.\n\n" +
+                        "Cordiali saluti,\nIl Team di Enterprise.";
 
-        } catch (Exception e) {
-            log.error("Errore nell'invio dell'email di rifiuto a {}: {}", richiesta.getEmailProfessionale(), e.getMessage());
-        }
+                emailService.sendSimpleEmail(richiesta.getEmailProfessionale(), oggetto, testo);
+                log.info("✅ Email di rifiuto inviata a: {}", richiesta.getEmailProfessionale());
+            } catch (Exception e) {
+                log.error("❌ Errore nell'invio dell'email di rifiuto a {}: {}", richiesta.getEmailProfessionale(), e.getMessage());
+            }
+        });
+
+        log.info("✅ Richiesta {} rifiutata. Email in background.", richiestaId);
     }
 
     @Override
@@ -194,7 +257,15 @@ public class AdminServiceImpl implements AdminService {
         utente.setAttivo(false);
         utente.setMotivoSospensione("Violazione dei termini");
         utenteRepository.save(utente);
-        emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
+                log.info("✅ Email di ban inviata a: {}", utente.getEmail());
+            } catch (Exception e) {
+                log.error("❌ Errore invio email di ban: {}", e.getMessage());
+            }
+        });
     }
 
     @Override
@@ -214,7 +285,15 @@ public class AdminServiceImpl implements AdminService {
         utente.setAttivo(true);
         utente.setMotivoSospensione(null);
         utenteRepository.save(utente);
-        riabilitaSuKeycloak(utente.getUsername());
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                riabilitaSuKeycloak(utente.getUsername());
+                log.info("✅ Utente {} riabilitato su Keycloak", utente.getUsername());
+            } catch (Exception e) {
+                log.error("❌ Errore riabilitazione Keycloak: {}", e.getMessage());
+            }
+        });
     }
 
     private void riabilitaSuKeycloak(String username) {
@@ -241,7 +320,6 @@ public class AdminServiceImpl implements AdminService {
         }
 
         try {
-            // Scarica lo stream da MinIO
             InputStream stream = minioClient.getObject(
                     GetObjectArgs.builder()
                             .bucket(bucketName)
@@ -249,7 +327,6 @@ public class AdminServiceImpl implements AdminService {
                             .build()
             );
 
-            // Leggi tutto il contenuto in un array di byte
             byte[] bytes = stream.readAllBytes();
             stream.close();
 
@@ -265,4 +342,4 @@ public class AdminServiceImpl implements AdminService {
             throw new RuntimeException("Errore durante il recupero del documento", e);
         }
     }
-    }
+}

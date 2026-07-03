@@ -52,7 +52,7 @@ dependencies {
 
     // Libreria per le icone extra come Place, Email, ecc. (HomeViaggiatoreActivity)
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
-
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
     //per Mapbox
     implementation("com.mapbox.maps:android:11.2.2")
     implementation("com.mapbox.extension:maps-compose:11.2.2")

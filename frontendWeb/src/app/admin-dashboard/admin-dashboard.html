@@ -20,6 +20,7 @@
         </button>
       </div>
 
+
       <ng-container *ngIf="sezionePrincipale === 'PROMOZIONI'">
         <header class="form-header">
           <h1>Richieste di Promozione</h1>
@@ -72,8 +73,28 @@
           </table>
           <div *ngIf="richiesteFiltrate.length === 0" style="padding: 20px; text-align: center;">Nessuna richiesta trovata.</div>
         </div>
+
+        <div class="pagination-bar" *ngIf="totalePagine > 0 && !isLoading" style="margin-top: 30px; padding-bottom: 30px; text-align: center;">
+          <div class="pagination-info" style="font-size: 1.1rem; margin-bottom: 15px;">
+            Pagina <strong>{{ paginaCorrente + 1 }}</strong> di <strong>{{ totalePagine }}</strong>
+          </div>
+
+          <div class="pagination-buttons" style="display: flex; justify-content: center;">
+            <button class="btn" style="background-color: #666; margin-right: 10px;"
+                    (click)="paginaPrecedente()"
+                    [disabled]="paginaCorrente === 0 || isLoading">
+              &larr; Precedente
+            </button>
+            <button class="btn" style="margin-left: 10px;"
+                    (click)="paginaSuccessiva()"
+                    [disabled]="paginaCorrente === totalePagine - 1 || isLoading">
+              Successiva &rarr;
+            </button>
+          </div>
+        </div>
       </ng-container>
 
+      <!-- ✅ SEZIONE SEGNALAZIONI -->
       <ng-container *ngIf="sezionePrincipale === 'SEGNALAZIONI'">
         <header class="form-header">
           <h1>Centro Segnalazioni</h1>
@@ -191,7 +212,7 @@
   </div>
 </main>
 
-<!-- MODALE 1: Segnalazioni (Quella che avevi già) -->
+<!-- MODALE 1: Motivazione -->
 <div class="modale-overlay" *ngIf="mostraModaleMessaggio" (click)="chiudiModaleMessaggio()" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;">
   <div class="modale-content" (click)="$event.stopPropagation()" style="background: white; color: black; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">

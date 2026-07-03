@@ -41,10 +41,18 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
     LaunchedEffect(statoUi) {
         if (statoUi is StatoAuth.Successo) {
             val ruolo = (statoUi as StatoAuth.Successo).ruolo
-            val intent = if (ruolo == "ROLE_ORGANIZZATORE" || ruolo == "ORGANIZZATORE") {
-                android.content.Intent(context, HomeOrganizzatoreActivity::class.java).apply { putExtra("CHIAVE_USERNAME", username) }
-            } else {
-                android.content.Intent(context, HomeViaggiatoreActivity::class.java)
+            val intent = when {
+                ruolo.equals("ROLE_ADMIN", ignoreCase = true) || ruolo.equals("ADMIN", ignoreCase = true) -> {
+                    android.content.Intent(context, AdminActivity::class.java)
+                }
+                ruolo.equals("ROLE_ORGANIZZATORE", ignoreCase = true) || ruolo.equals("ORGANIZZATORE", ignoreCase = true) -> {
+                    android.content.Intent(context, HomeOrganizzatoreActivity::class.java).apply {
+                        putExtra("CHIAVE_USERNAME", username)
+                    }
+                }
+                else -> {
+                    android.content.Intent(context, HomeViaggiatoreActivity::class.java)
+                }
             }
             intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
             context.startActivity(intent)

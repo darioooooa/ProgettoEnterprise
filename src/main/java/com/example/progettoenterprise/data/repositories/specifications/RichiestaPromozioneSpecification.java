@@ -16,29 +16,34 @@ public class RichiestaPromozioneSpecification {
         private StatoRichiesta stato;
         private Long viaggiatoreId;
         private Long adminId;
+        private String usernameViaggiatore;
     }
 
     public static Specification<RichiestaPromozione> withFilter(RichiestaFilter filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Filtra per stato
             if (filter.getStato() != null) {
                 predicates.add(cb.equal(root.get("stato"), filter.getStato()));
             }
 
-            // Filtra per utente che ha fatto la richiesta
             if (filter.getViaggiatoreId() != null) {
                 predicates.add(cb.equal(root.get("viaggiatore").get("id"), filter.getViaggiatoreId()));
             }
 
-            // Filtra per amministratore che ha valutato la richiesta
             if (filter.getAdminId() != null) {
                 predicates.add(cb.equal(root.get("adminId"), filter.getAdminId()));
             }
 
-            // Ordina dalla richiesta più vecchia alla più nuova
-            query.orderBy(cb.asc(root.get("dataRichiesta")));
+            //filtro per username del viaggiatore
+            if (filter.getUsernameViaggiatore() != null && !filter.getUsernameViaggiatore().isBlank()) {
+                predicates.add(cb.like(
+                        cb.lower(root.get("viaggiatore").get("username")),
+                        "%" + filter.getUsernameViaggiatore().toLowerCase() + "%"
+                ));
+            }
+
+            query.orderBy(cb.desc(root.get("dataRichiesta")));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

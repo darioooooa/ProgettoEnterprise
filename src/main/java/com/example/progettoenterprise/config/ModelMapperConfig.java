@@ -38,6 +38,8 @@ public class ModelMapperConfig {
                         .map(source, destination.getNomeCompleto());
             }
         });
+
+
         org.modelmapper.Converter<Set<ListaViaggio>, List<ViaggioDTO>> convertitoreViaggi = ctx -> {
             if (ctx.getSource() == null) return java.util.Collections.emptyList();
             return ctx.getSource().stream()

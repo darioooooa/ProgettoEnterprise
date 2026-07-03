@@ -9,7 +9,7 @@ import com.example.enterprisemobile.model.PrenotazioneEntity
 import com.example.enterprisemobile.model.AttivitaViaggioEntity
 import com.example.enterprisemobile.model.ImmagineViaggioEntity
 import com.example.enterprisemobile.model.RecensioneViaggioEntity
-
+import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
 
 @Database(
     entities = [
@@ -17,21 +17,21 @@ import com.example.enterprisemobile.model.RecensioneViaggioEntity
         PrenotazioneEntity::class,
         AttivitaViaggioEntity::class,
         ImmagineViaggioEntity::class,
-        RecensioneViaggioEntity::class
+        RecensioneViaggioEntity::class,
+        RichiestaPromozioneEntity::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun viaggioDao(): ViaggioDAO
     abstract fun prenotazioneDao(): PrenotazioneDAO
-
     abstract fun galleriaDao(): GalleriaDAO
-
-    abstract fun dettaglioViaggioDao() : DettaglioViaggioDAO
+    abstract fun dettaglioViaggioDao(): DettaglioViaggioDAO
     abstract fun programmaDao(): ProgrammaDAO
     abstract fun communityDao(): CommunityDAO
+    abstract fun richiestaPromozioneDao(): RichiestaPromozioneDAO
 
     companion object {
         @Volatile

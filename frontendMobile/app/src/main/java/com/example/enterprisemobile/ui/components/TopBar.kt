@@ -96,6 +96,7 @@ fun EnterpriseScaffold(
     val sessionManager = SessionManager(context)
     val ruoloUtente = sessionManager.ottieniRuolo() ?: ""
     val isViaggiatore = ruoloUtente.contains("VIAGGIATORE", ignoreCase = true)
+    val isAdmin = ruoloUtente.contains("ADMIN", ignoreCase = true)
 
     var notificheAmiciFetch by remember { mutableIntStateOf(0) }
     val notificheAmici = badgeAmiciOverride ?: notificheAmiciFetch
@@ -136,7 +137,6 @@ fun EnterpriseScaffold(
 
                 HorizontalDivider(color = Color.Gray, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
-
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Filled.Person, null, tint = WhiteText) },
                     label = { Text("Il mio profilo", color = WhiteText, fontSize = 16.sp) },
@@ -150,30 +150,32 @@ fun EnterpriseScaffold(
                     colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
                 )
 
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Filled.Group, null, tint = WhiteText) },
-                    label = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Amici", color = WhiteText, fontSize = 16.sp)
 
-                            if (notificheAmici > 0) {
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Badge(containerColor = DangerRed, contentColor = WhiteText) {
-                                    Text(notificheAmici.toString(), fontWeight = FontWeight.Bold)
+                if (!isAdmin) {
+                    NavigationDrawerItem(
+                        icon = { Icon(Icons.Filled.Group, null, tint = WhiteText) },
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Amici", color = WhiteText, fontSize = 16.sp)
+
+                                if (notificheAmici > 0) {
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Badge(containerColor = DangerRed, contentColor = WhiteText) {
+                                        Text(notificheAmici.toString(), fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
-                        }
-                    },
-                    selected = titolo == "AMICI",
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        if (titolo != "AMICI") {
-                            context.startActivity(Intent(context, AmiciziaActivity::class.java))
-                        }
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
-                )
-
+                        },
+                        selected = titolo == "AMICI",
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            if (titolo != "AMICI") {
+                                context.startActivity(Intent(context, AmiciziaActivity::class.java))
+                            }
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
+                    )
+                }
 
                 if (isViaggiatore) {
                     NavigationDrawerItem(
