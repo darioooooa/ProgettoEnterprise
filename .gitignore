@@ -52,3 +52,4 @@ app/build/
 firebase-service-account.json
 src/main/resources/firebase-service-account.json
 frontendMobile/app/google-services.json
+frontendWeb/src/environments/EnvMap.ts

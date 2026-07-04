@@ -27,6 +27,8 @@ export class SchermataOrganizzatoreComponent implements OnInit {
   mostraSegnalazione = false;
   idDaSegnalare = 0;
 
+  mappaAttiva: boolean = false;
+
   constructor(
     private viaggioService: ViaggioService,
     private prenotazioneService: PrenotazioneService,
@@ -41,6 +43,10 @@ export class SchermataOrganizzatoreComponent implements OnInit {
     this.caricaPrenotazioniRicevute();
   }
 
+  mostraMappa() {
+    this.mappaAttiva = true;
+  }
+
   caricaViaggi(pagina: number = 0) {
     this.isLoading = true;
     this.paginaCorrente = pagina;
@@ -52,7 +58,11 @@ export class SchermataOrganizzatoreComponent implements OnInit {
 
     this.viaggioService.getViaggi(this.paginaCorrente, filtriDashboard).subscribe({
       next: (data) => {
-        this.listaDeiViaggi = data.content;
+        // Mappiamo i dati in arrivo e calcoliamo il badge subito per evitare troppi caricamenti
+        this.listaDeiViaggi = data.content.map((v: any) => ({
+          ...v,
+          badgeSvolgimento: this.getBadgeStatoSvolgimento(v)
+        }));
         this.totalePagine = data.totalPages;
         this.isLoading = false;
         this.cdr.detectChanges();
