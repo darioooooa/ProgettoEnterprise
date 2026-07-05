@@ -2,10 +2,10 @@ package com.example.enterprisemobile.viewmodels
 
 import android.content.Context
 import android.util.Base64
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.enterprisemobile.data.api.RetrofitClient
-import com.example.enterprisemobile.data.api.UtenteApiService
 import com.example.enterprisemobile.data.security.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +19,20 @@ sealed class StatoAuth {
     object Caricamento : StatoAuth()
     data class Successo(val ruolo: String) : StatoAuth()
     data class Errore(val messaggio: String) : StatoAuth()
+}
+
+sealed class StatoRegistrazione {
+    object Iniziale : StatoRegistrazione()
+    object Caricamento : StatoRegistrazione()
+    object Successo : StatoRegistrazione()
+    data class Errore(val messaggio: String) : StatoRegistrazione()
+}
+
+sealed class StatoRecupero {
+    object Iniziale : StatoRecupero()
+    object Caricamento : StatoRecupero()
+    object Successo : StatoRecupero()
+    data class Errore(val messaggio: String) : StatoRecupero()
 }
 
 class AuthViewModel : ViewModel() {
@@ -139,23 +153,30 @@ class AuthViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val authService = RetrofitClient.ottieniAuthService(context)
+                val utenteService = RetrofitClient.ottieniUtenteService(context)
+
                 val dati = mapOf(
                     "username" to usernamePulito,
                     "nome" to nomePulito,
                     "cognome" to cognomePulito,
                     "email" to emailPulito,
-                    "password" to passwordPulita,
-                    "ruolo" to "VIAGGIATORE"
+                    "password" to passwordPulita
                 )
 
-                val risposta = authService.registraUtente(dati)
+                val risposta = utenteService.registraUtente(dati)
+
                 if (risposta.isSuccessful) {
                     _statoRegistrazione.value = StatoRegistrazione.Successo
                 } else {
-                    _statoRegistrazione.value = StatoRegistrazione.Errore("Sembra che questa email o username siano già registrati.")
+                    val erroreRaw = risposta.errorBody()?.string()
+                    Log.e("AuthViewModel", "Registrazione fallita. Codice: ${risposta.code()}, Contenuto: $erroreRaw")
+
+                    val messaggio = "Ops! Sembra che questa email o username siano già registrati."
+                    _statoRegistrazione.value = StatoRegistrazione.Errore(messaggio)
                 }
             } catch (e: Exception) {
+                // Gestione degli errori fisici di assenza di rete
+                Log.e("AuthViewModel", "Errore di rete durante la registrazione: ${e.message}", e)
                 _statoRegistrazione.value = StatoRegistrazione.Errore("Errore di rete. Impossibile contattare il server.")
             }
         }
@@ -180,29 +201,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun resetStato() {
-        _statoUi.value = StatoAuth.Iniziale
-    }
-
-    fun resetStatoRegistrazione() {
-        _statoRegistrazione.value = StatoRegistrazione.Iniziale
-    }
-
-    fun resetStatoRecupero() {
-        _statoRecupero.value = StatoRecupero.Iniziale
-    }
-}
-
-sealed class StatoRegistrazione {
-    object Iniziale : StatoRegistrazione()
-    object Caricamento : StatoRegistrazione()
-    object Successo : StatoRegistrazione()
-    data class Errore(val messaggio: String) : StatoRegistrazione()
-}
-
-sealed class StatoRecupero {
-    object Iniziale : StatoRecupero()
-    object Caricamento : StatoRecupero()
-    object Successo : StatoRecupero()
-    data class Errore(val messaggio: String) : StatoRecupero()
+    fun resetStato() { _statoUi.value = StatoAuth.Iniziale }
+    fun resetStatoRegistrazione() { _statoRegistrazione.value = StatoRegistrazione.Iniziale }
+    fun resetStatoRecupero() { _statoRecupero.value = StatoRecupero.Iniziale }
 }

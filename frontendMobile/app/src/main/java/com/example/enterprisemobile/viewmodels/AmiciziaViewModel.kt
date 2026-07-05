@@ -115,14 +115,21 @@ class AmiciziaViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // --- FUNZIONI PER GLI ITINERARI DELL'AMICO ---
+    // Funzioni per gli itinerari dell'amico
     fun caricaItinerariPubbliciAmico(usernameAmico: String) {
         viewModelScope.launch {
             isLoadingItinerari = true
             amicoSelezionatoPerItinerari = usernameAmico
             try {
                 val apiItinerari = RetrofitClient.ottieniItinerariService(getApplication())
-                itinerariAmico = apiItinerari.getItinerariPubbliciAmico(usernameAmico)
+                val response = apiItinerari.getListePubblicheUtente(usernameAmico)
+
+                if (response.isSuccessful && response.body() != null) {
+                    itinerariAmico = response.body()!!
+                } else {
+                    messaggioAvviso = "Il server ha risposto con un errore nel caricamento degli itinerari."
+                    itinerariAmico = emptyList()
+                }
             } catch (e: Exception) {
                 messaggioAvviso = "Impossibile caricare gli itinerari di $usernameAmico"
                 itinerariAmico = emptyList()

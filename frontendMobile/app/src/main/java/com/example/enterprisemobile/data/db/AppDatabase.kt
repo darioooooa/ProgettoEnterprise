@@ -4,12 +4,14 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.enterprisemobile.model.ViaggioEntity
 import com.example.enterprisemobile.model.PrenotazioneEntity
 import com.example.enterprisemobile.model.AttivitaViaggioEntity
 import com.example.enterprisemobile.model.ImmagineViaggioEntity
 import com.example.enterprisemobile.model.RecensioneViaggioEntity
 import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
+import com.example.enterprisemobile.model.ItinerarioEntity
 
 @Database(
     entities = [
@@ -18,11 +20,14 @@ import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
         AttivitaViaggioEntity::class,
         ImmagineViaggioEntity::class,
         RecensioneViaggioEntity::class,
-        RichiestaPromozioneEntity::class
+        RichiestaPromozioneEntity::class,
+        ItinerarioEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
+
+@TypeConverters(ItinerariTypeConverters::class) //Attiva l'uso dei convertitori JSON
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun viaggioDao(): ViaggioDAO
@@ -32,6 +37,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun programmaDao(): ProgrammaDAO
     abstract fun communityDao(): CommunityDAO
     abstract fun richiestaPromozioneDao(): RichiestaPromozioneDAO
+    abstract fun itinerarioDao(): ItinerarioDAO
 
     companion object {
         @Volatile

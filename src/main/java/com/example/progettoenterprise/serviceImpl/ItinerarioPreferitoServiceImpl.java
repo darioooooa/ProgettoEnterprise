@@ -279,4 +279,28 @@ public class ItinerarioPreferitoServiceImpl implements ItinerarioPreferitoServic
         listaUtenteRepository.delete(invito);
         log.info("Invito per l'itinerario {} rifiutato ed eliminato dall'utente {}", itinerarioId, idUtenteInvitato);
     }
+
+    @Override
+    @Transactional
+    public void spostaViaggioTraItinerari(Long idSorgente, Long idDestinazione, Long idViaggio, Long idUtente) {
+        log.info("Esecuzione atomica spostamento viaggio {} da {} a {} per utente {}", idViaggio, idSorgente, idDestinazione, idUtente);
+
+        // Controllo preventivo sui duplicati
+        ItinerarioPreferito destinazione = itinerarioRepository.findById(idDestinazione)
+                .orElseThrow(() -> new EntityNotFoundException(messageLang.getMessage("itinerario.notexist", idDestinazione)));
+
+        boolean giaPresente = destinazione.getContenuti().stream()
+                .anyMatch(collegamento -> collegamento.getViaggio().getId().equals(idViaggio));
+
+        if (giaPresente) {
+            // Se il viaggio è già presente nella destinazione, blocca l'esecuzione
+            throw new IllegalArgumentException("Il viaggio è già presente nell'itinerario di destinazione.");
+        }
+
+        // Se il controllo è superato, si procede alla rimozione dall'itinerario sorgente
+        rimuoviViaggioDallaLista(idSorgente, idViaggio, idUtente);
+
+        // Completamento dell'inserimento nell'itinerario di destinazione
+        aggiungiViaggioAllaLista(idDestinazione, idViaggio, idUtente);
+    }
 }

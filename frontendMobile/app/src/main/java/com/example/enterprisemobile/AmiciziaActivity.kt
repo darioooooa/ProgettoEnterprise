@@ -1,6 +1,7 @@
 package com.example.enterprisemobile
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -175,7 +176,23 @@ fun AmiciziaContent(viewModel: AmiciziaViewModel) {
                                                     Text("Nessun viaggio inserito.", color = Color.Gray, fontSize = 14.sp)
                                                 } else {
                                                     itinerario.viaggiContenuti.forEach { viaggio ->
-                                                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                                                        Row(
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .clickable {
+                                                                    val idPassato = viaggio.id ?: 0L
+                                                                    if (idPassato > 0L) {
+                                                                        val intent = Intent(context, DettaglioViaggioActivity::class.java).apply {
+                                                                            putExtra("VIAGGIO_ID", idPassato)
+                                                                        }
+                                                                        context.startActivity(intent)
+                                                                    } else {
+                                                                        Toast.makeText(context, "Errore: id viaggio non valido", Toast.LENGTH_SHORT).show()
+                                                                    }
+                                                                }
+                                                                .padding(vertical = 6.dp, horizontal = 4.dp)
+                                                        ) {
                                                             Text("✈️", fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp))
                                                             Column {
                                                                 Text(viaggio.titolo ?: "Viaggio sconosciuto", color = WhiteText, fontSize = 14.sp, fontWeight = FontWeight.Medium)

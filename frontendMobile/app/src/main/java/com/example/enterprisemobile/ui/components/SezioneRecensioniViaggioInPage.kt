@@ -1,9 +1,13 @@
 package com.example.enterprisemobile.ui.components
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,6 +44,8 @@ fun SezioneRecensioniViaggioInPage(
     // Stati per controllare la visibilità dei DatePicker dei filtri
     var dDaAperto by remember { mutableStateOf(false) }
     var dAAperto by remember { mutableStateOf(false) }
+
+    var filtriEspansi by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -92,38 +98,64 @@ fun SezioneRecensioniViaggioInPage(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Filtra recensioni", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = viewModel.filtroParolaChiave, onValueChange = { viewModel.filtroParolaChiave = it }, label = { Text("Parola chiave") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(
-                        value = viewModel.filtroVotoEsatto,
-                        onValueChange = { if (it.isEmpty() || it.trim() in listOf("1", "2", "3", "4", "5")) viewModel.filtroVotoEsatto = it.trim() },
-                        label = { Text("Voto (1-5)") },
-                        modifier = Modifier.weight(1f)
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { filtriEspansi = !filtriEspansi },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Filtra recensioni",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Icon(
+                        imageVector = if (filtriEspansi) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (filtriEspansi) "Riduci filtri" else "Espandi filtri",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Filtro data da
-                    Box(modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(value = viewModel.filtroDataDa, onValueChange = {}, label = { Text("Da data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
-                        Box(modifier = Modifier.matchParentSize().clickable { dDaAperto = true })
-                    }
-                    // Filtro data a
-                    Box(modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(value = viewModel.filtroDataA, onValueChange = {}, label = { Text("A data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
-                        Box(modifier = Modifier.matchParentSize().clickable { dAAperto = true })
-                    }
-                }
+                AnimatedVisibility(visible = filtriEspansi) {
+                    Column(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(value = viewModel.filtroParolaChiave, onValueChange = { viewModel.filtroParolaChiave = it }, label = { Text("Parola chiave") }, modifier = Modifier.weight(1f))
+                            OutlinedTextField(
+                                value = viewModel.filtroVotoEsatto,
+                                onValueChange = { if (it.isEmpty() || it.trim() in listOf("1", "2", "3", "4", "5")) viewModel.filtroVotoEsatto = it.trim() },
+                                label = { Text("Voto (1-5)") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = { viewModel.pulisciFiltriRecensioni(viaggioId) }) {
-                        Text("Resetta", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { viewModel.filtraRecensioni(viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
-                        Text("Cerca")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Filtro data da
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(value = viewModel.filtroDataDa, onValueChange = {}, label = { Text("Da data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
+                                Box(modifier = Modifier.matchParentSize().clickable { dDaAperto = true })
+                            }
+                            // Filtro data a
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(value = viewModel.filtroDataA, onValueChange = {}, label = { Text("A data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
+                                Box(modifier = Modifier.matchParentSize().clickable { dAAperto = true })
+                            }
+                        }
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = { viewModel.pulisciFiltriRecensioni(viaggioId) }) {
+                                Text("Resetta", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(onClick = { viewModel.filtraRecensioni(viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
+                                Text("Cerca")
+                            }
+                        }
                     }
                 }
             }
@@ -137,34 +169,19 @@ fun SezioneRecensioniViaggioInPage(
         if (!isMioViaggio && viewModel.mioRuolo == "ROLE_VIAGGIATORE" && haPartecipatoEIniziato) {
             if (mostraFormScrittura) {
                 Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                            alpha = 0.5f
-                        )
-                    ),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
                             text = if (viewModel.inModifica) "✏️ Modifica la tua recensione" else "💬 Lascia una recensione per questo viaggio",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold
                         )
 
-                        // Selettore del voto numerico (1-5)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                "Valutazione: ",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 14.sp
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Valutazione: ", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                             (1..5).forEach { stella ->
                                 val selezionata = viewModel.votoInput >= stella
                                 Text(
@@ -176,34 +193,16 @@ fun SezioneRecensioniViaggioInPage(
                             }
                         }
 
-                        OutlinedTextField(
-                            value = viewModel.commentoInput,
-                            onValueChange = { viewModel.commentoInput = it },
-                            label = { Text("Scrivi il tuo commento...") },
-                            modifier = Modifier.fillMaxWidth(),
-                            minLines = 2
-                        )
+                        OutlinedTextField(value = viewModel.commentoInput, onValueChange = { viewModel.commentoInput = it }, label = { Text("Scrivi il tuo commento...") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                             if (viewModel.inModifica) {
                                 TextButton(onClick = { viewModel.pulisciForm() }) {
-                                    Text(
-                                        "Annulla",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                            alpha = 0.6f
-                                        )
-                                    )
+                                    Text("Annulla", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                             }
-                            Button(
-                                onClick = { viewModel.aggiungiRecensione(context, viaggioId) },
-                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                            ) {
+                            Button(onClick = { viewModel.aggiungiRecensione(context, viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
                                 Text(if (viewModel.inModifica) "Aggiorna" else "Invia recensione")
                             }
                         }
@@ -217,18 +216,9 @@ fun SezioneRecensioniViaggioInPage(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
+                    Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text("✅", fontSize = 20.sp)
-                        Text(
-                            text = "Grazie per aver valutato questo viaggio! Trovi la tua recensione nell'elenco della community.",
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp
-                        )
+                        Text(text = "Grazie per aver valutato questo viaggio! Trovi la tua recensione nell'elenco della community.", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), fontSize = 13.sp, lineHeight = 18.sp)
                     }
                 }
             }
@@ -253,17 +243,8 @@ fun SezioneRecensioniViaggioInPage(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Column {
-                                Text(
-                                    text = if (miaRecensione) "Tu (${rec.utenteUsername ?: "Anonimo"})" else rec.utenteUsername ?: "Utente Anonimo",
-                                    color = if (miaRecensione) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
-                                Text(
-                                    text = rec.dataCreazione?.replace("T", " ")?.take(10) ?: "Data non disponibile",
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                    fontSize = 11.sp
-                                )
+                                Text(text = if (miaRecensione) "Tu (${rec.utenteUsername ?: "Anonimo"})" else rec.utenteUsername ?: "Utente Anonimo", color = if (miaRecensione) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text(text = rec.dataCreazione?.replace("T", " ")?.take(10) ?: "Data non disponibile", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 11.sp)
                             }
                             // Visualizzazione stelle del commento
                             Row {
@@ -281,21 +262,10 @@ fun SezioneRecensioniViaggioInPage(
                         // Controlli per l'autore del commento (modifica ed eliminazione con ritardo)
                         if (miaRecensione || isMioViaggio) {
                             Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
-                                if (miaRecensione) { // Solo chi ha scritto la recensione può modificarla
-                                    Text(
-                                        text = "Modifica",
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .clickable { viewModel.avviaModifica(rec) }
-                                            .padding(end = 16.dp)
-                                    )
+                                if (miaRecensione) {
+                                    Text(text = "Modifica", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { viewModel.avviaModifica(rec) }.padding(end = 16.dp))
                                 }
-                                Text(
-                                    text = if (viewModel.idRecensioneDaEliminare == rec.id) "⚠️ Confermi?" else "Elimina",
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.clickable { viewModel.cancellaRecensione(context, viaggioId, rec.id) }
-                                )
+                                Text(text = if (viewModel.idRecensioneDaEliminare == rec.id) "⚠️ Confermi?" else "Elimina", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { viewModel.cancellaRecensione(context, viaggioId, rec.id) })
                             }
                         }
                     }

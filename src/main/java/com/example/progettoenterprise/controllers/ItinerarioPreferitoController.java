@@ -129,9 +129,8 @@ public class ItinerarioPreferitoController {
             @PathVariable Long idViaggio,
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
-        log.info("Spostamento viaggio ID {} dall'itinerario {} all'itinerario {}", idViaggio, idSorgente, idDestinazione);
-        itinerarioService.rimuoviViaggioDallaLista(idSorgente, idViaggio, utenteLoggato.getId());
-        itinerarioService.aggiungiViaggioAllaLista(idDestinazione, idViaggio, utenteLoggato.getId());
+        log.info("Spostamento viaggio id {} dall'itinerario {} all'itinerario {}", idViaggio, idSorgente, idDestinazione);
+        itinerarioService.spostaViaggioTraItinerari(idSorgente, idDestinazione, idViaggio, utenteLoggato.getId());
 
         return ResponseEntity.ok(Map.of("message", "Viaggio spostato con successo!"));
     }

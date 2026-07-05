@@ -1,6 +1,7 @@
 package com.example.enterprisemobile.data.api
 
 import com.example.enterprisemobile.model.RispostaToken
+import com.example.enterprisemobile.model.UtenteDTO
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
@@ -25,9 +26,4 @@ interface AuthApiService {
         @FieldMap parametri: Map<String, String>
     ): Call<RispostaToken>
 
-    // Registrazione utente
-    @POST("auth/register")
-    suspend fun registraUtente(
-        @Body datiRegistrazione: Map<String, String>
-    ): Response<ResponseBody>
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -12,9 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -30,6 +34,8 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
     val context = LocalContext.current
     val statoUi by viewModel.statoUi.collectAsState()
     val statoRecupero by viewModel.statoRecupero.collectAsState()
+    val focusManager = LocalFocusManager.current
+    val isCaricamento = statoUi is StatoAuth.Caricamento
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -63,7 +69,7 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
         Text(
             text = "← Torna alla pagina iniziale",
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            modifier = Modifier.statusBarsPadding().clickable { if (statoUi !is StatoAuth.Caricamento) onTornaIndietro() }.padding(vertical = 8.dp)
+            modifier = Modifier.statusBarsPadding().clickable { if (!isCaricamento) onTornaIndietro() }.padding(vertical = 8.dp)
         )
 
         Column(
@@ -86,20 +92,32 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
             OutlinedTextField(
                 value = username, onValueChange = { username = it },
                 label = { Text("Identificativo utente") }, modifier = Modifier.fillMaxWidth(),
-                enabled = statoUi !is StatoAuth.Caricamento
+                enabled = !isCaricamento,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), // Tasto "Avanti"
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }) // Sposta il cursore giù
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = password, onValueChange = { password = it },
+                value = password,
+                onValueChange = { password = it },
                 label = { Text("Password") },
                 visualTransformation = if (passwordVisibile) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth(), enabled = statoUi !is StatoAuth.Caricamento,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isCaricamento,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done), // Tasto "Fine"
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus() // Chiude la tastiera
+                    if (!isCaricamento) {
+                        viewModel.eseguiLogin(context, username, password) // Esegue l'accesso diretto
+                    }
+                }),
                 trailingIcon = {
                     val icona = if (passwordVisibile) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    IconButton(onClick = { passwordVisibile = !passwordVisibile }) {
+                    IconButton(onClick = { passwordVisibile = !passwordVisibile }, enabled = !isCaricamento) {
                         Icon(icona, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -113,16 +131,18 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
                     fontSize = 13.sp,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable {
-                        viewModel.resetStatoRecupero()
-                        emailRecupero = ""
-                        mostraModaleRecupero = true
+                        if (!isCaricamento) {
+                            viewModel.resetStatoRecupero()
+                            emailRecupero = ""
+                            mostraModaleRecupero = true
+                        }
                     }
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (statoUi is StatoAuth.Caricamento) {
+            if (isCaricamento) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             } else {
                 Button(
@@ -148,7 +168,7 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
                     text = "Registrati",
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigaARegistrazione() }
+                    modifier = Modifier.clickable { if (!isCaricamento) onNavigaARegistrazione() }
                 )
             }
         }

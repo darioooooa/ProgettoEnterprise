@@ -41,6 +41,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.ui.text)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
 
     // Room essenziale
