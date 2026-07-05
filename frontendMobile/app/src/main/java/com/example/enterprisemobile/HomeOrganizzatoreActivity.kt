@@ -44,7 +44,7 @@ class HomeOrganizzatoreActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val usernameRicevuto = intent.getStringExtra("CHIAVE_USERNAME") ?: "Utente"
 
-        MapboxOptions.accessToken="pk.eyJ1IjoibG9sbG8xOSIsImEiOiJjbXAzNzhuMDAwMmxzMnJzZDh5azZ6ajRpIn0.pYRkM98DgyohuPpF3pf_cQ"
+        MapboxOptions.accessToken = com.example.enterprisemobile.BuildConfig.MAPBOX_TOKEN
 
         setContent {
             EnterpriseMobileTheme {

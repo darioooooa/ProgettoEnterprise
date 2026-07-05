@@ -14,9 +14,19 @@
     <button class="btn-ghost" [disabled]="isLoading">Scarica Report PDF</button>
   </div>
 
-  <div style="margin-bottom: 40px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"
+  <div style="margin-bottom: 40px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #f8fafc; text-align: center; padding: 20px;"
        [style.pointer-events]="isLoading ? 'none' : 'auto'">
-    <app-map (viaggioSelezionato)="vaiAiDettagli($event)"></app-map>
+
+    <div *ngIf="!mappaAttiva" style="padding: 40px 0;">
+      <h3 style="color: #475569; margin-bottom: 15px;">Mappa degli Itinerari</h3>
+      <p style="color: #64748b; margin-bottom: 20px; font-size: 0.9rem;">Clicca qui sotto per caricare la mappa interattiva dei tuoi viaggi.</p>
+      <button class="btn-admin" style="background-color: #3b82f6; color: white; padding: 12px 24px; font-size: 1rem; cursor: pointer;" (click)="mostraMappa()">
+        🗺️ Carica la Mappa
+      </button>
+    </div>
+
+    <app-map *ngIf="mappaAttiva" (viaggioSelezionato)="vaiAiDettagli($event)"></app-map>
+
   </div>
 
   <div class="management-section">
@@ -40,8 +50,9 @@
           <td>{{ v.destinazione }}</td>
           <td>{{ v.prezzo }}€</td>
           <td style="text-align: center;">
-            <span [ngClass]="getBadgeStatoSvolgimento(v).classe">
-              {{ getBadgeStatoSvolgimento(v).testo }}
+            <!-- ECCO LA MODIFICA: Lettura diretta della variabile per evitare i cicli infiniti di Angular -->
+            <span [ngClass]="v.badgeSvolgimento.classe">
+              {{ v.badgeSvolgimento.testo }}
             </span>
           </td>
         </tr>

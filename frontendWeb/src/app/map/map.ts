@@ -1,7 +1,16 @@
-import { AfterViewInit, Component, PLATFORM_ID, inject, EventEmitter, Output, ChangeDetectorRef } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  PLATFORM_ID,
+  inject,
+  EventEmitter,
+  Output,
+  ChangeDetectorRef,
+  NgZone
+} from '@angular/core';
 import mapboxgl from 'mapbox-gl';
 import { isPlatformBrowser } from '@angular/common';
-import { envMap } from '../../environments/envMap';
+import { envMap } from '../../environments/EnvMap';
 import {ViaggioService} from '../service/viaggio.service';
 
 export const MAPBOX_ACCESS_TOKEN = envMap.mapboxToken;
@@ -24,8 +33,12 @@ export class MapComponent implements AfterViewInit {
   private platformId = inject(PLATFORM_ID);
 
   isLoading: boolean = false;
-
-  constructor(private viaggioService: ViaggioService, private cdr: ChangeDetectorRef
+  // serve per controllo per evitare cicli infiniti
+  private readonly MAX_CHIAMATE = 3;
+  private chiamateEffettuate = 0;
+  constructor(private viaggioService: ViaggioService,
+              private cdr: ChangeDetectorRef,
+              private zone: NgZone
   ) {
     // Configurazione iniziale del token Mapbox
     (mapboxgl as any).accessToken = MAPBOX_ACCESS_TOKEN;
@@ -35,6 +48,11 @@ export class MapComponent implements AfterViewInit {
     // Protezione SSR per evitare crash quando Angular gira lato server (Node.js)
     if (isPlatformBrowser(this.platformId)) {
       this.inizializzaMappa();
+    }
+  }
+  ngOnDestroy(): void {
+    if (this.map) {
+      this.map.remove();
     }
   }
 
@@ -53,8 +71,14 @@ export class MapComponent implements AfterViewInit {
   }
 
   caricaViaggiPerMappa() {
+    if (this.chiamateEffettuate >= this.MAX_CHIAMATE) {
+      console.error("🚨 BLOCCO SICUREZZA: Tentativo di chiamate API infinite fermato!");
+      return;
+    }
+
     if (this.isLoading) return;
     this.isLoading = true;
+    this.chiamateEffettuate++;
 
     this.viaggioService.getViaggiPerMappa().subscribe({
       next: (viaggi: any) => {
