@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface SegnalazioneService {
     SegnalazioneDTO creaSegnalazione(SegnalazioneDTO segnalazioneDTO, Long idSegnalatore);
-    List<SegnalazioneDTO> cercaSegnalazioni(SegnalazioneSpecification.SegnalazioneFilter filtro, int pagina);
+    org.springframework.data.domain.Page<SegnalazioneDTO> cercaSegnalazioni(SegnalazioneSpecification.SegnalazioneFilter filtro, int pagina, int dimensione);
     SegnalazioneDTO prendiInCarico(Long segnalazioneId, Long adminId);
     SegnalazioneDTO risolviSegnalazione(Long idSegnalazione, Long idAdmin, boolean sospendiAutore);
 

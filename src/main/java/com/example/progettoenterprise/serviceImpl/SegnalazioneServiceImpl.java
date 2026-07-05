@@ -60,17 +60,21 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SegnalazioneDTO> cercaSegnalazioni(SegnalazioneSpecification.SegnalazioneFilter filtro, int pagina) {
-        PageRequest richiestaPagina = PageRequest.of(pagina, DIMENSIONE_PAGINA, Sort.by("dataSegnalazione").ascending());
-        Page<Segnalazione> paginaSegnalazioni = segnalazioneRepository.findAll(SegnalazioneSpecification.withFilter(filtro), richiestaPagina);
+    public org.springframework.data.domain.Page<SegnalazioneDTO> cercaSegnalazioni(
+            SegnalazioneSpecification.SegnalazioneFilter filtro, int pagina, int dimensione) {
+
+        PageRequest richiestaPagina = PageRequest.of(pagina, dimensione, Sort.by("dataSegnalazione").descending());
+        Page<Segnalazione> paginaSegnalazioni = segnalazioneRepository.findAll(
+                SegnalazioneSpecification.withFilter(filtro),
+                richiestaPagina
+        );
+
         if ((pagina < 0 || pagina >= paginaSegnalazioni.getTotalPages()) && paginaSegnalazioni.getTotalPages() > 0) {
             log.warn("Tentativo di accesso a una pagina non valida: {}", pagina);
             throw new IllegalArgumentException(messageLang.getMessage("segnalazione.invalid_page"));
         }
 
-        return paginaSegnalazioni.getContent().stream()
-                .map(this::convertiConNomi)
-                .toList();
+        return paginaSegnalazioni.map(this::convertiConNomi);
     }
 
     @Override

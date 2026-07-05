@@ -7,19 +7,20 @@ import com.example.progettoenterprise.security.ratelimiter.RateLimitPolicy;
 import com.example.progettoenterprise.security.ratelimiter.WithRateLimit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/segnalazioni")
+@RequestMapping("/api/v1/segnalazioni")
 @RequiredArgsConstructor
 public class SegnalazioneController {
 
     private final SegnalazioneService segnalazioneService;
+
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/crea")
     @WithRateLimit(RateLimitPolicy.CRITICAL)
@@ -34,12 +35,13 @@ public class SegnalazioneController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/ricerca")
-    public ResponseEntity<List<SegnalazioneDTO>> cercaSegnalazioni(
+    public ResponseEntity<Page<SegnalazioneDTO>> cercaSegnalazioni(
             @ModelAttribute SegnalazioneSpecification.SegnalazioneFilter filtro,
-            @RequestParam(defaultValue = "0") int pagina) {
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int dimensione) {
 
-        log.info("Ricerca segnalazioni in corso. Pagina richiesta: {}", pagina);
-        List<SegnalazioneDTO> risultati = segnalazioneService.cercaSegnalazioni(filtro, pagina);
+        log.info("Ricerca segnalazioni in corso. Pagina: {}, Dimensione: {}", pagina, dimensione);
+        Page<SegnalazioneDTO> risultati = segnalazioneService.cercaSegnalazioni(filtro, pagina, dimensione);
         return ResponseEntity.ok(risultati);
     }
 
@@ -59,7 +61,7 @@ public class SegnalazioneController {
     public ResponseEntity<SegnalazioneDTO> risolviSegnalazione(
             @PathVariable Long id,
             @RequestParam Long idAdmin,
-            @RequestParam(required = false, defaultValue = "false") boolean sospendiAutore) { // <-- Nuovo parametro
+            @RequestParam(required = false, defaultValue = "false") boolean sospendiAutore) {
 
         log.info("L'amministratore ID: {} sta risolvendo la segnalazione ID: {}. Sospensione autore: {}", idAdmin, id, sospendiAutore);
         SegnalazioneDTO risolta = segnalazioneService.risolviSegnalazione(id, idAdmin, sospendiAutore);

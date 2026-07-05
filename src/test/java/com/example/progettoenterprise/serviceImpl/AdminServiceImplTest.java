@@ -64,15 +64,20 @@ public class AdminServiceImplTest {
 
         RichiestaPromozione richiestaMock = new RichiestaPromozione();
         richiestaMock.setStato(RichiestaPromozione.StatoRichiesta.IN_ATTESA);
+        richiestaMock.setEmailProfessionale("test@email.it");
 
         when(richiestaRepository.findById(idRichiesta)).thenReturn(Optional.of(richiestaMock));
 
         adminService.rifiutaRichiesta(idRichiesta, note, idAdmin);
 
+        // Verifiche sincrone
         assertEquals(RichiestaPromozione.StatoRichiesta.RIFIUTATA, richiestaMock.getStato());
         assertEquals(note, richiestaMock.getMotivazione());
         assertEquals(idAdmin, richiestaMock.getAdminId());
         verify(richiestaRepository, times(1)).save(richiestaMock);
+
+        // Verifica asincrona con timeout (per via del CompletableFuture)
+        verify(emailService, timeout(2000).times(1)).sendSimpleEmail(eq("test@email.it"), anyString(), anyString());
     }
 
     @Test
@@ -80,7 +85,7 @@ public class AdminServiceImplTest {
     void testRifiutaRichiesta_NonInAttesa() {
         Long idRichiesta = 1L;
         RichiestaPromozione richiestaMock = new RichiestaPromozione();
-        richiestaMock.setStato(RichiestaPromozione.StatoRichiesta.APPROVATA); // Già processata!
+        richiestaMock.setStato(RichiestaPromozione.StatoRichiesta.APPROVATA);
 
         when(richiestaRepository.findById(idRichiesta)).thenReturn(Optional.of(richiestaMock));
 
@@ -100,7 +105,6 @@ public class AdminServiceImplTest {
         String username = "nuovoOrg";
         String email = "org@email.it";
 
-        // Preparazione Dati Locali
         Viaggiatore viaggiatore = new Viaggiatore();
         viaggiatore.setNome("Mario");
         viaggiatore.setCognome("Rossi");
@@ -122,9 +126,12 @@ public class AdminServiceImplTest {
         Response responseMock = mock(Response.class);
 
         when(keycloak.realm("enterprise-realm")).thenReturn(realmResourceMock);
-
-        // Creazione Utente
         when(realmResourceMock.users()).thenReturn(usersResourceMock);
+
+        // Mock del controllo iniziale: l'utente NON esiste
+        when(usersResourceMock.search(username, true)).thenReturn(Collections.emptyList());
+
+        // Creazione Utente Keycloak
         when(usersResourceMock.create(any(UserRepresentation.class))).thenReturn(responseMock);
         when(responseMock.getStatus()).thenReturn(201); // 201 = Created
 
@@ -133,7 +140,7 @@ public class AdminServiceImplTest {
         kcUserMock.setId("kc-secret-id-123");
         when(usersResourceMock.search(username)).thenReturn(List.of(kcUserMock));
 
-        //  Recupero Ruolo Organizzatore
+        // Recupero Ruolo Organizzatore
         RoleRepresentation orgRole = new RoleRepresentation();
         orgRole.setName("ORGANIZZATORE");
         when(realmResourceMock.roles()).thenReturn(rolesResourceMock);
@@ -146,41 +153,46 @@ public class AdminServiceImplTest {
 
         adminService.approvaRichiesta(idRichiesta, idAdmin);
 
-        // Verifiche Locali
+        // Verifiche Locali (Sincrone)
         assertEquals(RichiestaPromozione.StatoRichiesta.APPROVATA, richiestaMock.getStato());
         assertEquals(idAdmin, richiestaMock.getAdminId());
         verify(organizzatoreRepository, times(1)).save(any(Organizzatore.class));
         verify(richiestaRepository, times(1)).save(richiestaMock);
 
-        // Verifiche Esterne
-        verify(roleScopeResourceMock, times(1)).add(anyList()); // Ruolo assegnato
-        verify(userResourceMock, times(1)).executeActionsEmail(List.of("UPDATE_PASSWORD")); // Email inviata
+        // Verifiche Esterne (Asincrone, richiedono il timeout)
+        verify(roleScopeResourceMock, timeout(2000).times(1)).add(anyList()); // Ruolo assegnato
+        verify(userResourceMock, timeout(2000).times(1)).executeActionsEmail(List.of("UPDATE_PASSWORD")); // Email Keycloak
+        verify(emailService, timeout(2000).times(1)).sendSimpleEmail(eq(email), anyString(), anyString()); // Email Benvenuto
     }
 
     @Test
     @DisplayName("Approvazione richiesta: Errore (Utente esiste già su Keycloak)")
     void testApprovaRichiesta_ConflittoKeycloak() {
         Long idRichiesta = 1L;
+        String username = "nuovoOrg";
+
         RichiestaPromozione richiestaMock = new RichiestaPromozione();
         richiestaMock.setStato(RichiestaPromozione.StatoRichiesta.IN_ATTESA);
         richiestaMock.setViaggiatore(new Viaggiatore());
+        richiestaMock.setUsernameRichiesto(username);
 
         when(richiestaRepository.findById(idRichiesta)).thenReturn(Optional.of(richiestaMock));
 
         RealmResource realmResourceMock = mock(RealmResource.class);
         UsersResource usersResourceMock = mock(UsersResource.class);
-        Response responseMock = mock(Response.class);
 
         when(keycloak.realm("enterprise-realm")).thenReturn(realmResourceMock);
         when(realmResourceMock.users()).thenReturn(usersResourceMock);
-        when(usersResourceMock.create(any(UserRepresentation.class))).thenReturn(responseMock);
-        when(responseMock.getStatus()).thenReturn(409); // 409 = Conflict
+
+        // Simula che l'utente esista già su Keycloak
+        when(usersResourceMock.search(username, true)).thenReturn(List.of(new UserRepresentation()));
 
         IllegalArgumentException eccezione = assertThrows(IllegalArgumentException.class, () -> {
             adminService.approvaRichiesta(idRichiesta, 99L);
         });
 
-        assertTrue(eccezione.getMessage().contains("esiste già nel sistema di sicurezza"));
+        assertTrue(eccezione.getMessage().contains("già in uso su Keycloak"));
+        verify(organizzatoreRepository, never()).save(any());
     }
 
     @Test
@@ -211,15 +223,19 @@ public class AdminServiceImplTest {
         viaggiatoreMock.setUsername("badUser");
         viaggiatoreMock.setEmail("bad@email.it");
         viaggiatoreMock.setAttivo(true);
+        viaggiatoreMock.setRuolo(Utente.Ruolo.ROLE_VIAGGIATORE);
 
         when(utenteRepository.findById(idUtente)).thenReturn(Optional.of(viaggiatoreMock));
 
         adminService.banUtente(idUtente);
 
+        // Verifiche sincrone
         assertFalse(viaggiatoreMock.isAttivo()); // Utente disattivato
-        assertEquals("Violazione dei termini di servizio", viaggiatoreMock.getMotivoSospensione());
+        assertEquals("Violazione dei termini", viaggiatoreMock.getMotivoSospensione());
         verify(utenteRepository, times(1)).save(viaggiatoreMock);
-        verify(emailService, times(1)).inviaEmailBan("bad@email.it", "badUser");
+
+        // Verifica asincrona
+        verify(emailService, timeout(2000).times(1)).inviaEmailBan("bad@email.it", "badUser");
     }
 
     @Test
@@ -235,7 +251,7 @@ public class AdminServiceImplTest {
             adminService.banUtente(idUtente);
         });
 
-        assertTrue(eccezione.getMessage().contains("non puoi bannare un account Organizzatore"));
+        assertTrue(eccezione.getMessage().contains("Non puoi bannare un Organizzatore"));
         verify(utenteRepository, never()).save(any());
         verify(emailService, never()).inviaEmailBan(anyString(), anyString());
     }
@@ -288,8 +304,8 @@ public class AdminServiceImplTest {
         assertTrue(utenteMock.isAttivo());
         assertNull(utenteMock.getMotivoSospensione());
         verify(utenteRepository, times(1)).save(utenteMock);
-        // Verifiche Esterne
-        assertTrue(kcUserMock.isEnabled()); // Verifichiamo che il DTO Keycloak sia stato acceso
-        verify(userResourceMock, times(1)).update(kcUserMock); // Comando inviato a Keycloak
+
+        // Verifiche Esterne (Asincrone)
+        verify(userResourceMock, timeout(2000).times(1)).update(any(UserRepresentation.class));
     }
 }

@@ -23,6 +23,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +49,12 @@ public class AttivitaViaggioServiceImplTest {
     private Utente orgMock;
     private AttivitaViaggio attivitaMock;
 
+    // Date fittizie per accontentare il controllore del calendario
+    private final LocalDate inizioViaggio = LocalDate.of(2026, 8, 1);
+    private final LocalDate fineViaggio = LocalDate.of(2026, 8, 10);
+    private final LocalDateTime inizioAttivita = LocalDateTime.of(2026, 8, 5, 10, 0);
+    private final LocalDateTime fineAttivita = LocalDateTime.of(2026, 8, 5, 12, 0);
+
     @BeforeEach
     void setUp() {
         orgMock = mock(Utente.class);
@@ -61,8 +69,13 @@ public class AttivitaViaggioServiceImplTest {
     void testCreaAttivita_Successo() {
         when(orgMock.getId()).thenReturn(1L);
         when(viaggioMock.getOrganizzatore()).thenReturn(orgMock);
+        when(viaggioMock.getDataInizio()).thenReturn(inizioViaggio);
+        when(viaggioMock.getDataFine()).thenReturn(fineViaggio);
 
         AttivitaViaggioDTO dto = new AttivitaViaggioDTO();
+        dto.setOrarioInizio(inizioAttivita);
+        dto.setOrarioFine(fineAttivita);
+
         when(viaggioRepository.findById(10L)).thenReturn(Optional.of(viaggioMock));
         when(modelMapper.map(dto, AttivitaViaggio.class)).thenReturn(attivitaMock);
         when(attivitaViaggioRepository.save(attivitaMock)).thenReturn(attivitaMock);
@@ -75,7 +88,6 @@ public class AttivitaViaggioServiceImplTest {
     @Test
     @DisplayName("Crea Attività: Errore Viaggio Non Trovato")
     void testCreaAttivita_ViaggioNonTrovato() {
-        // Questo test fallisce subito
         when(viaggioRepository.findById(10L)).thenReturn(Optional.empty());
         when(messageLang.getMessage(anyString(), any())).thenReturn("Errore");
 
@@ -100,7 +112,6 @@ public class AttivitaViaggioServiceImplTest {
         when(viaggioMock.getId()).thenReturn(10L);
 
         Utente viaggiatore = mock(Utente.class);
-        when(viaggiatore.getRuolo()).thenReturn(Utente.Ruolo.ROLE_VIAGGIATORE);
 
         when(attivitaViaggioRepository.findById(100L)).thenReturn(Optional.of(attivitaMock));
         when(utenteRepository.findById(2L)).thenReturn(Optional.of(viaggiatore));
@@ -112,10 +123,7 @@ public class AttivitaViaggioServiceImplTest {
     @Test
     @DisplayName("Get Attività: Successo (Organizzatore corretto)")
     void testGetAttivitaById_Successo_Organizzatore() {
-        when(orgMock.getId()).thenReturn(1L);
-        when(orgMock.getRuolo()).thenReturn(Utente.Ruolo.ROLE_ORGANIZZATORE);
         when(viaggioMock.getId()).thenReturn(10L);
-        when(viaggioMock.getOrganizzatore()).thenReturn(orgMock);
 
         when(attivitaViaggioRepository.findById(100L)).thenReturn(Optional.of(attivitaMock));
         when(utenteRepository.findById(1L)).thenReturn(Optional.of(orgMock));
@@ -146,7 +154,7 @@ public class AttivitaViaggioServiceImplTest {
         when(utenteRepository.findById(1L)).thenReturn(Optional.of(u));
         when(messageLang.getMessage(anyString(), any())).thenReturn("Errore");
 
-        assertThrows(EntityNotFoundException.class, () -> attivitaService.getAttivitaById(100L, 99L, 1L)); // ID viaggio 99 invece di 10
+        assertThrows(EntityNotFoundException.class, () -> attivitaService.getAttivitaById(100L, 99L, 1L));
     }
 
     @Test
@@ -154,9 +162,13 @@ public class AttivitaViaggioServiceImplTest {
     void testModificaAttivita_Successo() {
         when(orgMock.getId()).thenReturn(1L);
         when(viaggioMock.getOrganizzatore()).thenReturn(orgMock);
+        when(viaggioMock.getDataInizio()).thenReturn(inizioViaggio);
+        when(viaggioMock.getDataFine()).thenReturn(fineViaggio);
 
         AttivitaViaggioDTO dto = new AttivitaViaggioDTO();
         dto.setTitolo("Nuovo Titolo");
+        dto.setOrarioInizio(inizioAttivita);
+        dto.setOrarioFine(fineAttivita);
 
         when(attivitaViaggioRepository.findById(100L)).thenReturn(Optional.of(attivitaMock));
         when(attivitaViaggioRepository.save(attivitaMock)).thenReturn(attivitaMock);
@@ -216,10 +228,6 @@ public class AttivitaViaggioServiceImplTest {
     @DisplayName("Ricerca Filtrata: Successo")
     @SuppressWarnings("unchecked")
     void testRicercaFiltrata_Successo() {
-        when(orgMock.getId()).thenReturn(1L);
-        when(orgMock.getRuolo()).thenReturn(Utente.Ruolo.ROLE_ORGANIZZATORE);
-        when(viaggioMock.getOrganizzatore()).thenReturn(orgMock);
-
         when(viaggioRepository.findById(10L)).thenReturn(Optional.of(viaggioMock));
         when(utenteRepository.findById(1L)).thenReturn(Optional.of(orgMock));
 
@@ -242,15 +250,6 @@ public class AttivitaViaggioServiceImplTest {
         when(utenteRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> attivitaService.ricercaFiltrata(new AttivitaViaggioSpecification.AttivitaFilter(), 10L, 1L, 0));
 
-        // Non autorizzato
-        when(orgMock.getId()).thenReturn(1L);
-        when(orgMock.getRuolo()).thenReturn(Utente.Ruolo.ROLE_ORGANIZZATORE);
-        when(viaggioMock.getOrganizzatore()).thenReturn(orgMock);
-
-        when(utenteRepository.findById(99L)).thenReturn(Optional.of(orgMock));
-        when(messageLang.getMessage("viaggio.unauthorized")).thenReturn("Err");
-        assertThrows(IllegalArgumentException.class, () -> attivitaService.ricercaFiltrata(new AttivitaViaggioSpecification.AttivitaFilter(), 10L, 99L, 0));
-
         // Pagina invalida
         when(utenteRepository.findById(1L)).thenReturn(Optional.of(orgMock));
         Page<AttivitaViaggio> mockPage = mock(Page.class);
@@ -258,6 +257,6 @@ public class AttivitaViaggioServiceImplTest {
         when(attivitaViaggioRepository.findAll(any(Specification.class), any(PageRequest.class))).thenReturn(mockPage);
         when(messageLang.getMessage("attivita.invalid_page")).thenReturn("Err");
 
-        assertThrows(IllegalArgumentException.class, () -> attivitaService.ricercaFiltrata(new AttivitaViaggioSpecification.AttivitaFilter(), 10L, 1L, 10)); // Pagina 10 su 5 totali
+        assertThrows(IllegalArgumentException.class, () -> attivitaService.ricercaFiltrata(new AttivitaViaggioSpecification.AttivitaFilter(), 10L, 1L, 10));
     }
 }

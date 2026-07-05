@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +40,7 @@ public class PrenotazioneServiceImplTest {
     @Mock private ViaggioRepository viaggioRepository;
     @Mock private PrenotazioneRepository prenotazioneRepository;
     @Mock private UtenteRepository utenteRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private ModelMapper modelMapper;
     @Mock private MessageLang messageLang;
 
@@ -154,6 +156,13 @@ public class PrenotazioneServiceImplTest {
         when(prenotazioneMock.getNumeroPersone()).thenReturn(2);
         when(viaggioMock.getPartecipantiAttuali()).thenReturn(5);
 
+        // Elementi per preparare le info della notifica
+        Utente organizzatore = mock(Utente.class);
+        when(viaggioMock.getOrganizzatore()).thenReturn(organizzatore);
+        when(organizzatore.getFirebaseToken()).thenReturn("token-organizzatore");
+        when(utenteMock.getUsername()).thenReturn("utente1");
+        when(viaggioMock.getDestinazione()).thenReturn("Parigi");
+
         prenotazioneService.cancellaPrenotazione(100L, 1L);
 
         verify(viaggioMock).setPartecipantiAttuali(3); // 5 - 2
@@ -195,7 +204,7 @@ public class PrenotazioneServiceImplTest {
         when(utenteRepository.findById(1L)).thenReturn(Optional.of(utenteMock));
         when(utenteMock.getRuolo()).thenReturn(Utente.Ruolo.ROLE_ADMIN);
 
-        // Prepariamo i mock interni per evitare NullPointer
+        // Prepariamo i finti dati interni per accontentare il test
         Utente proprietario = mock(Utente.class);
         when(proprietario.getId()).thenReturn(2L);
         when(prenotazioneMock.getViaggiatore()).thenReturn(proprietario);

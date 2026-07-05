@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class SegnalazioneService {
 
-  private urlBase = '/api/segnalazioni';
+  private urlBase = '/api/v1/segnalazioni';
 
   constructor(private http: HttpClient) {}
 
@@ -15,17 +15,27 @@ export class SegnalazioneService {
     return this.http.post(`${this.urlBase}/crea?idSegnalatore=${idSegnalatore}`, datiSegnalazione);
   }
 
-  cercaSegnalazioni(filtri: any, pagina: number = 0): Observable<any> {
-    let parametri = new HttpParams().set('pagina', pagina.toString());
+  cercaSegnalazioni(filtro: any, pagina: number, dimensione: number = 10): Observable<any> {
+    let params = new HttpParams()
+      .set('pagina', pagina.toString())
+      .set('dimensione', dimensione.toString());
 
-    if (filtri.tipo) parametri = parametri.set('tipo', filtri.tipo);
-    if (filtri.stato) parametri = parametri.set('stato', filtri.stato);
-    if (filtri.segnalatoreId) parametri = parametri.set('segnalatoreId', filtri.segnalatoreId.toString());
-    if (filtri.adminId) parametri = parametri.set('adminId', filtri.adminId.toString());
+    // Aggiungi i filtri solo se esistono
+    if (filtro.tipo) {
+      params = params.set('tipo', filtro.tipo);
+    }
+    if (filtro.stato) {
+      params = params.set('stato', filtro.stato);
+    }
+    if (filtro.segnalatoreId) {
+      params = params.set('segnalatoreId', filtro.segnalatoreId.toString());
+    }
+    if (filtro.adminId) {
+      params = params.set('adminId', filtro.adminId.toString());
+    }
 
-    return this.http.get(`${this.urlBase}/ricerca`, { params: parametri });
+    return this.http.get<any>(`${this.urlBase}/ricerca`, { params });
   }
-
   prendiInCarico(idSegnalazione: number, idAdmin: number): Observable<any> {
     return this.http.put(`${this.urlBase}/${idSegnalazione}/prendi-in-carico?idAdmin=${idAdmin}`, {});
   }

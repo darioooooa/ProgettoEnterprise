@@ -2,10 +2,12 @@ package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.ItinerarioPreferito;
+import com.example.progettoenterprise.data.entities.ListaUtente;
 import com.example.progettoenterprise.data.entities.ListaViaggio;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.repositories.ItinerarioPreferitoRepository;
+import com.example.progettoenterprise.data.repositories.ListaUtenteRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.dto.ItinerarioPreferitoDTO;
@@ -33,6 +35,7 @@ public class ItinerarioPreferitoServiceImplTest {
     @Mock private ItinerarioPreferitoRepository itinerarioRepository;
     @Mock private UtenteRepository utenteRepository;
     @Mock private ViaggioRepository viaggioRepository;
+    @Mock private ListaUtenteRepository listaUtenteRepository;
     @Mock private ModelMapper modelMapper;
     @Mock private MessageLang messageLang;
 
@@ -53,6 +56,7 @@ public class ItinerarioPreferitoServiceImplTest {
         listaMock.setNome("La mia lista");
         listaMock.setProprietario(proprietarioMock);
         listaMock.setContenuti(new HashSet<>());
+        listaMock.setUtentiAutorizzati(new HashSet<>());
     }
 
     @Test
@@ -85,7 +89,12 @@ public class ItinerarioPreferitoServiceImplTest {
         when(itinerarioRepository.findByNomeContainingIgnoreCaseAndVisibilita("Mia", ItinerarioPreferito.Visibilita.PUBBLICA))
                 .thenReturn(List.of(listaMock));
         when(itinerarioRepository.findById(10L)).thenReturn(Optional.of(listaMock));
-        when(itinerarioRepository.findByUtentiAutorizzati_Utente_Id(2L)).thenReturn(List.of(listaMock));
+
+        when(listaUtenteRepository.existsByListaIdAndStato(anyLong(), any())).thenReturn(false);
+
+        ListaUtente fintoInvito = new ListaUtente();
+        fintoInvito.setLista(listaMock);
+        when(listaUtenteRepository.findByUtenteIdAndStato(2L, ListaUtente.StatoInvito.ACCETTATO)).thenReturn(List.of(fintoInvito));
 
         when(modelMapper.map(listaMock, ItinerarioPreferitoDTO.class)).thenReturn(new ItinerarioPreferitoDTO());
 
@@ -144,7 +153,6 @@ public class ItinerarioPreferitoServiceImplTest {
     @DisplayName("Aggiungi Viaggio: Successo")
     void testAggiungiViaggio_Successo() {
         when(proprietarioMock.getId()).thenReturn(1L);
-        when(viaggioMock.getId()).thenReturn(50L);
 
         when(itinerarioRepository.findById(10L)).thenReturn(Optional.of(listaMock));
         when(viaggioRepository.findById(50L)).thenReturn(Optional.of(viaggioMock));
@@ -159,7 +167,8 @@ public class ItinerarioPreferitoServiceImplTest {
     @DisplayName("Aggiungi Viaggio: Errore Viaggio Già Presente")
     void testAggiungiViaggio_GiaPresente() {
         when(proprietarioMock.getId()).thenReturn(1L);
-        when(viaggioMock.getId()).thenReturn(50L);
+        when(viaggioMock.getId()).thenReturn(50L); // Qui serve perché la lista ha già un elemento!
+
         ListaViaggio collegamento = new ListaViaggio();
         collegamento.setViaggio(viaggioMock);
         listaMock.getContenuti().add(collegamento);
@@ -193,7 +202,8 @@ public class ItinerarioPreferitoServiceImplTest {
     @DisplayName("Rimuovi Viaggio: Successo")
     void testRimuoviViaggio_Successo() {
         when(proprietarioMock.getId()).thenReturn(1L);
-        when(viaggioMock.getId()).thenReturn(50L);
+        when(viaggioMock.getId()).thenReturn(50L); // Anche qui serve, rimuove un elemento esistente
+
         ListaViaggio collegamento = new ListaViaggio();
         collegamento.setViaggio(viaggioMock);
         listaMock.getContenuti().add(collegamento);
@@ -210,7 +220,7 @@ public class ItinerarioPreferitoServiceImplTest {
     @DisplayName("Rimuovi Viaggio: Errore Viaggio Non Presente")
     void testRimuoviViaggio_NonPresente() {
         when(proprietarioMock.getId()).thenReturn(1L);
-        when(viaggioMock.getId()).thenReturn(50L);
+        // Tolta la finta domanda sull'ID
 
         when(itinerarioRepository.findById(10L)).thenReturn(Optional.of(listaMock));
 

@@ -9,6 +9,9 @@ import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.repositories.ViaggiatoreRepository;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import com.example.progettoenterprise.dto.ViaggiatoreDTO;
+import io.minio.BucketExistsArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,38 +22,29 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-// Usiamo Mockito per gestire le annotazioni @Mock
 @ExtendWith(MockitoExtension.class)
 public class ViaggiatoreServiceImplTest {
 
-    @Mock
-    private ViaggiatoreRepository viaggiatoreRepository;
+    @Mock private ViaggiatoreRepository viaggiatoreRepository;
+    @Mock private ModelMapper modelMapper;
+    @Mock private MessageLang messageLang;
+    @Mock private UtenteRepository utenteRepository;
+    @Mock private Keycloak keycloak;
+    @Mock private OrganizzatoreRepository organizzatoreRepository;
+    @Mock private RichiestaPromozioneRepository richiestaPromozioneRepository;
 
-    @Mock
-    private ModelMapper modelMapper;
-
-    @Mock
-    private MessageLang messageLang;
-
-    @Mock
-    private UtenteRepository utenteRepository;
-
-    @Mock
-    private Keycloak keycloak;
-
-    @Mock
-    private OrganizzatoreRepository organizzatoreRepository;
-
-    @Mock
-    private RichiestaPromozioneRepository richiestaPromozioneRepository;
+    @Mock private MinioClient minioClient;
 
     @InjectMocks
     private ViaggiatoreServiceImpl viaggiatoreService;
@@ -60,14 +54,11 @@ public class ViaggiatoreServiceImplTest {
     void testGetProfiloViaggiatore_Successo() {
         Long idViaggiatore = 1L;
 
-        // Creiamo un mock per il test
         Viaggiatore viaggiatoreMock = mock(Viaggiatore.class);
         ViaggiatoreDTO dtoAtteso = new ViaggiatoreDTO();
         dtoAtteso.setId(idViaggiatore);
 
-        // Quando cercano il viaggiatore con id=1 ritornano il mock
         when(viaggiatoreRepository.findById(idViaggiatore)).thenReturn(Optional.of(viaggiatoreMock));
-        // Quando chiedono di mappare il mock restituiamo il dtoAtteso
         when(modelMapper.map(viaggiatoreMock, ViaggiatoreDTO.class)).thenReturn(dtoAtteso);
 
         ViaggiatoreDTO risultato = viaggiatoreService.getProfiloViaggiatore(idViaggiatore);
@@ -83,12 +74,9 @@ public class ViaggiatoreServiceImplTest {
         Long idViaggiatore = 99L;
         String messaggioErroreAtteso = "L'utente con id " + idViaggiatore + " non esiste";
 
-        // Se ti chiedono l'ID 99 rispondiamo che è vuoto
         when(viaggiatoreRepository.findById(idViaggiatore)).thenReturn(Optional.empty());
-        // Istruiamo il traduttore dei messaggi
         when(messageLang.getMessage("utente.notexist", idViaggiatore)).thenReturn(messaggioErroreAtteso);
 
-        // Controlliamo che l'esecuzione del metodo scateni esattamente l'errore
         EntityNotFoundException eccezione = assertThrows(EntityNotFoundException.class, () -> {
             viaggiatoreService.getProfiloViaggiatore(idViaggiatore);
         });
@@ -110,7 +98,6 @@ public class ViaggiatoreServiceImplTest {
         ViaggiatoreDTO dtoRisposta = new ViaggiatoreDTO();
         dtoRisposta.setNome("Marco");
 
-        // Istruiamo il finto database e il convertitore
         when(viaggiatoreRepository.findById(idViaggiatore)).thenReturn(Optional.of(viaggiatoreDalDb));
         when(viaggiatoreRepository.save(viaggiatoreDalDb)).thenReturn(viaggiatoreSalvato);
         when(modelMapper.map(viaggiatoreSalvato, ViaggiatoreDTO.class)).thenReturn(dtoRisposta);
@@ -118,10 +105,8 @@ public class ViaggiatoreServiceImplTest {
         ViaggiatoreDTO risultato = viaggiatoreService.aggiornaProfilo(idViaggiatore, datiInviati);
 
         assertNotNull(risultato);
-        // Controlliamo che il sistema abbia provato a cambiare nome e cognome
         verify(viaggiatoreDalDb).setNome("Marco");
         verify(viaggiatoreDalDb).setCognome("Verdi");
-        // Controlliamo che il salvataggio sia stato lanciato una volta
         verify(viaggiatoreRepository, times(1)).save(viaggiatoreDalDb);
     }
 
@@ -143,34 +128,55 @@ public class ViaggiatoreServiceImplTest {
 
     @Test
     @DisplayName("Creazione richiesta promozione: Caso di successo")
-    void testCreaRichiesta_Successo() {
+    void testCreaRichiesta_Successo() throws Exception {
+        ReflectionTestUtils.setField(viaggiatoreService, "bucketName", "test-bucket");
+
         Long idViaggiatore = 1L;
         Viaggiatore utenteAttuale = new Viaggiatore();
         utenteAttuale.setUsername("vecchioUsername");
         utenteAttuale.setEmail("vecchia@email.it");
+        utenteAttuale.setId(idViaggiatore);
 
         RichiestaPromozioneDTO dtoInviato = new RichiestaPromozioneDTO();
         dtoInviato.setUsernameRichiesto("nuovoOrganizzatore");
         dtoInviato.setEmailProfessionale("lavoro@email.it");
+        dtoInviato.setMotivazione("Motivazione test");
+        dtoInviato.setBiografiaProfessionale("Bio test");
 
-        // L'utente esiste
+        // Prepariamo un finto documento PDF per superare il controllo
+        MultipartFile fintoDocumento = mock(MultipartFile.class);
+        when(fintoDocumento.isEmpty()).thenReturn(false);
+        when(fintoDocumento.getContentType()).thenReturn("application/pdf");
+        when(fintoDocumento.getSize()).thenReturn(1024L);
+        when(fintoDocumento.getOriginalFilename()).thenReturn("candidatura.pdf");
+        when(fintoDocumento.getInputStream()).thenReturn(new ByteArrayInputStream("contenuto".getBytes()));
+
         when(viaggiatoreRepository.findById(idViaggiatore)).thenReturn(Optional.of(utenteAttuale));
 
-        // Simulo che i controlli di sicurezza vadano tutti a buon fine (restituiscono false)
         when(richiestaPromozioneRepository.existsByViaggiatoreIdAndStato(idViaggiatore, RichiestaPromozione.StatoRichiesta.IN_ATTESA)).thenReturn(false);
         when(richiestaPromozioneRepository.existsByViaggiatoreIdAndStato(idViaggiatore, RichiestaPromozione.StatoRichiesta.APPROVATA)).thenReturn(false);
         when(richiestaPromozioneRepository.existsByUsernameRichiestoAndStatoNot(dtoInviato.getUsernameRichiesto(), RichiestaPromozione.StatoRichiesta.RIFIUTATA)).thenReturn(false);
         when(utenteRepository.existsByUsername(dtoInviato.getUsernameRichiesto())).thenReturn(false);
         when(richiestaPromozioneRepository.existsByEmailProfessionaleAndStatoNot(dtoInviato.getEmailProfessionale(), RichiestaPromozione.StatoRichiesta.RIFIUTATA)).thenReturn(false);
-        when(utenteRepository.existsByEmail(dtoInviato.getEmailProfessionale())).thenReturn(false);
 
-        RichiestaPromozione richiestaSalvata = mock(RichiestaPromozione.class);
+        // Diciamo all'archivio che è pronto a ricevere il documento
+        when(minioClient.bucketExists(any(BucketExistsArgs.class))).thenReturn(true);
+        when(minioClient.putObject(any(PutObjectArgs.class))).thenReturn(null);
+
+        // Prepariamo il salvataggio finale
+        when(richiestaPromozioneRepository.findFirstByViaggiatoreIdAndStatoOrderByDataRichiestaDesc(idViaggiatore, RichiestaPromozione.StatoRichiesta.RIFIUTATA))
+                .thenReturn(Optional.empty());
+
+        RichiestaPromozione richiestaSalvata = new RichiestaPromozione();
+        richiestaSalvata.setId(100L);
+
         RichiestaPromozioneDTO dtoAtteso = new RichiestaPromozioneDTO();
+        dtoAtteso.setId(100L);
 
         when(richiestaPromozioneRepository.save(any(RichiestaPromozione.class))).thenReturn(richiestaSalvata);
         when(modelMapper.map(richiestaSalvata, RichiestaPromozioneDTO.class)).thenReturn(dtoAtteso);
 
-        RichiestaPromozioneDTO risultato = viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato, null);
+        RichiestaPromozioneDTO risultato = viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato, fintoDocumento);
 
         assertNotNull(risultato);
         verify(richiestaPromozioneRepository, times(1)).save(any(RichiestaPromozione.class));
@@ -184,11 +190,10 @@ public class ViaggiatoreServiceImplTest {
         RichiestaPromozioneDTO dtoInviato = new RichiestaPromozioneDTO();
 
         when(viaggiatoreRepository.findById(idViaggiatore)).thenReturn(Optional.of(utenteAttuale));
-        // Simuliamo che il sistema trovi già una richiesta in stato IN_ATTESA
         when(richiestaPromozioneRepository.existsByViaggiatoreIdAndStato(idViaggiatore, RichiestaPromozione.StatoRichiesta.IN_ATTESA)).thenReturn(true);
 
         ResponseStatusException eccezione = assertThrows(ResponseStatusException.class, () -> {
-            viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato,null);
+            viaggiatoreService.creaRichiestaPromozione(idViaggiatore, dtoInviato, null);
         });
 
         assertEquals(HttpStatus.CONFLICT, eccezione.getStatusCode());

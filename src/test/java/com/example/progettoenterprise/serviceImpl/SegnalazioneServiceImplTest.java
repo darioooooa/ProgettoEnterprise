@@ -30,6 +30,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -90,19 +91,28 @@ public class SegnalazioneServiceImplTest {
         verify(segnalazioneRepository, never()).save(any());
     }
 
+
     @Test
     @DisplayName("Cerca Segnalazioni: Successo")
     @SuppressWarnings("unchecked")
     void testCercaSegnalazioni_Successo() {
         Page<Segnalazione> pagina = new PageImpl<>(List.of(segnalazioneMock));
         when(segnalazioneRepository.findAll(any(Specification.class), any(PageRequest.class))).thenReturn(pagina);
-        when(modelMapper.map(any(), eq(SegnalazioneDTO.class))).thenReturn(new SegnalazioneDTO());
 
-        List<SegnalazioneDTO> risultati = segnalazioneService.cercaSegnalazioni(new SegnalazioneSpecification.SegnalazioneFilter(), 0);
+        when(modelMapper.map(segnalazioneMock, SegnalazioneDTO.class)).thenReturn(new SegnalazioneDTO());
 
-        assertEquals(1, risultati.size());
+        Page<SegnalazioneDTO> risultati = segnalazioneService.cercaSegnalazioni(
+                new SegnalazioneSpecification.SegnalazioneFilter(),
+                0,
+                10
+        );
+
+        assertNotNull(risultati);
+        assertEquals(1, risultati.getContent().size());
+        assertEquals(1, risultati.getTotalElements());
     }
 
+    // ✅ CORRETTO: Ora passiamo anche il parametro dimensione
     @Test
     @DisplayName("Cerca Segnalazioni: Errore Pagina Invalida")
     @SuppressWarnings("unchecked")
@@ -112,8 +122,13 @@ public class SegnalazioneServiceImplTest {
         when(segnalazioneRepository.findAll(any(Specification.class), any(PageRequest.class))).thenReturn(pagina);
         when(messageLang.getMessage("segnalazione.invalid_page")).thenReturn("Pagina non valida");
 
+
         assertThrows(IllegalArgumentException.class, () ->
-                segnalazioneService.cercaSegnalazioni(new SegnalazioneSpecification.SegnalazioneFilter(), 5));
+                segnalazioneService.cercaSegnalazioni(
+                        new SegnalazioneSpecification.SegnalazioneFilter(),
+                        5,
+                        10
+                ));
     }
 
     @Test
@@ -212,6 +227,7 @@ public class SegnalazioneServiceImplTest {
         verify(messaggioChatRepository).delete(msg);
         verify(emailService).inviaEmailAvvertimento(eq("luca@email.it"), eq("luca"), anyString());
     }
+
     @Test
     @DisplayName("Risolvi Segnalazione: Recensione (Sospensione)")
     void testRisolviSegnalazione_Recensione_Sospensione() {

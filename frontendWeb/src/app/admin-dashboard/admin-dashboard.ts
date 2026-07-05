@@ -214,15 +214,17 @@ export class AdminDashboard implements OnInit {
   caricaSegnalazioni() {
     this.caricamentoSegnalazioni = true;
     this.isLoading = true;
-    this.segnalazioneService.cercaSegnalazioni({}, 0).subscribe({
+
+    this.segnalazioneService.cercaSegnalazioni({}, 0, 10).subscribe({
       next: (risposta) => {
-        this.segnalazioni = risposta.content ? risposta.content : risposta;
+        console.log('✅ Segnalazioni ricevute:', risposta);
+        this.segnalazioni = risposta.content || [];
         this.caricamentoSegnalazioni = false;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error(err);
+        console.error('❌ Errore caricamento segnalazioni:', err);
         this.caricamentoSegnalazioni = false;
         this.isLoading = false;
         this.cdr.detectChanges();

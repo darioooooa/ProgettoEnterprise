@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -31,14 +32,11 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PagamentoServiceImplTest {
 
-    @Mock
-    private PagamentoRepository pagamentoRepository;
-    @Mock
-    private PrenotazioneRepository prenotazioneRepository;
-    @Mock
-    private ViaggiatoreRepository viaggiatoreRepository;
-    @Mock
-    private ModelMapper modelMapper;
+    @Mock private PagamentoRepository pagamentoRepository;
+    @Mock private PrenotazioneRepository prenotazioneRepository;
+    @Mock private ViaggiatoreRepository viaggiatoreRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private ModelMapper modelMapper;
 
     @InjectMocks
     private PagamentoServiceImpl pagamentoService;
@@ -53,10 +51,17 @@ class PagamentoServiceImplTest {
         ReflectionTestUtils.setField(pagamentoService, "stripeApiKey", "sk_test_fake_key_123");
         utenteViaggiatore = mock(Utente.class);
         lenient().when(utenteViaggiatore.getId()).thenReturn(1L);
+        lenient().when(utenteViaggiatore.getFirebaseToken()).thenReturn("token-viaggiatore");
+        lenient().when(utenteViaggiatore.getUsername()).thenReturn("mario88");
+
+        Utente organizzatore = mock(Utente.class);
+        lenient().when(organizzatore.getFirebaseToken()).thenReturn("token-organizzatore");
 
         viaggioAssociato = new Viaggio();
         viaggioAssociato.setId(10L);
         viaggioAssociato.setPrezzo(500.0);
+        viaggioAssociato.setOrganizzatore(organizzatore);
+        viaggioAssociato.setDestinazione("Roma");
 
         prenotazioneValida = new Prenotazione();
         prenotazioneValida.setId(100L);
