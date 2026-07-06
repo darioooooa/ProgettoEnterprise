@@ -274,7 +274,10 @@ public class ViaggioServiceImpl implements ViaggioService {
 
         return viaggi.stream()
                 .filter(viaggio -> viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
-                .map(viaggio -> modelMapper.map(viaggio, ViaggioDTO.class))
+                .map(viaggio -> {
+                    ViaggioDTO dto = modelMapper.map(viaggio, ViaggioDTO.class);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

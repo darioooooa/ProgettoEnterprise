@@ -5,12 +5,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,6 +32,7 @@ import com.example.enterprisemobile.model.ViaggioMappaDTO
 import com.example.enterprisemobile.ui.theme.EnterpriseMobileTheme
 import com.example.enterprisemobile.ui.components.EnterpriseScaffold
 import com.example.enterprisemobile.viewmodels.HomeOrganizzatoreViewModel
+import com.example.enterprisemobile.viewmodels.StatisticheOrganizzatoreViewModel
 import com.example.enterprisemobile.viewmodels.ViewModelFactory
 import com.mapbox.common.MapboxOptions
 import com.mapbox.geojson.Point
@@ -63,7 +67,7 @@ fun MappaItinerari(
     markerIcon: android.graphics.Bitmap?,
     onMarkerClick: (ViaggioMappaDTO) -> Unit
 ) {
-    android.util.Log.d("MAPBOX_PERF", "Rendering  del componente MapboxMap")
+    android.util.Log.d("MAPBOX_PERF", "Rendering del componente MapboxMap")
 
     MapboxMap(
         modifier = Modifier.fillMaxSize(),
@@ -103,9 +107,13 @@ fun SchermataOrganizzatore(nomeUtente: String) {
     val viewModel: HomeOrganizzatoreViewModel = viewModel(
         factory = ViewModelFactory(repository)
     )
+    val viewModelStatistiche: StatisticheOrganizzatoreViewModel = viewModel()
 
     val viaggi by viewModel.viaggi.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+
+    // ✅ NUOVO: Stato per la bottom bar
+    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
     // Caricamento asincrono iniziale
     LaunchedEffect(Unit) {
@@ -135,126 +143,197 @@ fun SchermataOrganizzatore(nomeUtente: String) {
         }
     }
 
+
+    val items = listOf("Home", "Statistiche", "Messaggi")
+    val icons = listOf(Icons.Filled.Home, Icons.Filled.BarChart, Icons.Filled.Email)
+
     EnterpriseScaffold(
         titolo = "Dashboard",
         nomeUtente = nomeUtente,
         //serve per evitare che si bugghi l'ingrandimento della mappa
-        gesturesEnabled = false
+        gesturesEnabled = false,
+
+        bottomBar = {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                items.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        icon = { Icon(icons[index], contentDescription = item) },
+                        label = { Text(item) },
+                        selected = selectedItem == index,
+                        onClick = { selectedItem = index },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                }
+            }
+        }
     ) { paddingValues ->
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(paddingValues)
         ) {
-
-            Text(text = "I tuoi itinerari", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            val mapViewportState = rememberMapViewportState()
-
-            LaunchedEffect(Unit) {
-                android.util.Log.d("MAPBOX_PERF", "Configurazione iniziale camera")
-                mapViewportState.setCameraOptions {
-                    center(Point.fromLngLat(12.4964, 41.9028)) // Centrato su Roma
-                    zoom(5.0)
-                }
-            }
-
-            // Convertiamo il Vector(viaggio_marker dentro res) in Bitmap e lo "ricordiamo" per non ricaricarlo a ogni frame
-            val markerIcon = remember(context) {
-                ContextCompat.getDrawable(context, R.drawable.viaggio_marker)?.toBitmap()
-            }
-
-            var viaggioSelezionato by remember { mutableStateOf<ViaggioMappaDTO?>(null) }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-            ) {
-                // Iniezione del componente statico isolato
-                MappaItinerari(
-                    viaggi = viaggi,
-                    mapViewportState = mapViewportState,
-                    markerIcon = markerIcon,
-                    onMarkerClick = { viaggio -> viaggioSelezionato = viaggio }
-                )
-
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-
-                viaggioSelezionato?.let { viaggio ->
-                    Card(
+            when (selectedItem) {
+                0 -> {
+                    // SEZIONE HOME - Mappa e Azioni Rapide
+                    LazyColumn(
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = viaggio.titolo,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Clicca per i dettagli",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                        item {
+                            Text(text = "I tuoi itinerari", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        item {
+                            val mapViewportState = rememberMapViewportState()
+
+                            LaunchedEffect(Unit) {
+                                android.util.Log.d("MAPBOX_PERF", "Configurazione iniziale camera")
+                                mapViewportState.setCameraOptions {
+                                    center(Point.fromLngLat(12.4964, 41.9028)) // Centrato su Roma
+                                    zoom(5.0)
+                                }
                             }
 
-                            Button(
-                                onClick = {
-                                    val intent = Intent(context, DettaglioViaggioActivity::class.java)
-                                    intent.putExtra("VIAGGIO_ID", viaggio.id)
-                                    context.startActivity(intent)
+                            // Convertiamo il Vector(viaggio_marker dentro res) in Bitmap e lo "ricordiamo" per non ricaricarlo a ogni frame
+                            val markerIcon = remember(context) {
+                                ContextCompat.getDrawable(context, R.drawable.viaggio_marker)?.toBitmap()
+                            }
 
-                                    viaggioSelezionato = null
-                                }
+                            var viaggioSelezionato by remember { mutableStateOf<ViaggioMappaDTO?>(null) }
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp)
                             ) {
-                                Text("Visualizza")
+                                // Iniezione del componente statico isolato
+                                MappaItinerari(
+                                    viaggi = viaggi,
+                                    mapViewportState = mapViewportState,
+                                    markerIcon = markerIcon,
+                                    onMarkerClick = { viaggio -> viaggioSelezionato = viaggio }
+                                )
+
+                                if (isLoading) {
+                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                }
+
+                                viaggioSelezionato?.let { viaggio ->
+                                    Card(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = viaggio.titolo,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 16.sp
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = "Clicca per i dettagli",
+                                                    fontSize = 12.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    val intent = Intent(context, DettaglioViaggioActivity::class.java)
+                                                    intent.putExtra("VIAGGIO_ID", viaggio.id)
+                                                    context.startActivity(intent)
+
+                                                    viaggioSelezionato = null
+                                                }
+                                            ) {
+                                                Text("Visualizza")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        item {
+                            Text(text = "Azioni Rapide", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                AzioneCard(
+                                    titolo = "Nuovo\nItinerario",
+                                    icona = Icons.Default.Add,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    val intent = Intent(context, CreaViaggioActivity::class.java)
+                                    context.startActivity(intent)
+                                }
+
+                                AzioneCard(
+                                    titolo = "Gestione\nPrenotazioni",
+                                    icona = Icons.AutoMirrored.Filled.List,
+                                    modifier = Modifier.weight(1f)
+                                ) {}
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(text = "Azioni Rapide", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                AzioneCard(
-                    titolo = "Nuovo\nItinerario",
-                    icona = Icons.Default.Add,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    val intent = Intent(context, CreaViaggioActivity::class.java)
-                    context.startActivity(intent)
+                1 -> {
+                    StatisticheContentInline(
+                        viewModel = viewModelStatistiche,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
 
-                AzioneCard(
-                    titolo = "Gestione\nPrenotazioni",
-                    icona = Icons.AutoMirrored.Filled.List,
-                    modifier = Modifier.weight(1f)
-                ) {}
+                2 -> {
+                    // SEZIONE MESSAGGI - Placeholder
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Filled.Email,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Messaggi",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Sezione in arrivo...",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
         }
     }
