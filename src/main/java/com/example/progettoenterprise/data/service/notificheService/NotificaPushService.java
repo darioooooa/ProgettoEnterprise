@@ -1,4 +1,4 @@
-package com.example.progettoenterprise.data;
+package com.example.progettoenterprise.data.service.notificheService;
 
 
 import com.google.firebase.messaging.FirebaseMessaging;

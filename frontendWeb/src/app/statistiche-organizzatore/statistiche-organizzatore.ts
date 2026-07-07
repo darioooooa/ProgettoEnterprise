@@ -32,6 +32,9 @@ export class StatisticheOrganizzatore implements OnInit {
   viaggiRecenti: any[] = [];
   isLoading: boolean = true;
 
+
+  mostraTuttiViaggi: boolean = false;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private viaggioService: ViaggioService,
@@ -155,6 +158,7 @@ export class StatisticheOrganizzatore implements OnInit {
       ANNO: guadagnoAnno,
       TOTALE: guadagnoTot
     };
+
     let listaViaggiPerTabella: any[] = [];
     viaggi.forEach(v => {
       if (v.dataInizio) {
@@ -168,7 +172,6 @@ export class StatisticheOrganizzatore implements OnInit {
       }
     });
 
-
     listaViaggiPerTabella.sort((a, b) => {
       if (b.guadagno !== a.guadagno) {
         return b.guadagno - a.guadagno;
@@ -176,7 +179,7 @@ export class StatisticheOrganizzatore implements OnInit {
       return b.dataOggetto.getTime() - a.dataOggetto.getTime();
     });
 
-    this.viaggiRecenti = listaViaggiPerTabella.slice(0, 5);
+    this.viaggiRecenti = listaViaggiPerTabella;
 
     this.aggiornaGuadagni();
   }
@@ -194,5 +197,24 @@ export class StatisticheOrganizzatore implements OnInit {
 
   getStelleArray(voto: number): number[] {
     return Array(Math.round(voto)).fill(0);
+  }
+
+  apriTuttiViaggi() {
+    this.mostraTuttiViaggi = true;
+  }
+
+  chiudiTuttiViaggi() {
+    this.mostraTuttiViaggi = false;
+  }
+
+  get primiCinqueViaggi() {
+    return this.viaggiRecenti.slice(0, 5);
+  }
+  get totalePostiVenduti(): number {
+    return this.viaggiRecenti.reduce((sum, v) => sum + (v.postiVenduti || 0), 0);
+  }
+
+  get totaleRicavo(): number {
+    return this.viaggiRecenti.reduce((sum, v) => sum + (v.guadagno || 0), 0);
   }
 }

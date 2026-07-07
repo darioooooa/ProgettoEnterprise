@@ -14,11 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.viewmodels.GalleriaViewModel
 
@@ -139,8 +141,10 @@ fun SezioneGalleriaInPage(
             val pagerState = rememberPagerState(pageCount = { immagini.size })
 
             // Aggiorna l'indice del ViewModel quando l'utente fa uno swipe manuale
-            LaunchedEffect(pagerState.currentPage) {
-                viewModel.immagineCorrenteIndex = pagerState.currentPage
+            LaunchedEffect(pagerState) {
+                snapshotFlow { pagerState.currentPage }.collect { pagina ->
+                    viewModel.immagineCorrenteIndex = pagina
+                }
             }
 
             // Sincronizzazione inversa (se l'indice del ViewModel cambia dall'esterno)
@@ -171,7 +175,11 @@ fun SezioneGalleriaInPage(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     AsyncImage(
-                                        model = immagineRenderizzata.url,
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(immagineRenderizzata.url)
+                                            .crossfade(true) // Transizione morbida
+                                            .size(800, 600) // Abbassa la risoluzione massima in memoria
+                                            .build(),
                                         contentDescription = "Immagine del viaggio",
                                         modifier = Modifier.fillMaxSize(),
                                         // Si adatta mantenendo le proporzioni

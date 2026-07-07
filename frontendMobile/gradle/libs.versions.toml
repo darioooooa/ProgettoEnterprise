@@ -18,6 +18,8 @@ mapbox = "11.2.2"
 lifecycleViewmodelKtx = "2.11.0"
 firebaseMessagingKtx = "25.1.0"
 uiText = "1.11.3"
+uiTextVersion = "1.11.4"
+krossbow = "8.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +48,10 @@ mapbox-compose = { module = "com.mapbox.extension:maps-compose", version.ref = "
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
+androidx-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiTextVersion" }
+
+krossbow-stomp-core = { group = "org.hildan.krossbow", name = "krossbow-stomp-core", version.ref = "krossbow" }
+krossbow-websocket-okhttp = { group = "org.hildan.krossbow", name = "krossbow-websocket-okhttp", version.ref = "krossbow" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

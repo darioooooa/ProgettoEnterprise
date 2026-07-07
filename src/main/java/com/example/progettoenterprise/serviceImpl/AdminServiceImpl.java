@@ -9,7 +9,7 @@ import com.example.progettoenterprise.data.service.AdminService;
 import com.example.progettoenterprise.dto.RichiestaPromozioneDTO;
 import com.example.progettoenterprise.dto.UtenteDTO;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -341,5 +341,24 @@ public class AdminServiceImpl implements AdminService {
             log.error("Errore recupero file da MinIO", e);
             throw new RuntimeException("Errore durante il recupero del documento", e);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UtenteDTO> getUtentiBannatiPaginati(int page, int size, String ricerca) {
+        log.info("Richiesta utenti bannati paginati - page: {}, size: {}, ricerca: {}", page, size, ricerca);
+
+        org.springframework.data.domain.PageRequest pageRequest =
+                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("username").ascending());
+
+        Page<Utente> utentiPage;
+
+        if (ricerca != null && !ricerca.isBlank()) {
+            utentiPage = utenteRepository.findBannatiByRicerca(ricerca, pageRequest);
+        } else {
+            utentiPage = utenteRepository.findBannatiPaginati(pageRequest);
+        }
+
+        return utentiPage.map(utente -> modelMapper.map(utente, UtenteDTO.class));
     }
 }

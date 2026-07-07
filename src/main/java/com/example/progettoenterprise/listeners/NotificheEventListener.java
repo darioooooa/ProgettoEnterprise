@@ -1,8 +1,7 @@
 package com.example.progettoenterprise.listeners;
 
-import com.example.progettoenterprise.data.NotificaPushService;
-import com.example.progettoenterprise.events.PagamentoConfermatoEvent;
-import com.example.progettoenterprise.events.PrenotazioneCancellataEvent;
+import com.example.progettoenterprise.data.service.notificheService.NotificaPushService;
+import com.example.progettoenterprise.events.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -51,6 +50,97 @@ public class NotificheEventListener {
                     "Nuovo pagamento ricevuto! 💰",
                     "L'utente " + event.getUsernameViaggiatore() + " ha confermato e pagato la prenotazione per " + event.getDestinazioneViaggio() + "."
             );
+        }
+    }
+    @Async
+    @EventListener
+    public void handlePromemoriaViaggioEvent(PromemoriaViaggioEvent event) {
+        notificaPushService.inviaNotificaAUtente(event.getFcmToken(), event.getTitolo(), event.getMessaggio());
+    }
+
+    @Async
+    @EventListener
+    public void gestisciRimborso(RimborsoErogatoEvent event) {
+        if (event.getTokenViaggiatore() != null && !event.getTokenViaggiatore().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenViaggiatore(),
+                    "Rimborso Emesso! 💸",
+                    "Il rimborso per il tuo viaggio '" + event.getNomeViaggio() + "' è stato elaborato con successo e inviato alla tua carta."
+            );
+        } else {
+            log.warn("Impossibile inviare la notifica di rimborso: l'utente non ha un token registrato.");
+        }
+    }
+    @Async
+    @EventListener
+    public void gestisciNuovaRecensione(NuovaRecensioneEvent event) {
+
+        if (event.getTokenOrganizzatore() != null && !event.getTokenOrganizzatore().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenOrganizzatore(),
+                    "Nuova Recensione Ricevuta! ⭐",
+                    "L'utente " + event.getUsernameViaggiatore() + " ha appena lasciato una recensione per il tuo itinerario '" + event.getNomeViaggio() + "'."
+            );
+        } else {
+            log.warn("Impossibile inviare la notifica di recensione: l'organizzatore non ha un token Firebase registrato.");
+        }
+    }
+    @Async
+    @EventListener
+    public void gestisciUtenteSegnalato(SegnalazioneUtenteEvent event) {
+
+        if (event.getTokenUtenteSegnalato() != null && !event.getTokenUtenteSegnalato().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenUtenteSegnalato(),
+                    "Avviso di Segnalazione ⚠️",
+                    "Il tuo account ha ricevuto una segnalazione. Ti invitiamo a mantenere un comportamento rispettoso delle linee guida della community."
+            );
+        } else {
+            log.warn("⚠️Impossibile inviare l'avviso: l'utente segnalato non ha un token registrato.");
+        }
+    }
+    @Async
+    @EventListener
+    public void gestisciViaggioConsigliato(ViaggioConsigliatoEvent event) {
+
+        if (event.getTokenViaggiatore() != null && !event.getTokenViaggiatore().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenViaggiatore(),
+                    "Ti manca " + event.getCitta() + "? ✈️",
+                    "Un nuovo itinerario ('" + event.getTitoloNuovoViaggio() + "') è stato appena pubblicato! Clicca per vedere l'offerta."
+            );
+            log.info(" Suggerimento inviato con successo a Firebase!");
+        } else {
+            log.warn("⚠️ Impossibile inviare: token vuoto.");
+        }
+    }
+    @Async
+    @EventListener
+    public void gestisciUtenteBannato(UtenteBannatoEvent event) {
+        if (event.getTokenUtente() != null && !event.getTokenUtente().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenUtente(),
+                    "Account Sospeso 🚫",
+                    "Il tuo account è stato disabilitato da un amministratore per violazione delle linee guida della community."
+            );
+        } else {
+            log.warn("⚠️L'utente bannato non ha un token registrato.");
+        }
+    }
+    @Async
+    @EventListener
+    public void gestisciNuovoMessaggioChat(NuovoMessaggioChatEvent event) {
+
+        if (event.getTokenRicevente() != null && !event.getTokenRicevente().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenRicevente(),
+                    event.getMittenteUsername(), // Il titolo della notifica è il nome del mittente
+                    "Ti ha inviato un nuovo messaggio."
+            );
+        } else {
+            // Qui mettiamo un log di livello DEBUG e non WARN, perché in chat è normalissimo
+            // che l'utente non abbia il token o non abbia l'app in background
+            log.debug("📝  Notifica saltata: il destinatario non ha un token Firebase.");
         }
     }
 

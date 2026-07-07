@@ -20,6 +20,7 @@ public interface ItinerarioPreferitoService {
     void accettaInvito(Long itinerarioId, Long idUtenteInvitato);
     void rifiutaInvito(Long itinerarioId, Long idUtenteInvitato);
     List<Map<String, Object>> getInvitiInSospeso(Long utenteId);
+    void spostaViaggioTraItinerari(Long idSorgente, Long idDestinazione, Long idViaggio, Long idUtente);
 
     @Transactional(readOnly = true)
     List<ItinerarioPreferitoDTO> getListePubblicheDiUtente(String username);

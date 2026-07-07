@@ -41,6 +41,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.ui.text)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
 
     // Room essenziale
@@ -78,4 +79,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // Moduli STOMP e WebSocket per la chat
+    implementation(libs.krossbow.stomp.core)
+    implementation(libs.krossbow.websocket.okhttp)
 }

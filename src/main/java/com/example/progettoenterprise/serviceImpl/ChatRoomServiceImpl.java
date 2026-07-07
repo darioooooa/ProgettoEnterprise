@@ -10,14 +10,17 @@ import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.service.ChatRoomService;
 import com.example.progettoenterprise.dto.ChatRoomDTO;
+import com.example.progettoenterprise.events.NuovoMessaggioChatEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatRoomServiceImpl implements ChatRoomService {
@@ -26,6 +29,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final MessaggioChatRepository messaggioChatRepository;
     private final ViaggioRepository viaggioRepository;
     private final UtenteRepository utenteRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ChatRoom ottieniOCreaStanza(Long viaggioId, String viaggiatoreUsername) {
@@ -64,7 +69,38 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .dataInvio(LocalDateTime.now())
                 .build();
 
-        return messaggioChatRepository.save(nuovoMessaggio);
+        MessaggioChat messaggioSalvato = messaggioChatRepository.save(nuovoMessaggio);
+
+        try {
+            // Scopriamo chi deve ricevere la notifica
+            Utente organizzatore = stanza.getOrganizzatore();
+            Utente viaggiatore = stanza.getViaggiatore();
+
+            // Se chi scrive è l'organizzatore, il destinatario è il viaggiatore. E viceversa.
+            Utente destinatario = (organizzatore != null && organizzatore.getUsername().equals(mittenteUsername))
+                    ? viaggiatore
+                    : organizzatore;
+
+            if (destinatario != null) {
+                String tokenDestinatario = destinatario.getFirebaseToken();
+                if (tokenDestinatario != null && !tokenDestinatario.trim().isEmpty()) {
+
+                    NuovoMessaggioChatEvent evento = new NuovoMessaggioChatEvent(
+                            tokenDestinatario,
+                            mittenteUsername
+                    );
+                    eventPublisher.publishEvent(evento);
+
+                } else {
+                    log.warn("⚠️  L'utente {} non ha un token Firebase salvato.", destinatario.getUsername());
+                }
+            }
+        } catch (Exception e) {
+            log.error("❌  Errore durante l'invio della notifica Push: {}", e.getMessage());
+        }
+
+
+        return messaggioSalvato;
     }
 
     public List<MessaggioChat> ottieniCronologia(Long roomId) {

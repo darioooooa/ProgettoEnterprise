@@ -1,10 +1,14 @@
 package com.example.enterprisemobile.ui.components
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,6 +44,8 @@ fun SezioneAttivitaViaggioInPage(
     var dGiornoMaxAperto by remember { mutableStateOf(false) }
     var dInizioFormAperto by remember { mutableStateOf(false) }
     var dFineFormAperto by remember { mutableStateOf(false) }
+
+    var filtriEspansi by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -92,58 +98,84 @@ fun SezioneAttivitaViaggioInPage(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Filtra tappe del programma", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = viewModel.filtroTitolo, onValueChange = { viewModel.filtroTitolo = it }, label = { Text("Titolo") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = viewModel.filtroPosizione, onValueChange = { viewModel.filtroPosizione = it }, label = { Text("Luogo") }, modifier = Modifier.weight(1f))
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { filtriEspansi = !filtriEspansi },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Filtra tappe del programma",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Icon(
+                        imageVector = if (filtriEspansi) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (filtriEspansi) "Riduci filtri" else "Espandi filtri",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = viewModel.filtroCostoMin, onValueChange = { viewModel.filtroCostoMin = it }, label = { Text("€ Min") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = viewModel.filtroCostoMax, onValueChange = { viewModel.filtroCostoMax = it }, label = { Text("€ Max") }, modifier = Modifier.weight(1f))
-                }
+                AnimatedVisibility(visible = filtriEspansi) {
+                    Column(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(value = viewModel.filtroTitolo, onValueChange = { viewModel.filtroTitolo = it }, label = { Text("Titolo") }, modifier = Modifier.weight(1f))
+                            OutlinedTextField(value = viewModel.filtroPosizione, onValueChange = { viewModel.filtroPosizione = it }, label = { Text("Luogo") }, modifier = Modifier.weight(1f))
+                        }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Filtro dal giorno
-                    Box(modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = viewModel.filtroOrarioInizioMin,
-                            onValueChange = {},
-                            label = { Text("Dal giorno") },
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { dGiornoMinAperto = true }
-                        )
-                    }
-                    // Filtro al giorno
-                    Box(modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = viewModel.filtroOrarioInizioMax,
-                            onValueChange = {},
-                            label = { Text("Al giorno") },
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { dGiornoMaxAperto = true }
-                        )
-                    }
-                }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(value = viewModel.filtroCostoMin, onValueChange = { viewModel.filtroCostoMin = it }, label = { Text("€ Min") }, modifier = Modifier.weight(1f))
+                            OutlinedTextField(value = viewModel.filtroCostoMax, onValueChange = { viewModel.filtroCostoMax = it }, label = { Text("€ Max") }, modifier = Modifier.weight(1f))
+                        }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = { viewModel.pulisciFiltriAttivita(viaggioId) }) {
-                        Text("Resetta", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { viewModel.filtraAttivita(viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
-                        Text("Cerca")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Filtro dal giorno
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = viewModel.filtroOrarioInizioMin,
+                                    onValueChange = {},
+                                    label = { Text("Dal giorno") },
+                                    readOnly = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { dGiornoMinAperto = true }
+                                )
+                            }
+                            // Filtro al giorno
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = viewModel.filtroOrarioInizioMax,
+                                    onValueChange = {},
+                                    label = { Text("Al giorno") },
+                                    readOnly = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { dGiornoMaxAperto = true }
+                                )
+                            }
+                        }
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = { viewModel.pulisciFiltriAttivita(viaggioId) }) {
+                                Text("Resetta", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(onClick = { viewModel.filtraAttivita(viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
+                                Text("Cerca")
+                            }
+                        }
                     }
                 }
             }

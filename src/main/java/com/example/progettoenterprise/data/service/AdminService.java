@@ -19,4 +19,5 @@ public interface AdminService {
     List<UtenteDTO> getUtentiBannati();
     void sbannaUtente(Long userId);
     Resource scaricaDocumentoCandidatura(Long idRichiesta);
+    Page<UtenteDTO> getUtentiBannatiPaginati(int page, int size, String ricerca);
 }

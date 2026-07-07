@@ -50,4 +50,7 @@ public interface ViaggioRepository extends JpaRepository<Viaggio,Long>, JpaSpeci
     @Query("SELECT v FROM Viaggio v LEFT JOIN FETCH v.tappe WHERE v.id = :id")
     Optional<Viaggio> findByIdConTappe(@Param("id") Long id);
 
+    @Query("SELECT v FROM Viaggio v WHERE v.dataInizio BETWEEN :oggi AND :limite AND v.stato = 'APERTO'")
+    List<Viaggio> findViaggiInPartenza(@Param("oggi") java.time.LocalDate oggi, @Param("limite") java.time.LocalDate limite);
+
 }

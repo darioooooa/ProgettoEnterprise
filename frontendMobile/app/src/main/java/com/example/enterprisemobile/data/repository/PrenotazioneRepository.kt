@@ -3,6 +3,7 @@ import com.example.enterprisemobile.data.api.PrenotazioneApiService
 import com.example.enterprisemobile.data.api.PrenotazioneRequest
 import com.example.enterprisemobile.data.api.PrenotazioneResponse
 import com.example.enterprisemobile.data.db.PrenotazioneDAO
+import com.example.enterprisemobile.model.PrenotazioneDTO
 import com.example.enterprisemobile.model.PrenotazioneEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -49,6 +50,25 @@ class PrenotazioneRepository(
     suspend fun getMiePrenotazioniLocali(): List<PrenotazioneEntity> {
         return withContext(Dispatchers.IO) {
             dao.getAllPrenotazioni()
+        }
+    }
+
+    // QUESTO SERVE ALL'ORGANIZZATORE
+    suspend fun getPrenotazioniPerImeiViaggi(page: Int,stato: String?=null): com.example.enterprisemobile.model.PageResponse<PrenotazioneDTO>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.getMiePrenotazioni(page = page,  stato=stato)
+
+                if (response.isSuccessful) {
+                    // Restituiamo tutto il blocco intero (dati + info sulle pagine)
+                    response.body()
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
         }
     }
 }

@@ -26,6 +26,8 @@ export class MieiItinerari implements OnInit {
   public emailDaInvitare='';
   public idItinerarioDaCondividere: number | null = null;
 
+  invitiPendentiCount: number = 0;
+
 
   public isLoading: boolean = false;
 
@@ -43,6 +45,7 @@ export class MieiItinerari implements OnInit {
     }
     this.caricaItinerari();
     this.caricaItinerariCondivisi();
+    this.caricaNumeroInviti();
   }
 
   caricaItinerari() {
@@ -248,6 +251,17 @@ export class MieiItinerari implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => console.error("Errore recupero itinerari condivisi", err)
+    });
+  }
+  caricaNumeroInviti(): void {
+
+    this.itinerarioService.getInvitiInSospeso().subscribe({
+      next: (inviti: any[]) => {
+        this.invitiPendentiCount = inviti.length;
+      },
+      error: (err) => {
+        console.error('Errore nel recupero degli inviti in sospeso:', err);
+      }
     });
   }
 }

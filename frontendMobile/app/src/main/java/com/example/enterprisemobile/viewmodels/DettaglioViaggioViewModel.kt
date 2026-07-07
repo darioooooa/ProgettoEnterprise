@@ -1,6 +1,9 @@
 package com.example.enterprisemobile.viewmodels
 
 import android.app.Application
+import android.content.ContentValues
+import android.os.Build
+import android.provider.MediaStore
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,8 +14,11 @@ import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.repository.DettaglioViaggioRepository
 import com.example.enterprisemobile.data.security.SessionManager
 import com.example.enterprisemobile.model.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.ResponseBody
 import java.time.LocalDate
 
 class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(application) {
@@ -21,6 +27,7 @@ class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(app
     private val sessionManager = SessionManager(application)
     private val repository: DettaglioViaggioRepository
 
+    private var prenotazioneIdAttiva: Long? = null
     var mioUsername by mutableStateOf("")
     var mioRuolo by mutableStateOf("")
     var viaggioId by mutableStateOf(-1L)
@@ -114,9 +121,11 @@ class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(app
 
                     if (infoPrenotazione != null && infoPrenotazione.stato == "CONFERMATA") {
                         isGiaAcquistato = true
+                        prenotazioneIdAttiva = infoPrenotazione.id
                         statoSvolgimentoIscrizione = calcolaSvolgimentoReale(viaggioEntity)
                     } else {
                         isGiaAcquistato = false
+                        prenotazioneIdAttiva = null
                         statoSvolgimentoIscrizione = ""
                     }
                 } catch (e: Exception) {
@@ -153,30 +162,54 @@ class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(app
             messaggioAvviso = "Prezzo inserito non valido."
             return
         }
+
+        val v = viaggioEntity ?: return
+        val s = statisticheDto
+
         viewModelScope.launch {
             isLoading = true
             try {
-                val v = viaggioEntity ?: return@launch
-                val payload = mapOf(
-                    "titolo" to v.titolo,
-                    "descrizione" to (v.descrizione ?: ""),
-                    "destinazione" to v.destinazione,
-                    "cittaPartenza" to v.cittaPartenza,
-                    "dataInizio" to v.dataInizio,
-                    "dataFine" to v.dataFine,
-                    "prezzo" to prezzoDouble.toString(),
-                    "maxPartecipanti" to v.maxPartecipanti.toString()
+                val payloadDto = ViaggioDTO(
+                    id = v.id,
+                    titolo = v.titolo,
+                    descrizione = v.descrizione,
+                    stato = "APERTO",
+                    maxPartecipanti = v.maxPartecipanti,
+                    partecipantiAttuali = v.partecipantiAttuali,
+                    destinazione = v.destinazione,
+                    cittaPartenza = v.cittaPartenza,
+                    prezzo = prezzoDouble, // Il nuovo prezzo numerico modificato
+                    dataInizio = v.dataInizio,
+                    dataFine = v.dataFine,
+                    latitudine = 0.0,
+                    longitudine = 0.0,
+                    organizzatoreId = s?.organizzatoreId,
+                    organizzatoreUsername = s?.organizzatoreUsername
                 )
-                val response = repository.modificaViaggio(viaggioId, payload)
+                val response = repository.modificaViaggio(viaggioId, payloadDto)
+
                 if (response.isSuccessful) {
                     inModificaPrezzo = false
-                    caricaDatiCompleti()
+
+                    val entityAggiornata = v.copy(prezzo = prezzoDouble)
+                    repository.salvaViaggioLocale(entityAggiornata)
+                    viaggioEntity = entityAggiornata
+
                     tipoAvviso = "successo"
                     messaggioAvviso = "Prezzo aggiornato con successo!"
+
+                    caricaDatiCompleti()
+                } else {
+                    tipoAvviso = "errore"
+                    messaggioAvviso = "Errore durante la modifica."
                 }
             } catch (e: Exception) {
+                e.printStackTrace()
+                tipoAvviso = "errore"
                 messaggioAvviso = "Impossibile aggiornare il prezzo."
-            } finally { isLoading = false }
+            } finally {
+                isLoading = false
+            }
         }
     }
 
@@ -201,10 +234,84 @@ class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(app
     }
 
     fun scaricaFileIcs() {
-        // TODO: implementare l'export del calendario
-        // Simulazione esportazione logica calendario .ics per dispositivi mobili
-        tipoAvviso = "successo"
-        messaggioAvviso = "📅 Calendario (.ics) esportato nella memoria del dispositivo!"
+        val idPrenotazione = prenotazioneIdAttiva
+        if (idPrenotazione == null) {
+            tipoAvviso = "errore"
+            messaggioAvviso = "Impossibile trovare una prenotazione valida per esportare il calendario."
+            return
+        }
+
+        viewModelScope.launch {
+            isLoading = true
+            messaggioAvviso = null
+
+            try {
+                val api = RetrofitClient.ottieniPrenotazioneService(getApplication())
+                val response = api.scaricaFileIcs(idPrenotazione)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val nomeFile = "prenotazione_$idPrenotazione.ics"
+
+                    // Scrittura asincrona del file su IO thread
+                    val successoSalvataggio = withContext(Dispatchers.IO) {
+                        salvaFileIcsSuDispositivo(response.body()!!, nomeFile)
+                    }
+
+                    if (successoSalvataggio) {
+                        tipoAvviso = "successo"
+                        messaggioAvviso = "📅 Calendario (.ics) salvato nei tuoi download!"
+                    } else {
+                        throw Exception("Errore durante la scrittura del file.")
+                    }
+                } else {
+                    throw Exception("Risposta del server non valida.")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                tipoAvviso = "errore"
+                messaggioAvviso = "Errore durante il download del calendario: ${e.localizedMessage}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    // Funzione per scrivere il file usando il MediaStore
+    private fun salvaFileIcsSuDispositivo(body: ResponseBody, nomeFile: String): Boolean {
+        val context = getApplication<Application>().applicationContext
+        val contentResolver = context.contentResolver
+
+        val dettagliFile = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, nomeFile)
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/calendar")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Download")
+            }
+        }
+
+        val uriRaccolta = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        } else {
+            // Fallback per vecchie versioni di Android
+            MediaStore.Files.getContentUri("external")
+        }
+
+        val fileUri = contentResolver.insert(uriRaccolta, dettagliFile) ?: return false
+
+        return try {
+            contentResolver.openOutputStream(fileUri).use { outputStream ->
+                if (outputStream == null) return false
+                body.byteStream().use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Rimuove il file vuoto/corrotto se la scrittura fallisce
+            contentResolver.delete(fileUri, null, null)
+            false
+        }
     }
 
     private fun calcolaSvolgimentoReale(v: ViaggioEntity?): String {

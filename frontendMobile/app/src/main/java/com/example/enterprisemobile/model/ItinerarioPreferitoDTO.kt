@@ -1,14 +1,13 @@
 package com.example.enterprisemobile.model
 
-import java.time.LocalDate
-
+import com.google.gson.annotations.SerializedName
 
 data class ItinerarioPreferitoDTO(
-    val idItinerario: Long? = null,
-    val nome: String,
-    val inCondivisione: Boolean? = null,
-    val proprietarioUsername: String? = null,
-    val dataCreazione: LocalDate? = null,
-    val visibilita: Visibilita,
-    val viaggiContenuti: List<ViaggioDTO>? = null
+    @SerializedName("idItinerario") val idItinerario: Long? = null,
+    @SerializedName("nome") val nome: String,
+    @SerializedName("inCondivisione") val inCondivisione: Boolean? = null,
+    @SerializedName("proprietarioUsername") val proprietarioUsername: String? = null,
+    @SerializedName("dataCreazione") val dataCreazione: String? = null,
+    @SerializedName("visibilita") val visibilita: Visibilita,
+    @SerializedName("viaggiContenuti") val viaggiContenuti: List<ViaggioDTO>? = null
 )

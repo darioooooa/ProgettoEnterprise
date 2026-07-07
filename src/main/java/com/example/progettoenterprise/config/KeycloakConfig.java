@@ -16,11 +16,14 @@ public class KeycloakConfig {
     @Value("${KEYCLOAK_ADMIN_PASSWORD}")
     private String adminPassword;
 
+    @Value("${keycloak.server-url}")
+    private String keycloakServerUrl;
+
     @Bean
     public Keycloak keycloakAdminClient() {
         return KeycloakBuilder.builder()
-                .serverUrl("http://localhost:8081") // URL del server Keycloak
-                .realm("master") // Autenticazione nel master per avere i permessi massimi
+                .serverUrl(keycloakServerUrl)
+                .realm("master")
                 .grantType(OAuth2Constants.PASSWORD)
                 .clientId("admin-cli")
                 .username(adminUsername)

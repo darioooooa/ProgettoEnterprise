@@ -37,6 +37,8 @@ public class PrenotazioneSpecification {
             // Filtra per stato
             if (prenotazioneFilter.getStato() != null) {
                 predicates.add(cb.equal(root.get("stato"), prenotazioneFilter.getStato()));
+            }else if (prenotazioneFilter.getOrganizzatoreProprietarioId() != null) {
+                predicates.add(cb.notEqual(root.get("stato"), Prenotazione.StatoPrenotazione.IN_ATTESA));
             }
 
             // Filtra per un utente specifico

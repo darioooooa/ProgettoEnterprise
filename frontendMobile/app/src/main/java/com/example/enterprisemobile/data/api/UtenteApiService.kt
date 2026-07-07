@@ -26,5 +26,11 @@ interface UtenteApiService {
     ): Response<ResponseBody>
 
     @POST("utenti/aggiorna-token")
-    suspend fun aggiornaToken(@Body payload: Map<String, String>): retrofit2.Response<Unit>
+    suspend fun aggiornaToken(@Body payload: Map<String, String>): Response<Unit>
+
+    // Registrazione utente
+    @POST("auth/register")
+    suspend fun registraUtente(
+        @Body datiRegistrazione: Map<String, String>
+    ): Response<UtenteDTO>
 }

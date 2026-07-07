@@ -387,7 +387,7 @@
 }
 
 /* Bottone per aprire la modale di condivisione */
-.btn-condividi {
+.btn-condividi{
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -456,4 +456,52 @@
   margin-left: 10px;
   cursor: help;
   box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+.btn-richieste-fluttuante {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.btn-richieste-fluttuante:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px); /* Piccolo effetto sollevamento al passaggio del mouse */
+}
+
+.icona-campanella {
+  font-size: 1.2rem;
+}
+
+.testo-bottone-richieste {
+  text-align: left;
+  line-height: 1.2;
+}
+
+/* Badge rosso in stile notifica app */
+.badge-notifica-sovrapposto {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  border: 2px solid #1e293b;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }

@@ -7,6 +7,7 @@ import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
 import com.example.enterprisemobile.data.model.RichiestaPromozioneResponse
 import com.example.enterprisemobile.model.PageResponse
+import com.example.enterprisemobile.model.UtenteBannatoDTO
 import okhttp3.ResponseBody
 import retrofit2.Response
 import com.example.enterprisemobile.model.SegnalazioneDTO
@@ -32,7 +33,6 @@ class AdminRepository(private val context: Context) {
                 val pageResponse = response.body()!!
                 val entities = pageResponse.content.map { mappaDtoAEntity(it) }
 
-                // Aggiorna la cache locale solo se è la prima pagina senza filtri
                 if (page == 0 && stato.isNullOrBlank() && username.isNullOrBlank()) {
                     richiestaDao.deleteAll()
                     richiestaDao.insertAll(entities)
@@ -100,6 +100,19 @@ class AdminRepository(private val context: Context) {
 
     suspend fun getUtentiBannati() =
         adminApiService.getUtentiBannati()
+
+    // ✅ NUOVO: Utenti bannati paginati
+    suspend fun getUtentiBannatiPaginati(
+        page: Int = 0,
+        size: Int = 10,
+        ricerca: String? = null
+    ): Response<PageResponse<UtenteBannatoDTO>> {
+        return adminApiService.getUtentiBannatiPaginati(page, size, ricerca)
+    }
+
+    suspend fun riattivaUtente(id: Long): Response<Unit> {
+        return adminApiService.riattivaUtente(id)
+    }
 
     private fun mappaDtoAEntity(dto: RichiestaPromozioneResponse): RichiestaPromozioneEntity {
         return RichiestaPromozioneEntity(

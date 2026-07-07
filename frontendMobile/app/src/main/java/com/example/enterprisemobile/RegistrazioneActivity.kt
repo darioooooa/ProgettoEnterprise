@@ -4,16 +4,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,12 +32,18 @@ import com.example.enterprisemobile.viewmodels.StatoRegistrazione
 fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onTornaAlLogin: () -> Unit) {
     val context = LocalContext.current
     val statoReg by viewModel.statoRegistrazione.collectAsState()
+    val focusManager = LocalFocusManager.current
+    val isCaricamento = statoReg is StatoRegistrazione.Caricamento
 
     var username by remember { mutableStateOf("") }
     var nome by remember { mutableStateOf("") }
     var cognome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confermaPassword by remember { mutableStateOf("") }
+
+    var passwordVisibile by remember { mutableStateOf(false) }
+    var erroreLocale by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = Modifier
@@ -43,7 +57,9 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 modifier = Modifier
                     .statusBarsPadding()
-                    .clickable { if (statoReg !is StatoRegistrazione.Caricamento) onTornaIndietro() }
+                    .clickable {
+                        if (!isCaricamento) onTornaIndietro()
+                    }
                     .padding(vertical = 8.dp)
             )
         }
@@ -125,19 +141,122 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
                 )
 
-                OutlinedTextField(value = username, onValueChange = { username = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth(), enabled = statoReg !is StatoRegistrazione.Caricamento)
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth(), enabled = statoReg !is StatoRegistrazione.Caricamento)
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(value = cognome, onValueChange = { cognome = it }, label = { Text("Cognome") }, modifier = Modifier.fillMaxWidth(), enabled = statoReg !is StatoRegistrazione.Caricamento)
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Indirizzo email") }, modifier = Modifier.fillMaxWidth(), enabled = statoReg !is StatoRegistrazione.Caricamento)
-                Spacer(modifier = Modifier.height(12.dp))
+                // Username
                 OutlinedTextField(
-                    value = password, onValueChange = { password = it }, label = { Text("Scegli una password") },
-                    visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier.fillMaxWidth(), enabled = statoReg !is StatoRegistrazione.Caricamento
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isCaricamento,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), // Mostra il tasto "Avanti"
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }) // Va giù
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Nome
+                OutlinedTextField(
+                    value = nome,
+                    onValueChange = { nome = it },
+                    label = { Text("Nome") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isCaricamento,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Cognome
+                OutlinedTextField(
+                    value = cognome,
+                    onValueChange = { cognome = it },
+                    label = { Text("Cognome") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isCaricamento,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Email
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Indirizzo email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isCaricamento,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Password
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        erroreLocale = null // Resetta l'errore appena l'utente modifica il testo
+                    },
+                    label = { Text("Scegli una password") },
+                    visualTransformation = if (passwordVisibile) VisualTransformation.None else PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isCaricamento,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                    trailingIcon = {
+                        val icona = if (passwordVisibile) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { passwordVisibile = !passwordVisibile }) {
+                            Icon(icona, contentDescription = "Mostra/Nascondi password", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Conferma password
+                OutlinedTextField(
+                    value = confermaPassword,
+                    onValueChange = {
+                        confermaPassword = it
+                        erroreLocale = null
+                    },
+                    label = { Text("Conferma password") },
+                    visualTransformation = if (passwordVisibile) VisualTransformation.None else PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isCaricamento,
+                    singleLine = true,
+                    // Ultimo campo della tastiera (ImeAction.Done)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                        if (statoReg !is StatoRegistrazione.Caricamento) {
+                            // Validazione prima dell'invio
+                            if (password != confermaPassword) {
+                                erroreLocale = "Le password inserite non coincidono."
+                            } else {
+                                viewModel.eseguiRegistrazione(context, username, nome, cognome, email, password)
+                            }
+                        }
+                    }),
+                    trailingIcon = {
+                        val icona = if (passwordVisibile) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { passwordVisibile = !passwordVisibile }, enabled = !isCaricamento) {
+                            Icon(icona, contentDescription = "Mostra/Nascondi password", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                )
+
+                // Mostra prima gli errori locali (password non coincidenti) e poi quelli del server
+                if (erroreLocale != null) {
+                    Text(text = erroreLocale!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))
+                } else if (statoReg is StatoRegistrazione.Errore) {
+                    Text(text = (statoReg as StatoRegistrazione.Errore).messaggio, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
 
                 if (statoReg is StatoRegistrazione.Errore) {
                     Text(text = (statoReg as StatoRegistrazione.Errore).messaggio, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))
@@ -149,7 +268,13 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 } else {
                     Button(
-                        onClick = { viewModel.eseguiRegistrazione(context, username, nome, cognome, email, password) },
+                        onClick = {
+                            if (password != confermaPassword) {
+                                erroreLocale = "Le password inserite non coincidono."
+                            } else {
+                                viewModel.eseguiRegistrazione(context, username, nome, cognome, email, password)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -166,7 +291,7 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                         text = "Torna al login",
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onTornaAlLogin() }
+                        modifier = Modifier.clickable { if (!isCaricamento) onTornaAlLogin() }
                     )
                 }
             }

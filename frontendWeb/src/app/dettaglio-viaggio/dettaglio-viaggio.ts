@@ -10,7 +10,6 @@ import { CommunityComponent } from './components/community/community';
 import { PrenotazioneService } from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 import { forkJoin } from 'rxjs';
-// 🟢 REINTRODOTTO L'IMPORT CHIRURGICO DELLA CHAT RECUPERATA
 import { ChatComponent } from './components/chat/chat';
 
 @Component({
@@ -287,5 +286,14 @@ export class DettaglioViaggio implements OnInit {
     this.tipoDaSegnalare = evento.tipo;
     this.mostraSegnalazione = true;
     this.cdr.detectChanges();
+  }
+
+  isViaggioNonAncoraIniziato(): boolean {
+    if (!this.statistiche || !this.statistiche.dataInizio) return true; // Se non ha caricato, di default mostriamo
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const dataPartenza = new Date(this.statistiche.dataInizio);
+    dataPartenza.setHours(0, 0, 0, 0);
+    return oggi < dataPartenza;
   }
 }
