@@ -7,19 +7,32 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UtenteRepository extends JpaRepository<Utente,Long>, JpaSpecificationExecutor<Utente> {
+public interface UtenteRepository extends JpaRepository<Utente, Long>, JpaSpecificationExecutor<Utente> {
 
     @Cacheable(value = CacheConfig.CACHE_UTENTI_AUTH, key = "#email", unless = "#result == null")
     Optional<Utente> findByEmail(String email);
+
     Optional<Utente> findByUsername(String username);
+
     boolean existsByUsername(String username);
+
     boolean existsByEmail(String email);
 
     @Query("SELECT u FROM Utente u WHERE u.isAttivo = false")
     List<Utente> findByIsAttivoFalse();
+
+    @Query("SELECT u FROM Utente u WHERE u.isAttivo = false AND " +
+            "(LOWER(u.username) LIKE LOWER(CONCAT('%', :ricerca, '%')) OR " +
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', :ricerca, '%')))")
+    Page<Utente> findBannatiByRicerca(String ricerca, Pageable pageable);
+
+    @Query("SELECT u FROM Utente u WHERE u.isAttivo = false")
+    Page<Utente> findBannatiPaginati(Pageable pageable);
 }

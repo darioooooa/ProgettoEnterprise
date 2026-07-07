@@ -29,6 +29,7 @@ import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.repository.ViaggioRepository
 import com.example.enterprisemobile.model.ViaggioMappaDTO
+import com.example.enterprisemobile.ui.StatisticheOrganizzatoreScreen
 import com.example.enterprisemobile.ui.theme.EnterpriseMobileTheme
 import com.example.enterprisemobile.ui.components.EnterpriseScaffold
 import com.example.enterprisemobile.viewmodels.HomeOrganizzatoreViewModel
@@ -301,10 +302,7 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                 }
 
                 1 -> {
-                    StatisticheContentInline(
-                        viewModel = viewModelStatistiche,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    StatisticheOrganizzatoreScreen(viewModel = viewModelStatistiche)
                 }
 
                 2 -> {

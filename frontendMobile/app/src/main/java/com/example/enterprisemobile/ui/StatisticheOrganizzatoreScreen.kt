@@ -1,9 +1,5 @@
-package com.example.enterprisemobile
+package com.example.enterprisemobile.ui
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,57 +7,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.enterprisemobile.data.security.SessionManager
-import com.example.enterprisemobile.ui.components.EnterpriseScaffold
 import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.RigaViaggioStat
 import com.example.enterprisemobile.viewmodels.StatisticheOrganizzatoreViewModel
 
-class StatisticheOrganizzatoreActivity : ComponentActivity() {
-    private val viewModel: StatisticheOrganizzatoreViewModel by viewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            EnterpriseMobileTheme {
-                StatisticheContent(viewModel, onBackClick = { finish() })
-            }
-        }
-    }
-}
-
 @Composable
-fun StatisticheContent(viewModel: StatisticheOrganizzatoreViewModel, onBackClick: () -> Unit) {
-    val context = LocalContext.current
-    val nomeUtente = SessionManager(context).ottieniUsername() ?: "Organizzatore"
-
-    EnterpriseScaffold(
-        titolo = "STATISTICHE",
-        nomeUtente = nomeUtente,
-        mostraFrecciaIndietro = true,
-        onBackClick = onBackClick
-    ) { innerPadding ->
-        StatisticheContentInline(
-            viewModel = viewModel,
-            modifier = Modifier.padding(innerPadding)
-        )
-    }
-}
-
-@Composable
-fun StatisticheContentInline(viewModel: StatisticheOrganizzatoreViewModel, modifier: Modifier = Modifier) {
+fun StatisticheOrganizzatoreScreen(viewModel: StatisticheOrganizzatoreViewModel) {
     var mostraTuttiViaggi by remember { mutableStateOf(false) }
 
     val viaggiDaMostrare = if (mostraTuttiViaggi) {
@@ -74,7 +32,7 @@ fun StatisticheContentInline(viewModel: StatisticheOrganizzatoreViewModel, modif
     val totaleRicavo = viaggiDaMostrare.sumOf { it.ricavo }
 
     LazyColumn(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
