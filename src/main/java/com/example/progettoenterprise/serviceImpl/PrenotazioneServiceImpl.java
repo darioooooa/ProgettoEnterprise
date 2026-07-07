@@ -69,7 +69,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
                 idUtente, viaggio.getDataInizio(), viaggio.getDataFine())
                 .stream()
                 .filter(p -> p.getStato() != Prenotazione.StatoPrenotazione.ANNULLATA)
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
 
         if (!prenotazioniSovrapposte.isEmpty()) {
             log.warn("Prenotazione bloccata: l'utente {} ha già un viaggio in quelle date", idUtente);
@@ -217,6 +217,11 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         // Se è l'admin, può vedere tutto
         else {
             log.debug("Ruolo ADMIN rilevato: forzatura filtro su tutte le prenotazioni");
+        }
+
+        if (prenotazioneFilter.getStato() == null) {
+            log.debug("Stato non specificato, impostazione predefinita: CONFERMATA");
+            prenotazioneFilter.setStato(Prenotazione.StatoPrenotazione.CONFERMATA);
         }
 
         // Paginazione della ricerca

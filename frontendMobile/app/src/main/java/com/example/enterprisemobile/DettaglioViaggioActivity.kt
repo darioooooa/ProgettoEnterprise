@@ -684,7 +684,7 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                     },
                     text = {
                         Text(
-                            text = "Sei sicuro di voler eliminare definitivamente questo viaggio? Questa azione non può essere annullata e tutti i dati andranno persi.",
+                            text = "Sei sicuro di voler eliminare definitivamente questo viaggio? Tutti i partecipanti verranno automaticamente rimborsati. Questa azione non può essere annullata.",
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
                     },

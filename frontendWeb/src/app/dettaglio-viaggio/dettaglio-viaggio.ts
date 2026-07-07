@@ -10,7 +10,6 @@ import { CommunityComponent } from './components/community/community';
 import { PrenotazioneService } from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 import { forkJoin } from 'rxjs';
-// 🟢 REINTRODOTTO L'IMPORT CHIRURGICO DELLA CHAT RECUPERATA
 import { ChatComponent } from './components/chat/chat';
 
 @Component({
