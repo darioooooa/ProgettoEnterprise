@@ -34,7 +34,7 @@ build/
 
 .env
 node_modules/
-frontendWeb/src/environments/envMap.ts
+frontendWeb/src/environments/EnvMap.ts
 /node_modules
 
 *.iml

@@ -9,6 +9,8 @@ import com.example.enterprisemobile.data.model.RichiestaPromozioneResponse
 import com.example.enterprisemobile.model.PageResponse
 import okhttp3.ResponseBody
 import retrofit2.Response
+import com.example.enterprisemobile.model.SegnalazioneDTO
+import com.example.enterprisemobile.model.SegnalazioneFiltroDTO
 
 class AdminRepository(private val context: Context) {
 
@@ -75,6 +77,29 @@ class AdminRepository(private val context: Context) {
     suspend fun scaricaDocumento(id: Long): Response<ResponseBody> {
         return adminApiService.scaricaDocumento(id)
     }
+    suspend fun prendiInCarico(id: Long, adminId: Long) =
+        adminApiService.prendiInCarico(id, adminId)
+
+    suspend fun risolviSegnalazione(id: Long, adminId: Long, sospendiAutore: Boolean) =
+        adminApiService.risolviSegnalazione(id, adminId, sospendiAutore)
+
+    suspend fun rifiutaSegnalazione(id: Long, adminId: Long) =
+        adminApiService.rifiutaSegnalazione(id, adminId)
+
+    suspend fun riattivaUtente(id: Long) =
+        adminApiService.riattivaUtente(id)
+
+    suspend fun getSegnalazioni(): Response<PageResponse<SegnalazioneDTO>> {
+        return adminApiService.getSegnalazioni(
+            tipo = null,
+            stato = null,
+            pagina = 0,
+            dimensione = 50
+        )
+    }
+
+    suspend fun getUtentiBannati() =
+        adminApiService.getUtentiBannati()
 
     private fun mappaDtoAEntity(dto: RichiestaPromozioneResponse): RichiestaPromozioneEntity {
         return RichiestaPromozioneEntity(

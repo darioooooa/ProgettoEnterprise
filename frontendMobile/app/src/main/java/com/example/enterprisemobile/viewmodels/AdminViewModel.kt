@@ -9,6 +9,9 @@ import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
 import com.example.enterprisemobile.data.repository.AdminRepository
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
+import com.example.enterprisemobile.model.UtenteBannatoDTO
+import com.example.enterprisemobile.model.SegnalazioneDTO
+import android.util.Log
 
 class AdminViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -40,6 +43,13 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     private var filtroStato: String? = null
     private var filtroUsername: String? = null
     private val dimensionePagina = 10
+
+    private val _mostraArchivio = MutableLiveData(false)
+    val mostraArchivio: LiveData<Boolean> = _mostraArchivio
+
+    fun cambiaVisualizzazione(archivio: Boolean) {
+        _mostraArchivio.value = archivio
+    }
 
     fun caricaRichieste(page: Int = 0) {
         viewModelScope.launch {
@@ -148,4 +158,78 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     fun resetDocumentoScaricato() {
         _documentoScaricato.value = null
     }
+    private val _segnalazioni = MutableLiveData<List<SegnalazioneDTO>>()
+    val segnalazioni: LiveData<List<SegnalazioneDTO>> = _segnalazioni
+
+    private val _utentiBannati = MutableLiveData<List<UtenteBannatoDTO>>()
+    val utentiBannati: LiveData<List<UtenteBannatoDTO>> = _utentiBannati
+
+    fun caricaSegnalazioni(statoFiltro: String? = null) {
+        viewModelScope.launch {
+            try {
+                val response = repository.getSegnalazioni()
+                if (response.isSuccessful) {
+                    _segnalazioni.value = response.body()?.content ?: emptyList()
+                }
+            }catch (e: Exception) {
+                Log.e("ADMIN_DEBUG", "Eccezione Rete/App: ${e.message}")
+                _errorMessage.value = "Impossibile collegarsi al server: ${e.message}"
+            }
+        }
+    }
+
+    fun caricaUtentiBannati() {
+        viewModelScope.launch {
+            try {
+                val response = repository.getUtentiBannati()
+                if (response.isSuccessful) {
+                    // Nessun .content qui, Spring Boot restituisce direttamente la lista
+                    _utentiBannati.value = response.body() ?: emptyList()
+                } else {
+                    val errorBodyString = response.errorBody()?.string()
+                    Log.e("ADMIN_DEBUG", "API Ban Fallita: ${response.code()} - $errorBodyString")
+                    _errorMessage.value = "Errore Server: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                Log.e("ADMIN_DEBUG", "Eccezione API Ban: ${e.message}")
+                _errorMessage.value = "Impossibile collegarsi: ${e.message}"
+            }
+        }
+    }
+    fun prendiInCaricoSegnalazione(id: Long, adminId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = repository.prendiInCarico(id, adminId)
+                if (response.isSuccessful) onSuccess() else onError("Errore presa in carico")
+            } catch (e: Exception) { onError(e.message ?: "Errore di rete") }
+        }
+    }
+
+    fun risolviSegnalazione(id: Long, adminId: Long, sospendiAutore: Boolean, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = repository.risolviSegnalazione(id, adminId, sospendiAutore)
+                if (response.isSuccessful) onSuccess() else onError("Errore durante la risoluzione")
+            } catch (e: Exception) { onError(e.message ?: "Errore di rete") }
+        }
+    }
+
+    fun rifiutaSegnalazione(id: Long, adminId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = repository.rifiutaSegnalazione(id, adminId)
+                if (response.isSuccessful) onSuccess() else onError("Errore nel rifiuto")
+            } catch (e: Exception) { onError(e.message ?: "Errore di rete") }
+        }
+    }
+
+    fun sbannaUtente(id: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = repository.riattivaUtente(id)
+                if (response.isSuccessful) onSuccess() else onError("Errore durante lo sblocco")
+            } catch (e: Exception) { onError(e.message ?: "Errore di rete") }
+        }
+    }
+
 }

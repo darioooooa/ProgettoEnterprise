@@ -42,6 +42,9 @@ import com.example.enterprisemobile.viewmodels.AdminViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import com.example.enterprisemobile.model.SegnalazioneDTO
+import com.example.enterprisemobile.model.UtenteBannatoDTO
+
 
 class AdminActivity : ComponentActivity() {
     private val viewModel: AdminViewModel by viewModels()
@@ -74,7 +77,6 @@ fun AdminContent(viewModel: AdminViewModel) {
     var vistaAttuale by remember { mutableStateOf("PENDENTI") }
     var isDownloading by remember { mutableStateOf(false) }
 
-    // ✅ NUOVO: Stato per la ricerca
     var queryRicerca by remember { mutableStateOf("") }
 
     var mostraModaleMotivazione by remember { mutableStateOf(false) }
@@ -88,6 +90,8 @@ fun AdminContent(viewModel: AdminViewModel) {
 
     LaunchedEffect(Unit) {
         viewModel.filtraPerStato("IN_ATTESA")
+        viewModel.caricaSegnalazioni()
+        viewModel.caricaUtentiBannati()
     }
 
     LaunchedEffect(errorMessage) {
@@ -107,7 +111,6 @@ fun AdminContent(viewModel: AdminViewModel) {
                             downloadsDir.mkdirs()
                         }
 
-                        // Capiamo se è un Word o un PDF guardando la sua natura reale
                         val tipoContenuto = body.contentType()?.toString()?.lowercase() ?: ""
                         val estensione = if (tipoContenuto.contains("word") || tipoContenuto.contains("document")) {
                             ".docx"
@@ -115,7 +118,6 @@ fun AdminContent(viewModel: AdminViewModel) {
                             ".pdf"
                         }
 
-                        // Assegniamo l'etichetta corretta
                         val fileName = "candidatura_${System.currentTimeMillis()}$estensione"
                         val file = File(downloadsDir, fileName)
 
@@ -290,6 +292,15 @@ fun AdminContent(viewModel: AdminViewModel) {
                         selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
                     )
                 )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Block, contentDescription = "Ban") },
+                    label = { Text("Ban", fontSize = 12.sp) },
+                    selected = selectedBottomTab == 2,
+                    onClick = { selectedBottomTab = 2 },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
+                    )
+                )
             }
         }
     ) { innerPadding ->
@@ -323,7 +334,6 @@ fun AdminContent(viewModel: AdminViewModel) {
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // ✅ BARRA DI RICERCA ANDROID
                             OutlinedTextField(
                                 value = queryRicerca,
                                 onValueChange = { queryRicerca = it },
@@ -406,7 +416,6 @@ fun AdminContent(viewModel: AdminViewModel) {
                                         )
                                     }
 
-                                    // PAGINAZIONE
                                     item {
                                         Row(
                                             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -439,19 +448,292 @@ fun AdminContent(viewModel: AdminViewModel) {
                             }
                         }
                     }
-                    1 -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Filled.Warning, null, tint = Color.Gray, modifier = Modifier.size(64.dp))
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text("Sezione Segnalazioni", color = WhiteText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                Text("In sviluppo...", color = Color.Gray, fontSize = 14.sp)
+                    1 -> SchermataSegnalazioni(viewModel)
+                    2 -> SchermataUtentiBannati(viewModel)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SchermataSegnalazioni(viewModel: AdminViewModel) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val adminId = sessionManager.ottieniIdUtente()?.toLongOrNull() ?: 0L
+
+    val segnalazioni by viewModel.segnalazioni.observeAsState(emptyList())
+    var mostraArchivio by remember { mutableStateOf(false) }
+
+    var mostraModaleRisolvi by remember { mutableStateOf(false) }
+    var mostraModaleBanna by remember { mutableStateOf(false) }
+    var segnalazioneSelezionata by remember { mutableStateOf<Long?>(null) }
+
+    val segnalazioniFiltrate = if (mostraArchivio) {
+        segnalazioni.filter { it.stato.toString() == "CHIUSA" || it.stato.toString() == "RIFIUTATA" }
+    } else {
+        segnalazioni.filter { it.stato.toString() == "APERTA" || it.stato.toString() == "IN_LAVORAZIONE" }
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Centro Segnalazioni", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { mostraArchivio = false
+                          viewModel.caricaSegnalazioni(null)},
+                colors = ButtonDefaults.buttonColors(containerColor = if (!mostraArchivio) AccentBlue else Color.Gray),
+                modifier = Modifier.weight(1f)
+            ) { Text("Da Gestire", color = if (!mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
+
+            Button(
+                onClick = { mostraArchivio = true
+                          viewModel.caricaSegnalazioni("CHIUSA")},
+                colors = ButtonDefaults.buttonColors(containerColor = if (mostraArchivio) AccentBlue else Color.Gray),
+                modifier = Modifier.weight(1f)
+            ) { Text("Archivio", color = if (mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
+        }
+
+        if (segnalazioniFiltrate.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                Text(
+                    text = if (mostraArchivio) "Nessuna segnalazione in archivio." else "Nessuna segnalazione da gestire.",
+                    color = Color.Gray
+                )
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 16.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(segnalazioniFiltrate) { segnalazione ->
+                    CartaSegnalazione(
+                        segnalazione = segnalazione,
+                        mostraAzioni = !mostraArchivio,
+                        onPrendiInCarico = {
+                            viewModel.prendiInCaricoSegnalazione(segnalazione.id.toLong(), adminId,
+                                onSuccess = {
+                                    Toast.makeText(context, "Presa in carico!", Toast.LENGTH_SHORT).show()
+                                    viewModel.caricaSegnalazioni()
+                                },
+                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                            )
+                        },
+                        onRisolvi = {
+                            segnalazioneSelezionata = segnalazione.id.toLong()
+                            mostraModaleRisolvi = true
+                        },
+                        onBanna = {
+                            segnalazioneSelezionata = segnalazione.id.toLong()
+                            mostraModaleBanna = true
+                        },
+                        onRifiuta = {
+                            viewModel.rifiutaSegnalazione(segnalazione.id.toLong(), adminId,
+                                onSuccess = {
+                                    Toast.makeText(context, "Segnalazione rifiutata.", Toast.LENGTH_SHORT).show()
+                                    viewModel.caricaSegnalazioni()
+                                },
+                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    if (mostraModaleRisolvi) {
+        AlertDialog(
+            onDismissRequest = { mostraModaleRisolvi = false },
+            title = { Text("Conferma Risoluzione", color = WhiteText) },
+            text = { Text("Confermi la risoluzione della segnalazione (con eventuale rimozione dell'elemento)?", color = Color.LightGray) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        segnalazioneSelezionata?.let { id ->
+                            viewModel.risolviSegnalazione(id, adminId, sospendiAutore = false,
+                                onSuccess = {
+                                    Toast.makeText(context, "Segnalazione risolta!", Toast.LENGTH_SHORT).show()
+                                    mostraModaleRisolvi = false
+                                    viewModel.caricaSegnalazioni()
+                                },
+                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                            )
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                ) { Text("Conferma") }
+            },
+            dismissButton = { TextButton(onClick = { mostraModaleRisolvi = false }) { Text("Annulla", color = Color.Gray) } },
+            containerColor = DarkNavy
+        )
+    }
+
+    if (mostraModaleBanna) {
+        AlertDialog(
+            onDismissRequest = { mostraModaleBanna = false },
+            title = { Text("⚠ ATTENZIONE BAN", color = DangerRed, fontWeight = FontWeight.Bold) },
+            text = { Text("Stai per applicare la sanzione più dura sull'elemento e sospendere definitivamente l'utente. Confermi?", color = Color.LightGray) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        segnalazioneSelezionata?.let { id ->
+                            viewModel.risolviSegnalazione(id, adminId, sospendiAutore = true,
+                                onSuccess = {
+                                    Toast.makeText(context, "Utente bannato con successo!", Toast.LENGTH_LONG).show()
+                                    mostraModaleBanna = false
+                                    viewModel.caricaSegnalazioni()
+                                    viewModel.caricaUtentiBannati()
+                                },
+                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                            )
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
+                ) { Text("Sì, Banna Utente") }
+            },
+            dismissButton = { TextButton(onClick = { mostraModaleBanna = false }) { Text("Annulla", color = Color.Gray) } },
+            containerColor = DarkNavy
+        )
+    }
+}
+
+@Composable
+fun CartaSegnalazione(
+    segnalazione: SegnalazioneDTO,
+    mostraAzioni: Boolean,
+    onPrendiInCarico: () -> Unit,
+    onRisolvi: () -> Unit,
+    onBanna: () -> Unit,
+    onRifiuta: () -> Unit
+) {
+    Surface(
+        color = CardOverlay,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("${segnalazione.id} - ${segnalazione.tipo}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Inviata da: ${segnalazione.segnalatoreUsername ?: "N/D"}", color = Color.LightGray, fontSize = 12.sp)
+                    Text("Riferimento: ${segnalazione.riferimentoNome ?: "N/D"}", color = DangerRed, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+
+                val (statoColore, statoTesto) = when (segnalazione.stato.toString()) {
+                    "APERTA" -> Color(0xFFF59E0B) to "APERTA"
+                    "IN_LAVORAZIONE" -> AccentBlue to "IN LAVORAZIONE"
+                    "CHIUSA" -> SuccessGreen to "RISOLTA"
+                    "RIFIUTATA" -> DangerRed to "RIFIUTATA"
+                    else -> Color.Gray to segnalazione.stato.toString()
+                }
+
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(statoColore.copy(alpha = 0.2f)).padding(horizontal = 8.dp, vertical = 4.dp)
+                ) { Text(statoTesto, color = statoColore, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = "Motivo: ${segnalazione.motivo}", color = Color(0xFFF59E0B), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(text = segnalazione.descrizione ?: "Nessuna descrizione", color = Color.Gray, fontSize = 12.sp)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (mostraAzioni) {
+                if (segnalazione.stato.toString() == "APERTA") {
+                    Button(onClick = onPrendiInCarico, colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), modifier = Modifier.fillMaxWidth()) {
+                        Text("Prendi in carico", color = DarkNavy, fontWeight = FontWeight.Bold)
+                    }
+                } else if (segnalazione.stato.toString() == "IN_LAVORAZIONE") {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen), modifier = Modifier.weight(1f)) {
+                            Text("✅ Risolvi", fontSize = 12.sp)
+                        }
+                        Button(onClick = onBanna, colors = ButtonDefaults.buttonColors(containerColor = DangerRed), modifier = Modifier.weight(1f)) {
+                            Text("⛔ Banna", fontSize = 12.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = onRifiuta, colors = ButtonDefaults.buttonColors(containerColor = DangerRed), modifier = Modifier.fillMaxWidth()) {
+                        Text("Rifiuta", color = WhiteText, fontWeight = FontWeight.Bold)
+                    }
+                }
+            } else {
+                Text("Segnalazione archiviata", color = Color.Gray, fontSize = 12.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+            }
+        }
+    }
+}
+
+@Composable
+fun SchermataUtentiBannati(viewModel: AdminViewModel) {
+    val context = LocalContext.current
+    var mostraModaleSbanna by remember { mutableStateOf(false) }
+    var utenteDaSbannare by remember { mutableStateOf<Long?>(null) }
+
+    val utentiBannati by viewModel.utentiBannati.observeAsState(emptyList())
+
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Utenti Bannati", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (utentiBannati.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Nessun utente bannato.", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 16.dp), modifier = Modifier.fillMaxSize()) {
+                items(utentiBannati) { utente ->
+                    Surface(color = CardOverlay, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("👤 ${utente.username}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                Text("Data: ${utente.dataBan}", color = Color.LightGray, fontSize = 12.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Motivo: ${utente.motivoBan}", color = DangerRed, fontSize = 14.sp)
                             }
+
+                            Button(
+                                onClick = {
+                                    utenteDaSbannare = utente.id.toLong()
+                                    mostraModaleSbanna = true
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                            ) { Text("🔓 Sbanna", color = WhiteText, fontWeight = FontWeight.Bold) }
                         }
                     }
                 }
             }
         }
+    }
+
+    if (mostraModaleSbanna) {
+        AlertDialog(
+            onDismissRequest = { mostraModaleSbanna = false },
+            title = { Text("Riattiva Utente", color = WhiteText, fontWeight = FontWeight.Bold) },
+            text = { Text("Sei sicuro di voler riattivare questo utente? Potrà nuovamente accedere alla piattaforma.", color = Color.LightGray) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        utenteDaSbannare?.let { id ->
+                            viewModel.sbannaUtente(id,
+                                onSuccess = {
+                                    Toast.makeText(context, "Utente riattivato con successo!", Toast.LENGTH_SHORT).show()
+                                    mostraModaleSbanna = false
+                                    viewModel.caricaUtentiBannati()
+                                },
+                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                            )
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                ) { Text("Conferma") }
+            },
+            dismissButton = { TextButton(onClick = { mostraModaleSbanna = false }) { Text("Annulla", color = Color.Gray) } },
+            containerColor = DarkNavy
+        )
     }
 }
 
@@ -570,7 +852,6 @@ private fun apriFile(context: android.content.Context, file: File) {
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_VIEW).apply {
 
-            // Scegliamo la "chiave di lettura" giusta in base a come finisce il nome
             val tipoCorretto = if (file.name.endsWith(".docx")) {
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             } else {

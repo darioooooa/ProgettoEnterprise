@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class ViaggioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ViaggioRepository
-    val viaggiSalvati: StateFlow<List<ViaggioEntity>>
+    val viaggiSalvati: StateFlow<List<ViaggioEntity>> 
 
     var nomeUtente by mutableStateOf("Caricamento...")
     var paginaCorrente by mutableIntStateOf(0)
