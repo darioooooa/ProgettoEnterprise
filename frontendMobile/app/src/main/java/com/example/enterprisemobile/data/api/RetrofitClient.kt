@@ -141,4 +141,8 @@ object RetrofitClient {
         return ottieniClientBackend(context).create(ViaggiatoreApiService::class.java)
     }
 
+    fun ottieniChatService(context: Context): InterfacciaApiChat {
+        return ottieniClientBackend(context).create(InterfacciaApiChat::class.java)
+    }
+
 }
