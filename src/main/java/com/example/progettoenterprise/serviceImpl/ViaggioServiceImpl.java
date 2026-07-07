@@ -141,8 +141,11 @@ public class ViaggioServiceImpl implements ViaggioService {
                 }
             } catch (Exception e) {
                 // Se una carta è bloccata, stampiamo l'errore ma il ciclo continua per rimborsare gli altri
-                log.error("Impossibile rimborsare la prenotazione ID {}: {}", prenotazione.getId(), e.getMessage());
-            }
+                log.error("Rimborso Stripe fallito per la prenotazione id {} (motivo: {}). Forzo annullamento prenotazione.",
+                        prenotazione.getId(), e.getMessage());
+
+                prenotazione.setStato(Prenotazione.StatoPrenotazione.ANNULLATA);
+                prenotazioneRepository.save(prenotazione);            }
         }
         if (viaggio.getPrenotazioniRicevute() != null) {
             for (Prenotazione p : viaggio.getPrenotazioniRicevute()) {
@@ -225,7 +228,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         // 3. Mappiamo nel DTO
         return viaggi.stream()
                 // Teniamo solo i viaggi che non sono annullati
-                .filter(viaggio -> viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
+                .filter(viaggio -> viaggio.getStato() != null && viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
                 .map(viaggio -> {
                     ViaggioMappaDTO dto = new ViaggioMappaDTO();
                     dto.setId(viaggio.getId());
@@ -314,7 +317,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         log.info("Trovati {} viaggi per l'organizzatore id: {}", viaggi.size(), organizzatoreId);
 
         return viaggi.stream()
-                .filter(viaggio -> viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
+                .filter(viaggio -> viaggio.getStato() != null && viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
                 .map(viaggio -> {
                     ViaggioDTO dto = modelMapper.map(viaggio, ViaggioDTO.class);
                     return dto;

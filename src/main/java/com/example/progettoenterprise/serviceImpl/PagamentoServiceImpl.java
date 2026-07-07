@@ -20,20 +20,19 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PagamentoServiceImpl implements PagamentoService {
         private final PagamentoRepository pagamentoRepository;
-        private final ViaggiatoreRepository viaggiatoreRepository;
         private final PrenotazioneRepository prenotazioneRepository;
         private final ModelMapper modelMapper;
         private final MessageLang messageLang;
@@ -129,9 +128,20 @@ public class PagamentoServiceImpl implements PagamentoService {
         Pagamento pagamento = pagamentoRepository.findByPrenotazioneId(idPrenotazione)
                 .orElseThrow(() -> new EntityNotFoundException("Pagamento non trovato per questa prenotazione."));
         Prenotazione prenotazione = pagamento.getPrenotazione();
+
+        // Pulizia della stringa se per errore contiene il "_secret_"
+        String ricevutaRaw = pagamento.getRicevutaPagamento();
+        String paymentIntentId = ricevutaRaw;
+
+        if (ricevutaRaw != null && ricevutaRaw.contains("_secret_")) {
+            // Estrae solo la parte iniziale prima di "_secret_", cioè il vero id
+            paymentIntentId = ricevutaRaw.split("_secret_")[0];
+            log.info("Pulizia ClientSecret effettuata. id isolato: {}", paymentIntentId);
+        }
+
         // Preparo i parametri per Stripe usando il PaymentIntent ID che ho salvato quando ha pagato
         RefundCreateParams params = RefundCreateParams.builder()
-                .setPaymentIntent(pagamento.getRicevutaPagamento()) // qui c'è la ricevuta di pagamento
+                .setPaymentIntent(paymentIntentId) // Ricevuta di pagamento
                 .build();
 
         //Chiamo Stripe per eseguire il rimborso
