@@ -114,5 +114,34 @@ public class NotificheEventListener {
             log.warn("⚠️ Impossibile inviare: token vuoto.");
         }
     }
+    @Async
+    @EventListener
+    public void gestisciUtenteBannato(UtenteBannatoEvent event) {
+        if (event.getTokenUtente() != null && !event.getTokenUtente().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenUtente(),
+                    "Account Sospeso 🚫",
+                    "Il tuo account è stato disabilitato da un amministratore per violazione delle linee guida della community."
+            );
+        } else {
+            log.warn("⚠️L'utente bannato non ha un token registrato.");
+        }
+    }
+    @Async
+    @EventListener
+    public void gestisciNuovoMessaggioChat(NuovoMessaggioChatEvent event) {
+
+        if (event.getTokenRicevente() != null && !event.getTokenRicevente().trim().isEmpty()) {
+            notificaPushService.inviaNotificaAUtente(
+                    event.getTokenRicevente(),
+                    event.getMittenteUsername(), // Il titolo della notifica è il nome del mittente
+                    "Ti ha inviato un nuovo messaggio."
+            );
+        } else {
+            // Qui mettiamo un log di livello DEBUG e non WARN, perché in chat è normalissimo
+            // che l'utente non abbia il token o non abbia l'app in background
+            log.debug("📝  Notifica saltata: il destinatario non ha un token Firebase.");
+        }
+    }
 
 }

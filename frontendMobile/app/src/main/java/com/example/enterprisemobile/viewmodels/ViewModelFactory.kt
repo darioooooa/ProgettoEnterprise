@@ -2,12 +2,13 @@ package com.example.enterprisemobile.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.enterprisemobile.data.repository.PrenotazioneRepository
 import com.example.enterprisemobile.data.repository.ViaggioRepository
 
 class ViewModelFactory(
-    private val repository: ViaggioRepository
+    private val repository: ViaggioRepository,
+    private val prenotazioneRepository: PrenotazioneRepository
 
-    //se servono altri repository nella factory vanno  aggiunti semplicemente qui
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -15,7 +16,7 @@ class ViewModelFactory(
 
         //  Diciamo alla Factory come costruire l'HomeOrganizzatoreViewModel
         if (modelClass.isAssignableFrom(HomeOrganizzatoreViewModel::class.java)) {
-            return HomeOrganizzatoreViewModel(repository) as T
+            return HomeOrganizzatoreViewModel(repository,prenotazioneRepository) as T
         }
 
         //Quando verranno create le altre schermate, gli altripezzi di codice vanno aggiunti qui sotto

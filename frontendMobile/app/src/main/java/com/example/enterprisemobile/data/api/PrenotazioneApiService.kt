@@ -24,7 +24,9 @@ interface PrenotazioneApiService {
 
     @GET("prenotazioni")
     suspend fun getMiePrenotazioni(
-        @Query("page") page: Int = 0
+        @Query("page") page: Int = 0,
+        @Query("stato") stato: String? = null,
+        @Query("username") username: String? = null
     ): Response<PageResponse<PrenotazioneDTO>>
 
     @Streaming
@@ -32,4 +34,6 @@ interface PrenotazioneApiService {
     suspend fun scaricaFileIcs(
         @Path("prenotazioneId") prenotazioneId: Long
     ): Response<ResponseBody>
+
+
 }

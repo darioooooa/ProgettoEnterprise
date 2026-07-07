@@ -8,6 +8,7 @@ import com.example.progettoenterprise.data.repositories.specifications.Segnalazi
 import com.example.progettoenterprise.data.service.SegnalazioneService;
 import com.example.progettoenterprise.dto.SegnalazioneDTO;
 import com.example.progettoenterprise.events.SegnalazioneUtenteEvent;
+import com.example.progettoenterprise.events.UtenteBannatoEvent;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -130,11 +131,7 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
                     }
 
                     if (sospendiAutore) {
-                        utente.setAttivo(false);
-                        utente.setMotivoSospensione("Account sospeso a seguito di segnalazione diretta: " + segnalazione.getMotivo());
-                        utenteRepository.save(utente);
-                        disabilitaSuKeycloak(utente.getUsername());
-                        emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
+                        eseguiProceduraBan(utente, "Account sospeso a seguito di segnalazione per la seguente motivazione: " + segnalazione.getMotivo());
                     } else {
                         emailService.inviaEmailAvvertimento(utente.getEmail(), utente.getUsername(), "Il tuo comportamento generale è stato segnalato e valutato non conforme dai moderatori.");
                     }
@@ -149,11 +146,7 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
                     utenteRepository.findByUsername(autoreUsername).ifPresent(autore -> {
                         if (sospendiAutore && autore.getRuolo() != Utente.Ruolo.ROLE_ORGANIZZATORE) {
-                            autore.setAttivo(false);
-                            autore.setMotivoSospensione("Sospeso per invio di messaggi inappropriati/spam in chat.");
-                            utenteRepository.save(autore);
-                            disabilitaSuKeycloak(autore.getUsername());
-                            emailService.inviaEmailBan(autore.getEmail(), autore.getUsername());
+                            eseguiProceduraBan(autore, "Sospeso per invio di messaggi inappropriati/spam in chat.");
                         } else {
                             emailService.inviaEmailAvvertimento(autore.getEmail(), autore.getUsername(), "Messaggio in chat: \"" + contenutoRimosso + "\"");
 
@@ -173,11 +166,7 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
                     utenteRepository.findByUsername(autoreUsername).ifPresent(autore -> {
                         if (sospendiAutore && autore.getRuolo() != Utente.Ruolo.ROLE_ORGANIZZATORE) {
-                            autore.setAttivo(false);
-                            autore.setMotivoSospensione("Sospeso per pubblicazione di recensioni inappropriate/spam.");
-                            utenteRepository.save(autore);
-                            disabilitaSuKeycloak(autore.getUsername());
-                            emailService.inviaEmailBan(autore.getEmail(), autore.getUsername());
+                            eseguiProceduraBan(autore, "Sospeso per pubblicazione di recensioni inappropriate/spam.");
                         } else {
                             emailService.inviaEmailAvvertimento(autore.getEmail(), autore.getUsername(), "Una tua recensione è stata rimossa in quanto ritenuta inappropriata o non veritiera dai moderatori.");
                         }
@@ -188,6 +177,23 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
         Segnalazione salvata = segnalazioneRepository.save(segnalazione);
         return convertiConNomi(salvata);
+    }
+    private void eseguiProceduraBan(Utente utente, String motivazione) {
+        // Aggiorna lo stato sul Database
+        utente.setAttivo(false);
+        utente.setMotivoSospensione(motivazione);
+        utenteRepository.save(utente);
+
+        // Lancia la Notifica Push
+        String token = utente.getFirebaseToken();
+        if (token != null && !token.trim().isEmpty()) {
+            applicationEventPublisher.publishEvent(new UtenteBannatoEvent(token));
+            log.info("✅ [DEBUG BAN] Notifica Push lanciata per l'utente {}", utente.getUsername());
+        }
+
+        //Disabilita su Keycloak e invia l'email
+        disabilitaSuKeycloak(utente.getUsername());
+        emailService.inviaEmailBan(utente.getEmail(), utente.getUsername());
     }
 
     @Override

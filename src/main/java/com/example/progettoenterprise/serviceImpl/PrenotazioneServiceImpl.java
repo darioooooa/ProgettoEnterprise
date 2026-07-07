@@ -219,8 +219,8 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             log.debug("Ruolo ADMIN rilevato: forzatura filtro su tutte le prenotazioni");
         }
 
-        if (prenotazioneFilter.getStato() == null) {
-            log.debug("Stato non specificato, impostazione predefinita: CONFERMATA");
+        if (prenotazioneFilter.getStato() == null && utente.getRuolo().equals(Utente.Ruolo.ROLE_VIAGGIATORE)) {
+            log.debug("Ruolo VIAGGIATORE e stato non specificato: impostazione predefinita CONFERMATA");
             prenotazioneFilter.setStato(Prenotazione.StatoPrenotazione.CONFERMATA);
         }
 
