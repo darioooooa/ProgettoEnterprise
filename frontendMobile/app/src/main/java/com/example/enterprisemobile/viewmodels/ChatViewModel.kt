@@ -19,7 +19,6 @@ class ChatViewModel(
     private val statoMessaggiInterno = MutableStateFlow<List<MessaggioChatDTO>>(emptyList())
     val messaggiVisibili: StateFlow<List<MessaggioChatDTO>> = statoMessaggiInterno
 
-
     private val statoStanzeInterno = MutableStateFlow<List<StanzaChatDTO>>(emptyList())
     val stanzeVisibili: StateFlow<List<StanzaChatDTO>> = statoStanzeInterno
 
@@ -30,11 +29,10 @@ class ChatViewModel(
         ascoltaMessaggiInArrivo()
     }
 
-
     fun caricaLeMieStanze(nomeUtente: String) {
         viewModelScope.launch {
             try {
-                // Passiamo il nome utente  a Retrofit
+                // Passiamo il nome utente a Retrofit
                 val stanzeRecuperate = chiamateApiChat.caricaLeMieStanze(nomeUtente)
                 statoStanzeInterno.value = stanzeRecuperate
             } catch (erroreDiRete: Exception) {
@@ -72,7 +70,6 @@ class ChatViewModel(
                 println("Impossibile caricare lo storico: ${erroreDiRete.message}")
             }
 
-
             servizioDiChat.iscrivitiAllaStanza(identificativoStanza)
         }
     }
@@ -85,6 +82,7 @@ class ChatViewModel(
         super.onCleared()
         servizioDiChat.chiudiConnessione()
     }
+
     fun azzeraNotificheStanza(identificativoStanza: Long, nomeUtente: String) {
         viewModelScope.launch {
             try {
@@ -95,16 +93,47 @@ class ChatViewModel(
             }
         }
     }
-    fun attivaAscoltoNotifiche(nomeUtente: String) {
+    fun azzeraNotificheStanzaOrganizzatore(identificativoStanza: Long, nomeUtente: String) {
+        viewModelScope.launch {
+            try {
+                chiamateApiChat.segnaMessaggiComeLetti(identificativoStanza, nomeUtente)
+                caricaLeMieStanzeOrganizzatore(nomeUtente)
+            } catch (erroreDiRete: Exception) {
+                println("Impossibile azzerare le notifiche organizzatore: ${erroreDiRete.message}")
+            }
+        }
+    }
 
+    fun attivaAscoltoNotifiche(nomeUtente: String) {
         servizioDiChat.ascoltaNotificheLive(nomeUtente)
 
         viewModelScope.launch {
-
             servizioDiChat.notificheGlobali.collect {
-
-                // Ricarica le stanze
+                // Ricarica le stanze del viaggiatore
                 caricaLeMieStanze(nomeUtente)
+            }
+        }
+    }
+
+    fun attivaAscoltoNotificheOrganizzatore(nomeUtente: String) {
+        servizioDiChat.ascoltaNotificheLive(nomeUtente)
+
+        viewModelScope.launch {
+            servizioDiChat.notificheGlobali.collect {
+                // Ricarica le stanze dell'organizzatore
+                caricaLeMieStanzeOrganizzatore(nomeUtente)
+            }
+        }
+    }
+
+    fun caricaLeMieStanzeOrganizzatore(nomeUtente: String) {
+        viewModelScope.launch {
+            try {
+                val stanzeRecuperate = chiamateApiChat.caricaStanzeOrganizzatore(nomeUtente)
+                // Salviamo le stanze nel contenitore unificato
+                statoStanzeInterno.value = stanzeRecuperate
+            } catch (erroreDiRete: Exception) {
+                println("Errore nel caricamento delle stanze organizzatore: ${erroreDiRete.message}")
             }
         }
     }

@@ -22,5 +22,10 @@ interface InterfacciaApiChat {
         @retrofit2.http.Query("username") nomeUtente: String
     )
 
+    @retrofit2.http.GET("/api/chat/organizzatore")
+    suspend fun caricaStanzeOrganizzatore(
+        @retrofit2.http.Query("organizzatoreUsername") nomeUtente: String
+    ): List<StanzaChatDTO>
+
 
 }

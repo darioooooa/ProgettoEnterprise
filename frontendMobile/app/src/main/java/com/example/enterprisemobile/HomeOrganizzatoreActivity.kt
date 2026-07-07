@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -32,6 +34,9 @@ import com.example.enterprisemobile.model.ViaggioMappaDTO
 import com.example.enterprisemobile.ui.StatisticheOrganizzatoreScreen
 import com.example.enterprisemobile.ui.theme.EnterpriseMobileTheme
 import com.example.enterprisemobile.ui.components.EnterpriseScaffold
+import com.example.enterprisemobile.ui.components.SchermataDellaChat
+import com.example.enterprisemobile.viewmodels.ChatViewModel
+import com.example.enterprisemobile.viewmodels.GeneratoreChatViewModel
 import com.example.enterprisemobile.viewmodels.HomeOrganizzatoreViewModel
 import com.example.enterprisemobile.viewmodels.StatisticheOrganizzatoreViewModel
 import com.example.enterprisemobile.viewmodels.ViewModelFactory
@@ -123,15 +128,27 @@ fun SchermataOrganizzatore(nomeUtente: String) {
     )
     val viewModelStatistiche: StatisticheOrganizzatoreViewModel = viewModel()
 
+    // Inizializzazione della Chat
+    val modelloDiVistaChat: ChatViewModel = viewModel(
+        factory = GeneratoreChatViewModel(context)
+    )
+    val listaDelleStanzeReali by modelloDiVistaChat.stanzeVisibili.collectAsState()
+    var identificativoStanzaSelezionata by rememberSaveable { mutableStateOf<Long?>(null) }
+
+
     val viaggi by viewModel.viaggi.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    // ✅ NUOVO: Stato per la bottom bar
+    // Stato per la bottom bar
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
     // Caricamento asincrono iniziale
     LaunchedEffect(Unit) {
         viewModel.caricaDatiMappa()
+
+        // Avviamo il recupero e l'ascolto delle notifiche per l'organizzatore
+        modelloDiVistaChat.caricaLeMieStanzeOrganizzatore(nomeUtente)
+        modelloDiVistaChat.attivaAscoltoNotificheOrganizzatore(nomeUtente)
 
         com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -157,9 +174,11 @@ fun SchermataOrganizzatore(nomeUtente: String) {
         }
     }
 
-
     val items = listOf("Home", "Statistiche", "Messaggi")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.BarChart, Icons.Filled.Email)
+
+    // Calcoliamo il numero totale delle notifiche live
+    val totaleNotifiche = listaDelleStanzeReali.sumOf { it.numeroMessaggiNonLetti }
 
     EnterpriseScaffold(
         titolo = "Dashboard",
@@ -171,7 +190,21 @@ fun SchermataOrganizzatore(nomeUtente: String) {
             NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
-                        icon = { Icon(icons[index], contentDescription = item) },
+                        icon = {
+                            if (index == 2 && totaleNotifiche > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge {
+                                            Text(totaleNotifiche.toString())
+                                        }
+                                    }
+                                ) {
+                                    Icon(icons[index], contentDescription = item)
+                                }
+                            } else {
+                                Icon(icons[index], contentDescription = item)
+                            }
+                        },
                         label = { Text(item) },
                         selected = selectedItem == index,
                         onClick = { selectedItem = index },
@@ -355,28 +388,90 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                 }
 
                 2 -> {
-                    // SEZIONE MESSAGGI - Placeholder
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Filled.Email,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Messaggi",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Sezione in arrivo...",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                    // SEZIONE MESSAGGI - Chat Completa Organizzatore
+                    if (identificativoStanzaSelezionata == null) {
+                        if (listaDelleStanzeReali.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Nessuna conversazione attiva al momento.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize().padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(listaDelleStanzeReali) { stanzaCorrente ->
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                identificativoStanzaSelezionata = stanzaCorrente.identificativoStanza
+                                                // Avvisa il server che l'organizzatore ha aperto la chat tenendo la logica separata
+                                                modelloDiVistaChat.azzeraNotificheStanzaOrganizzatore(
+                                                    stanzaCorrente.identificativoStanza,
+                                                    nomeUtente
+                                                )
+                                            }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = stanzaCorrente.titoloDelViaggio,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 16.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                // Mostriamo chi è il viaggiatore
+                                                Text(
+                                                    text = "Viaggiatore: ${stanzaCorrente.nomeUtenteViaggiatore}",
+                                                    fontSize = 14.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+
+                                            if (stanzaCorrente.numeroMessaggiNonLetti > 0) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(50),
+                                                    color = MaterialTheme.colorScheme.error,
+                                                    modifier = Modifier.padding(start = 8.dp).size(24.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Text(
+                                                            text = stanzaCorrente.numeroMessaggiNonLetti.toString(),
+                                                            color = MaterialTheme.colorScheme.onError,
+                                                            fontSize = 12.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            TextButton(
+                                onClick = { identificativoStanzaSelezionata = null },
+                                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                            ) {
+                                Text(text = "⬅ Torna alla lista delle chat")
+                            }
+
+                            SchermataDellaChat(
+                                modelloDiVistaChat = modelloDiVistaChat,
+                                identificativoDellaStanza = identificativoStanzaSelezionata!!,
+                                nomeDelMittenteLocale = nomeUtente
                             )
                         }
                     }
