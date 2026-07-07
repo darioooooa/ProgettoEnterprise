@@ -28,6 +28,8 @@ class ServizioChat(private val tokenDiAccesso: String) {
 
     private val flussoMessaggiInArrivo = MutableSharedFlow<String>()
     val messaggiRicevuti: SharedFlow<String> = flussoMessaggiInArrivo
+    private val flussoNotifiche = MutableSharedFlow<String>()
+    val notificheGlobali: SharedFlow<String> = flussoNotifiche
 
     private fun creaClientWebSocketSicuro(token: String): OkHttpClient {
         val gestoreCertificati = arrayOf<TrustManager>(object : X509TrustManager {
@@ -99,6 +101,25 @@ class ServizioChat(private val tokenDiAccesso: String) {
             sessioneAttiva?.sendText(destinazioneServer, corpoMessaggio)
         }
     }
+    fun ascoltaNotificheLive(nomeUtente: String) {
+        ambitoCoroutines.launch {
+
+            var tentativi = 0
+            while (sessioneAttiva == null && tentativi < 10) {
+                kotlinx.coroutines.delay(500)
+                tentativi++
+            }
+
+            sessioneAttiva?.let { sessione ->
+                val canale = "/topic/notifiche/$nomeUtente"
+                sessione.subscribeText(canale).collect {
+
+                    flussoNotifiche.emit(it)
+                }
+            }
+        }
+    }
+
 
     fun chiudiConnessione() {
         ambitoCoroutines.launch {

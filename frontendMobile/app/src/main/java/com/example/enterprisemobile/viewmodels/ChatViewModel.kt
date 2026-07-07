@@ -65,7 +65,7 @@ class ChatViewModel(
     fun entraNellaStanza(identificativoStanza: Long) {
         viewModelScope.launch {
             try {
-                // Recuperiamo lo storico dal database e lo mostriamo subito
+                // Recuperiamo lo storico dal database
                 val cronologiaPassata = chiamateApiChat.ottieniCronologiaStorica(identificativoStanza)
                 statoMessaggiInterno.value = cronologiaPassata
             } catch (erroreDiRete: Exception) {
@@ -92,6 +92,19 @@ class ChatViewModel(
                 caricaLeMieStanze(nomeUtente)
             } catch (erroreDiRete: Exception) {
                 println("Impossibile azzerare le notifiche: ${erroreDiRete.message}")
+            }
+        }
+    }
+    fun attivaAscoltoNotifiche(nomeUtente: String) {
+
+        servizioDiChat.ascoltaNotificheLive(nomeUtente)
+
+        viewModelScope.launch {
+
+            servizioDiChat.notificheGlobali.collect {
+
+                // Ricarica le stanze
+                caricaLeMieStanze(nomeUtente)
             }
         }
     }

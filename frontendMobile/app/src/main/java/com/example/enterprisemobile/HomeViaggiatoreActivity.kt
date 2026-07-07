@@ -77,6 +77,9 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     LaunchedEffect(Unit) {
         itinerarioViewModel.caricaItinerari()
         modelloDiVistaChat.caricaLeMieStanze(viewModel.nomeUtente)
+
+        // ACCENDIAMO LA RADIO DELLE NOTIFICHE GLOBALI IN BACKGROUND
+        modelloDiVistaChat.attivaAscoltoNotifiche(viewModel.nomeUtente)
     }
 
     val totaleNotifiche = listaDelleStanzeReali.sumOf { it.numeroMessaggiNonLetti }
