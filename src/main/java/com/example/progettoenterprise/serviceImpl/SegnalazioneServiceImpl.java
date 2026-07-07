@@ -7,12 +7,14 @@ import com.example.progettoenterprise.data.repositories.*;
 import com.example.progettoenterprise.data.repositories.specifications.SegnalazioneSpecification;
 import com.example.progettoenterprise.data.service.SegnalazioneService;
 import com.example.progettoenterprise.dto.SegnalazioneDTO;
+import com.example.progettoenterprise.events.SegnalazioneUtenteEvent;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -40,6 +42,7 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
 
     private final Keycloak keycloakAdminClient;
     private final EmailServiceImpl emailService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -55,6 +58,22 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
         segnalazione.setSegnalatoreId(idSegnalatore);
         Segnalazione salvata = segnalazioneRepository.save(segnalazione);
         log.info("Nuova segnalazione creata con ID: {}", salvata.getId());
+        // per notifica segnalazione
+        if (salvata.getTipo() == Segnalazione.TipoEntita.UTENTE && salvata.getIdRiferimento() != null) {
+
+            utenteRepository.findById(salvata.getIdRiferimento()).ifPresent(utenteSegnalato -> {
+                String tokenSegnalato = utenteSegnalato.getFirebaseToken();
+
+                if (tokenSegnalato != null && !tokenSegnalato.trim().isEmpty()) {
+                    SegnalazioneUtenteEvent evento = new SegnalazioneUtenteEvent(tokenSegnalato);
+                    applicationEventPublisher.publishEvent(evento);
+                    log.info("✅  Evento inviato a Firebase per l'utente {}", utenteSegnalato.getUsername());
+                } else {
+                    log.warn("⚠️L'utente segnalato ({}) non ha un token Firebase salvato.", utenteSegnalato.getUsername());
+                }
+            });
+
+        }
         return convertiConNomi(salvata);
     }
 

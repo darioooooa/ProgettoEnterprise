@@ -53,7 +53,8 @@ export class SchermataPrenotazioni implements OnInit {
 
     this.prenotazioneService.getListaPrenotazioni(this.paginaCorrente, {}).subscribe({
       next: (rispostaPaginata: any) => {
-        this.listaPrenotazioni = rispostaPaginata.content || [];
+        const prenotazioniDalServer=rispostaPaginata.content||[];
+        this.listaPrenotazioni = prenotazioniDalServer.filter((p: any) => p.stato !== 'ANNULLATA');
         this.totalePagine = rispostaPaginata.totalPages || 0;
 
         const oggi = new Date();

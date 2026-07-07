@@ -1,7 +1,25 @@
 <div class="sfondo-globale">
   <div class="glass-container">
-    <h1 class="titolo-glass">I MIEI ITINERARI</h1>
-    <p class="sottotitolo-glass">Gestisci le tue avventure e i dettagli delle prenotazioni</p>
+
+    <div style="position: relative; text-align: center; margin-bottom: 25px;">
+
+      <h1 class="titolo-glass">I MIEI ITINERARI</h1>
+      <p class="sottotitolo-glass">Gestisci le tue avventure e i dettagli delle prenotazioni</p>
+
+      <button routerLink="/richieste-condivisione-itinerari" class="btn-richieste-fluttuante">
+
+        <span class="icona-campanella">🔔</span>
+        <span class="testo-bottone-richieste">
+          Richieste<br>
+          <span class="testo-bottone-richieste">Condivisione</span>
+        </span>
+
+        <span *ngIf="invitiPendentiCount > 0" class="badge-notifica-sovrapposto">
+          {{ invitiPendentiCount }}
+        </span>
+      </button>
+
+    </div>
 
     <button class="btn-crea-nuovo" [disabled]="isLoading" (click)="apriModaleCreazione()">+ Crea Nuovo Itinerario</button>
 

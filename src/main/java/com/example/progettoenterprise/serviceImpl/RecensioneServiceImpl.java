@@ -13,11 +13,13 @@ import com.example.progettoenterprise.data.repositories.ViaggioRepository;
 import com.example.progettoenterprise.data.repositories.specifications.RecensioneSpecification;
 import com.example.progettoenterprise.data.service.RecensioneService;
 import com.example.progettoenterprise.dto.RecensioneDTO;
+import com.example.progettoenterprise.events.NuovaRecensioneEvent;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -41,6 +43,8 @@ public class RecensioneServiceImpl implements RecensioneService {
 
     private final MessageLang messageLang;
     private final ModelMapper modelMapper;
+
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -93,6 +97,17 @@ public class RecensioneServiceImpl implements RecensioneService {
 
         // Aggiorna la media del viaggio
         viaggioRepository.aggiornaStatisticheRecensione(viaggioId,voto);
+        //per notifica recensione
+        String tokenOrganizzatore = viaggio.getOrganizzatore().getFirebaseToken();
+        if (tokenOrganizzatore != null && !tokenOrganizzatore.trim().isEmpty()) {
+            NuovaRecensioneEvent evento = new NuovaRecensioneEvent(
+                    tokenOrganizzatore,
+                    viaggio.getTitolo(),
+                    autore.getUsername()
+            );
+            applicationEventPublisher.publishEvent(evento);
+            log.info("Notifica di nuova recensione inviata all'organizzatore del viaggio ID: {}", viaggioId);
+        }
 
         return modelMapper.map(salvata, RecensioneDTO.class);
     }

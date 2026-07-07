@@ -1,7 +1,7 @@
 package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
-import com.example.progettoenterprise.data.NotificaPushService;
+import com.example.progettoenterprise.data.service.notificheService.NotificaPushService;
 import com.example.progettoenterprise.data.entities.Notifica;
 import com.example.progettoenterprise.data.entities.Utente;
 import com.example.progettoenterprise.data.repositories.NotificaRepository;

@@ -12,7 +12,7 @@
 
         <div class="header-actions-container">
 
-          <button *ngIf="isMioViaggio()"
+          <button *ngIf="isMioViaggio() && isViaggioNonAncoraIniziato()"
                   type="button"
                   (click)="eliminaViaggio(viaggioId)"
                   class="btn-elimina-top"
@@ -73,7 +73,7 @@
         <div class="stat-card">
           <span class="stat-icon">✈️</span>
           <div class="stat-info">
-            <label>Itinerario</label>
+            <label>Tratta</label>
             <p>{{ statistiche.cittaPartenza }} ➔ {{ statistiche.destinazione }}</p>
           </div>
         </div>

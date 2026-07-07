@@ -19,7 +19,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   mostraMenu: boolean = false;
   mioUsername: string = '';
   notificheTotali: number = 0;
-  public invitiPendentiCount: number = 0;
 
   modaleAmiciAperta: boolean = false;
   vistaAttuale: 'listaAmici' | 'itinerariAmico' = 'listaAmici';
@@ -68,10 +67,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
       this.caricaNotificheChat();
-      this.caricaNotificheCondivisione()
+
       //per tenere la navbar in ascolto
       this.itinerarioService.aggiornaNotifiche.subscribe(() => {
-        this.caricaNotificheCondivisione();
       });
     }
 
@@ -419,18 +417,5 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.isLoading = false;
       this.cdr.detectChanges();
     });
-  }
-  isSezioneItinerari(): boolean {
-    return this.router.url.includes('/miei-itinerari') || this.router.url.includes('/richieste-condivisione-itinerari');
-  }
-  caricaNotificheCondivisione() {
-    if (this.isLoggato() && this.isViaggiatore()) {
-      this.itinerarioService.getInvitiInSospeso().subscribe({
-        next: (data) => {
-          this.invitiPendentiCount = data.length; // Prende quante richieste ci sono in array
-        },
-        error: (err) => console.error("Errore recupero notifiche condivisione", err)
-      });
-    }
   }
 }

@@ -3,6 +3,7 @@ package com.example.progettoenterprise.data.repositories;
 
 import com.example.progettoenterprise.data.entities.Prenotazione;
 import com.example.progettoenterprise.data.entities.Prenotazione.StatoPrenotazione;
+import com.example.progettoenterprise.data.entities.Utente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -44,5 +45,11 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione,Long>
     List<Prenotazione> findByViaggioIdAndStato(Long viaggioId, Prenotazione.StatoPrenotazione stato);
 
     Optional<Prenotazione> findByViaggioIdAndViaggiatoreId(Long viaggioId, Long viaggiatoreId);
+
+    @Query("SELECT DISTINCT p.viaggiatore FROM Prenotazione p " +
+            "WHERE LOWER(p.viaggio.destinazione) = LOWER(:destinazione) " +
+            "AND p.viaggio.dataFine < CURRENT_DATE " +
+            "AND p.stato = 'CONFERMATA'")
+    List<Utente> findViaggiatoriViaggiGiaFatti(@Param("destinazione") String destinazione);
 }
 

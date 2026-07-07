@@ -14,9 +14,12 @@ import com.example.progettoenterprise.data.service.PagamentoService;
 import com.example.progettoenterprise.data.service.ViaggioService;
 import com.example.progettoenterprise.dto.ViaggioDTO;
 import com.example.progettoenterprise.dto.ViaggioMappaDTO;
+import com.example.progettoenterprise.events.RimborsoErogatoEvent;
+import com.example.progettoenterprise.events.ViaggioConsigliatoEvent;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -25,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,6 +47,7 @@ public class ViaggioServiceImpl implements ViaggioService {
     private final MessageLang messageLang;
     private final PagamentoService pagamentoService;
     private final PrenotazioneRepository prenotazioneRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -80,6 +85,31 @@ public class ViaggioServiceImpl implements ViaggioService {
         viaggio.setPartecipantiAttuali(0);
         viaggio.setStato(Viaggio.StatoViaggio.APERTO);
         Viaggio salvato = viaggioRepository.save(viaggio);
+        //messo nel try catch perche in caso ci sono errori con le notifiche non bloccano la
+        //creazione del viaggio
+        try {
+
+            List<Utente> viaggiGiaFatti = prenotazioneRepository.findViaggiatoriViaggiGiaFatti(salvato.getDestinazione());
+
+            for (Utente utente : viaggiGiaFatti) {
+                // Escludiamo il creatore del viaggio (perché magari anche lui in passato c'era andato come passeggero)
+                if (!utente.getId().equals(salvato.getOrganizzatore().getId())) {
+
+                    String token = utente.getFirebaseToken();
+                    if (token != null && !token.trim().isEmpty()) {
+                        String cittaMaiuscola = salvato.getDestinazione().toUpperCase();
+                        ViaggioConsigliatoEvent evento = new ViaggioConsigliatoEvent(
+                                token,
+                                cittaMaiuscola,
+                                salvato.getTitolo()
+                        );
+                        eventPublisher.publishEvent(evento);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("⚠️ Errore non bloccante durante l'invio dei consigli: {}", e.getMessage());
+        }
         return modelMapper.map(salvato, ViaggioDTO.class);
     }
 
@@ -103,9 +133,20 @@ public class ViaggioServiceImpl implements ViaggioService {
             try {
                 pagamentoService.rimborsaPrenotazione(prenotazione.getId());
                 log.info("Rimborso Stripe automatico effettuato per la prenotazione ID: {}", prenotazione.getId());
+                //per notifica rimborso
+                String token = prenotazione.getViaggiatore().getFirebaseToken();
+                if (token != null && !token.trim().isEmpty()) {
+                    RimborsoErogatoEvent evento = new RimborsoErogatoEvent(token, viaggio.getTitolo());
+                    eventPublisher.publishEvent(evento);
+                }
             } catch (Exception e) {
                 // Se una carta è bloccata, stampiamo l'errore ma il ciclo continua per rimborsare gli altri
                 log.error("Impossibile rimborsare la prenotazione ID {}: {}", prenotazione.getId(), e.getMessage());
+            }
+        }
+        if (viaggio.getPrenotazioniRicevute() != null) {
+            for (Prenotazione p : viaggio.getPrenotazioniRicevute()) {
+                p.setStato(Prenotazione.StatoPrenotazione.ANNULLATA);
             }
         }
 
@@ -279,6 +320,13 @@ public class ViaggioServiceImpl implements ViaggioService {
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Viaggio> getViaggiInPartenza(LocalDate oggi, LocalDate limite) {
+        log.info("Recupero viaggi in partenza tra {} e {}", oggi, limite);
+        return viaggioRepository.findViaggiInPartenza(oggi, limite);
     }
 
 }

@@ -288,4 +288,13 @@ export class DettaglioViaggio implements OnInit {
     this.mostraSegnalazione = true;
     this.cdr.detectChanges();
   }
+
+  isViaggioNonAncoraIniziato(): boolean {
+    if (!this.statistiche || !this.statistiche.dataInizio) return true; // Se non ha caricato, di default mostriamo
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const dataPartenza = new Date(this.statistiche.dataInizio);
+    dataPartenza.setHours(0, 0, 0, 0);
+    return oggi < dataPartenza;
+  }
 }

@@ -1,7 +1,6 @@
 package com.example.progettoenterprise.serviceImpl;
 
 import com.example.progettoenterprise.config.i18n.MessageLang;
-import com.example.progettoenterprise.data.NotificaPushService;
 import com.example.progettoenterprise.data.entities.Prenotazione;
 import com.example.progettoenterprise.data.entities.Viaggio;
 import com.example.progettoenterprise.data.entities.Utente;
@@ -26,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +66,10 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
 
         List<Prenotazione> prenotazioniSovrapposte = prenotazioneRepository.findPrenotazioniSovrapposte(
-                idUtente, viaggio.getDataInizio(), viaggio.getDataFine());
+                idUtente, viaggio.getDataInizio(), viaggio.getDataFine())
+                .stream()
+                .filter(p -> p.getStato() != Prenotazione.StatoPrenotazione.ANNULLATA)
+                .collect(Collectors.toList());;
 
         if (!prenotazioniSovrapposte.isEmpty()) {
             log.warn("Prenotazione bloccata: l'utente {} ha già un viaggio in quelle date", idUtente);
