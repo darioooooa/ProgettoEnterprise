@@ -23,11 +23,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.ViaggioViewModel
 import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
 import com.example.enterprisemobile.ui.components.EnterpriseScaffold
 import com.example.enterprisemobile.ui.ItinerariScreen
+import com.example.enterprisemobile.viewmodels.ChatViewModel
+import com.example.enterprisemobile.viewmodels.GeneratoreChatViewModel
+import com.example.enterprisemobile.ui.components.SchermataDellaChat
 
 class HomeViaggiatoreActivity : ComponentActivity() {
     private val viaggioViewModel: ViaggioViewModel by viewModels()
@@ -48,7 +52,12 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     val listaViaggi by viewModel.viaggiSalvati.collectAsState()
     val mieiItinerari by itinerarioViewModel.itinerari.collectAsState()
     val isItinerarioLoading by itinerarioViewModel.isLoading.collectAsState()
-    val context = LocalContext.current
+
+    val contestoAttuale = LocalContext.current
+    val modelloDiVistaChat: ChatViewModel = viewModel(
+        factory = GeneratoreChatViewModel(contestoAttuale)
+    )
+    val listaDelleStanzeReali by modelloDiVistaChat.stanzeVisibili.collectAsState()
 
     var destinazione by rememberSaveable { mutableStateOf("") }
     var dataMin by rememberSaveable { mutableStateOf("") }
@@ -60,15 +69,17 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
     var viaggioSelezionatoId by rememberSaveable { mutableStateOf<Long?>(null) }
     var mostraModaleSceltaItinerario by rememberSaveable { mutableStateOf(false) }
+    var identificativoStanzaSelezionata by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val items = listOf("Home", "Itinerari", "Messaggi")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.Place, Icons.Filled.Email)
-    var notificheAmici by remember { mutableIntStateOf(0) }
 
-    // Sincronizza gli itinerari del viaggiatore all'avvio
     LaunchedEffect(Unit) {
         itinerarioViewModel.caricaItinerari()
+        modelloDiVistaChat.caricaLeMieStanze(viewModel.nomeUtente)
     }
+
+    val totaleNotifiche = listaDelleStanzeReali.sumOf { it.numeroMessaggiNonLetti }
 
     EnterpriseScaffold(
         titolo = "ENTERPRISE",
@@ -76,12 +87,26 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
         mostraFrecciaIndietro = false,
         bottomBar = {
             NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                items.forEachIndexed { index, item ->
+                items.forEachIndexed { indiceIcona, nomeIcona ->
                     NavigationBarItem(
-                        icon = { Icon(icons[index], contentDescription = item) },
-                        label = { Text(item) },
-                        selected = selectedItem == index,
-                        onClick = { selectedItem = index },
+                        icon = {
+                            if (indiceIcona == 2 && totaleNotifiche > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge {
+                                            Text(totaleNotifiche.toString())
+                                        }
+                                    }
+                                ) {
+                                    Icon(icons[indiceIcona], contentDescription = nomeIcona)
+                                }
+                            } else {
+                                Icon(icons[indiceIcona], contentDescription = nomeIcona)
+                            }
+                        },
+                        label = { Text(nomeIcona) },
+                        selected = selectedItem == indiceIcona,
+                        onClick = { selectedItem = indiceIcona },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -92,10 +117,11 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(innerPadding)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding)
         ) {
             when (selectedItem) {
                 0 -> {
@@ -164,12 +190,12 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                             .clickable {
                                                 val idPassato = viaggio.id
                                                 if (idPassato > 0) {
-                                                    val intent = Intent(context, DettaglioViaggioActivity::class.java).apply {
+                                                    val intent = Intent(contestoAttuale, DettaglioViaggioActivity::class.java).apply {
                                                         putExtra("VIAGGIO_ID", idPassato)
                                                     }
-                                                    context.startActivity(intent)
+                                                    contestoAttuale.startActivity(intent)
                                                 } else {
-                                                    Toast.makeText(context, "Errore: id viaggio non valido", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(contestoAttuale, "Errore: id viaggio non valido", Toast.LENGTH_SHORT).show()
                                                 }
                                             }
                                             .padding(4.dp)
@@ -192,7 +218,6 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                             }
 
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                // Pulsante + per salvare l'itinerario
                                                 IconButton(
                                                     onClick = {
                                                         viaggioSelezionatoId = viaggio.id
@@ -205,9 +230,9 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
 
                                                 Button(
                                                     onClick = {
-                                                        val intent = Intent(context, PrenotaViaggioActivity::class.java)
+                                                        val intent = Intent(contestoAttuale, PrenotaViaggioActivity::class.java)
                                                         intent.putExtra("VIAGGIO_ID", viaggio.id)
-                                                        context.startActivity(intent)
+                                                        contestoAttuale.startActivity(intent)
                                                     },
                                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary, contentColor = MaterialTheme.colorScheme.onTertiary)
                                                 ) {
@@ -231,85 +256,167 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                         }
                     }
                 }
+
                 1 -> {
                     ItinerariScreen(viewModel = itinerarioViewModel)
                 }
-                2 -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Messaggi in arrivo...", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 18.sp)
-                    }
-                }
-            }
-        }
-    }
 
-    // Dialog di selezione dell'itinerario personale
-    if (mostraModaleSceltaItinerario && viaggioSelezionatoId != null) {
-        AlertDialog(
-            onDismissRequest = { mostraModaleSceltaItinerario = false },
-            title = { Text("Salva nei tuoi itinerari", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Seleziona una delle tue liste di viaggio:")
-                    if (mieiItinerari.isEmpty()) {
-                        Text("Non hai ancora creato nessun itinerario personale.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                    } else {
+                2 -> {
+                    if (identificativoStanzaSelezionata == null) {
                         LazyColumn(
-                            modifier = Modifier.heightIn(max = 200.dp),
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(mieiItinerari) { itn ->
-                                val giaPresente = itn.viaggiContenuti?.any { it.id == viaggioSelezionatoId } == true
+                            items(listaDelleStanzeReali) { stanzaCorrente ->
                                 Surface(
-                                    color = if (giaPresente) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceVariant,
-                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable(enabled = !isItinerarioLoading) {
-                                            if (giaPresente) {
-                                                // Impedisce l'aggiunta duplicata
-                                                Toast.makeText(context, "Questo viaggio è già presente in ${itn.nome}!", Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                itinerarioViewModel.aggiungiViaggioAItinerario(itn.idItinerario ?: 0L, viaggioSelezionatoId!!) { successo ->
-                                                    if (successo) {
-                                                        Toast.makeText(context, "Viaggio aggiunto con successo!", Toast.LENGTH_SHORT).show()
-                                                    } else {
-                                                        Toast.makeText(context, "Errore durante l'aggiunta.", Toast.LENGTH_SHORT).show()
-                                                    }
-                                                    mostraModaleSceltaItinerario = false
-                                                }
-                                            }
+                                        .clickable {
+                                            identificativoStanzaSelezionata = stanzaCorrente.identificativoStanza
+                                            modelloDiVistaChat.azzeraNotificheStanza(
+                                                stanzaCorrente.identificativoStanza,
+                                                viewModel.nomeUtente
+                                            )
                                         }
                                 ) {
                                     Row(
-                                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(itn.nome, fontWeight = FontWeight.Medium)
-                                        if (giaPresente) {
-                                            Text("Già incluso", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stanzaCorrente.titoloDelViaggio,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 16.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = "Organizzatore: ${stanzaCorrente.nomeUtenteOrganizzatore}",
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+
+                                        if (stanzaCorrente.numeroMessaggiNonLetti > 0) {
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.padding(start = 8.dp).size(24.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Text(
+                                                        text = stanzaCorrente.numeroMessaggiNonLetti.toString(),
+                                                        color = MaterialTheme.colorScheme.onError,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                    } else {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            TextButton(
+                                onClick = { identificativoStanzaSelezionata = null },
+                                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                            ) {
+                                Text(text = "⬅ Torna alla lista delle chat")
+                            }
+
+                            SchermataDellaChat(
+                                modelloDiVistaChat = modelloDiVistaChat,
+                                identificativoDellaStanza = identificativoStanzaSelezionata!!,
+                                nomeDelMittenteLocale = viewModel.nomeUtente
+                            )
+                        }
                     }
                 }
-            },
-            confirmButton = {
-                if (isItinerarioLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                } else {
-                    TextButton(onClick = { mostraModaleSceltaItinerario = false }) { Text("Chiudi") }
-                }
             }
-        )
+
+            if (mostraModaleSceltaItinerario && viaggioSelezionatoId != null) {
+                AlertDialog(
+                    onDismissRequest = { mostraModaleSceltaItinerario = false },
+                    title = {
+                        Text(
+                            "Salva nei tuoi itinerari",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text("Seleziona una delle tue liste di viaggio:")
+                            if (mieiItinerari.isEmpty()) {
+                                Text("Non hai ancora creato nessun itinerario personale.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.heightIn(max = 200.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    items(mieiItinerari) { itn ->
+                                        val giaPresente = itn.viaggiContenuti?.any { it.id == viaggioSelezionatoId } == true
+                                        Surface(
+                                            color = if (giaPresente) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceVariant,
+                                            shape = RoundedCornerShape(8.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable(enabled = !isItinerarioLoading) {
+                                                    if (giaPresente) {
+                                                        Toast.makeText(contestoAttuale, "Questo viaggio è già presente in ${itn.nome}!", Toast.LENGTH_SHORT).show()
+                                                    } else {
+                                                        itinerarioViewModel.aggiungiViaggioAItinerario(itn.idItinerario ?: 0L, viaggioSelezionatoId!!) { successo ->
+                                                            if (successo) {
+                                                                Toast.makeText(contestoAttuale, "Viaggio aggiunto con successo!", Toast.LENGTH_SHORT).show()
+                                                            } else {
+                                                                Toast.makeText(contestoAttuale, "Errore durante l'aggiunta.", Toast.LENGTH_SHORT).show()
+                                                            }
+                                                            mostraModaleSceltaItinerario = false
+                                                        }
+                                                    }
+                                                }
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(itn.nome, fontWeight = FontWeight.Medium)
+                                                if (giaPresente) {
+                                                    Text("Già incluso", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        if (isItinerarioLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        } else {
+                            TextButton(onClick = { mostraModaleSceltaItinerario = false }) { Text("Chiudi") }
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun SearchInput(label: String, value: String, modifier: Modifier = Modifier.fillMaxWidth(), onValueChange: (String) -> Unit) {
+fun SearchInput(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    onValueChange: (String) -> Unit
+) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,

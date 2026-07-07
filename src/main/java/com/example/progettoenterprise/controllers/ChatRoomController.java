@@ -6,6 +6,7 @@ import com.example.progettoenterprise.data.repositories.UtenteRepository;
 import com.example.progettoenterprise.data.service.ChatRoomService;
 import com.example.progettoenterprise.dto.ChatRoomDTO;
 import com.example.progettoenterprise.dto.MessaggioChatDTO;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -68,7 +69,7 @@ public class ChatRoomController {
 
         return ResponseEntity.ok(stanze);
     }
-
+    @Transactional
     @MessageMapping("/chat/invia/{roomId}")
     public void riceviEInviaMessaggio(
             @DestinationVariable("roomId") Long roomId,

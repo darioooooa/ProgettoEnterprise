@@ -55,4 +55,6 @@ class SessionManager(context: Context) {
     fun cancellaSessione() {
         sharedPreferences.edit().clear().apply()
     }
+
+
 }
