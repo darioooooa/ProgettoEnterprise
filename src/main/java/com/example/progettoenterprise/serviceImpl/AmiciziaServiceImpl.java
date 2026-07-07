@@ -40,13 +40,22 @@ public class AmiciziaServiceImpl implements AmiciziaService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageLang.getMessage("utente.username_notexist", riceventeUsername)));
 
-        // 3. Controllo di sicurezza: non puoi inviare richieste a te stesso
+        // Controllo di sicurezza: non puoi inviare richieste a te stesso
         if (richiedente.getId().equals(ricevente.getId())) {
             log.error("L'utente {} ha provato a chiedere l'amicizia a se stesso", richiedenteId);
             throw new IllegalArgumentException(messageLang.getMessage("amicizia.self_request"));
         }
 
-        // 4. Controlliamo se esiste una relazione in QUALSIASI direzione (A->B oppure B->A)
+        // Impedisce ai viaggiatori di mandare richieste agli organizzatori (o admin) e viceversa
+        if (richiedente.getRuolo() != Utente.Ruolo.ROLE_VIAGGIATORE ||
+                ricevente.getRuolo() != Utente.Ruolo.ROLE_VIAGGIATORE) {
+
+            log.warn("Richiesta amicizia rifiutata: transazione non ammessa tra ruoli {} e {}",
+                    richiedente.getRuolo(), ricevente.getRuolo());
+            throw new IllegalArgumentException("Le funzioni di amicizia sono riservate esclusivamente ai viaggiatori.");
+        }
+
+        // Controlliamo se esiste una relazione in QUALSIASI direzione (A->B oppure B->A)
         java.util.Optional<Amicizia> relazioneEsistente = amiciziaRepository.findQualsiasiRelazione(richiedente, ricevente);
 
         Amicizia amiciziaDaSalvare;

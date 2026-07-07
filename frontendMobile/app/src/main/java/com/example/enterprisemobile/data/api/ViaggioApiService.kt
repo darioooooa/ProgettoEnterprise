@@ -46,7 +46,7 @@ interface ViaggioApiService {
     @PUT("viaggi/{id}")
     suspend fun modificaViaggio(
         @Path("id") id: Long,
-        @Body viaggioDTO: Map<String, String>
+        @Body viaggioDTO: ViaggioDTO
     ): Response<ResponseBody>
 
     @DELETE("viaggi/{id}")

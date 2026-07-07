@@ -151,7 +151,7 @@ fun EnterpriseScaffold(
                 )
 
 
-                if (!isAdmin) {
+                if (isViaggiatore) {
                     NavigationDrawerItem(
                         icon = { Icon(Icons.Filled.Group, null, tint = WhiteText) },
                         label = {
@@ -175,9 +175,6 @@ fun EnterpriseScaffold(
                         },
                         colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
                     )
-                }
-
-                if (isViaggiatore) {
                     NavigationDrawerItem(
                         icon = { Icon(Icons.Filled.List, null, tint = WhiteText) },
                         label = { Text("Le Mie Prenotazioni", color = WhiteText, fontSize = 16.sp) },

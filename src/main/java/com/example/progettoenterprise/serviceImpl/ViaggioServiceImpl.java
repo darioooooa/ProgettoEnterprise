@@ -263,6 +263,18 @@ public class ViaggioServiceImpl implements ViaggioService {
             throw new IllegalArgumentException(messageLang.getMessage("viaggio.unauthorized"));
         }
 
+        // Controlla se il viaggio è già iniziato ed è in uno stato che permette la modifica del prezzo
+        if (viaggioEsistente.getDataInizio() != null && viaggioEsistente.getDataInizio().isBefore(LocalDate.now())) {
+            log.warn("Tentativo di modifica fallito: Il viaggio ID {} è già iniziato il {}", id, viaggioEsistente.getDataInizio());
+            throw new IllegalStateException(messageLang.getMessage("viaggio.already_started"));
+
+        }
+        if (viaggioEsistente.getStato() == Viaggio.StatoViaggio.IN_CORSO ||
+                viaggioEsistente.getStato() == Viaggio.StatoViaggio.COMPLETATO) {
+            log.warn("Tentativo di modifica fallito: Lo stato del viaggio ID {} è {}", id, viaggioEsistente.getStato());
+            throw new IllegalStateException(messageLang.getMessage("viaggio.already_started"));
+        }
+
 
         viaggioEsistente.setTitolo(viaggioDTO.getTitolo());
         viaggioEsistente.setDescrizione(viaggioDTO.getDescrizione());

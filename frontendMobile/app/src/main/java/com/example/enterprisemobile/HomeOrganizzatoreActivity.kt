@@ -66,23 +66,36 @@ fun MappaItinerari(
     viaggi: List<ViaggioMappaDTO>,
     mapViewportState: MapViewportState,
     markerIcon: android.graphics.Bitmap?,
-    onMarkerClick: (ViaggioMappaDTO) -> Unit
+    onMarkerClick: (List<ViaggioMappaDTO>) -> Unit
 ) {
     android.util.Log.d("MAPBOX_PERF", "Rendering del componente MapboxMap")
+
+    val viaggiRaggruppati = remember(viaggi) {
+        viaggi.filter { v -> v.latitudine != null && v.longitudine != null }
+            .groupBy { v ->
+                val latChiave = String.format("%.4f", v.latitudine)
+                val lngChiave = String.format("%.4f", v.longitudine)
+                "$latChiave|$lngChiave"
+            }
+    }
 
     MapboxMap(
         modifier = Modifier.fillMaxSize(),
         mapViewportState = mapViewportState
     ) {
-        android.util.Log.d("MAPBOX_PERF", "Disegno dei marker per ${viaggi.size} viaggi")
+        android.util.Log.d("MAPBOX_PERF", "Disegno di ${viaggiRaggruppati.size} cluster di marker stabili")
 
-        viaggi.forEach { viaggio ->
-            key(viaggio.id) { // Protegge i marker individuali dal ricrearsi inutilmente
+        viaggiRaggruppati.forEach { (coordinataChiave, listaViaggiInPunto) ->
+            // Estrazione della posizione dal primo viaggio del gruppo
+            val primoViaggio = listaViaggiInPunto.first()
+
+            key(coordinataChiave) { // Chiave basata sulle coordinate univoche
                 PointAnnotation(
-                    point = Point.fromLngLat(viaggio.longitudine, viaggio.latitudine),
+                    point = Point.fromLngLat(primoViaggio.longitudine, primoViaggio.latitudine),
                     iconImageBitmap = markerIcon,
                     onClick = {
-                        onMarkerClick(viaggio)
+                        // Invio dell'intero set di viaggi presenti in questo punto esatto
+                        onMarkerClick(listaViaggiInPunto)
                         true
                     }
                 )
@@ -202,70 +215,106 @@ fun SchermataOrganizzatore(nomeUtente: String) {
                                 }
                             }
 
-                            // Convertiamo il Vector(viaggio_marker dentro res) in Bitmap e lo "ricordiamo" per non ricaricarlo a ogni frame
                             val markerIcon = remember(context) {
                                 ContextCompat.getDrawable(context, R.drawable.viaggio_marker)?.toBitmap()
                             }
 
-                            var viaggioSelezionato by remember { mutableStateOf<ViaggioMappaDTO?>(null) }
+                            // Tiene traccia della lista di viaggi cliccati nel marker
+                            var viaggiSelezionatiInMarker by remember { mutableStateOf<List<ViaggioMappaDTO>>(emptyList()) }
 
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(300.dp)
+                                    .height(350.dp)
                             ) {
                                 // Iniezione del componente statico isolato
                                 MappaItinerari(
                                     viaggi = viaggi,
                                     mapViewportState = mapViewportState,
                                     markerIcon = markerIcon,
-                                    onMarkerClick = { viaggio -> viaggioSelezionato = viaggio }
+                                    onMarkerClick = { listaViaggi ->
+                                        viaggiSelezionatiInMarker = listaViaggi
+                                    }
                                 )
 
                                 if (isLoading) {
                                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                                 }
 
-                                viaggioSelezionato?.let { viaggio ->
+                                if (viaggiSelezionatiInMarker.isNotEmpty()) {
                                     Card(
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
-                                            .padding(16.dp)
-                                            .fillMaxWidth(),
+                                            .padding(12.dp)
+                                            .fillMaxWidth()
+                                            .wrapContentHeight(),
                                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                                     ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Column(modifier = Modifier.weight(1f)) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            // Intestazione popup
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
                                                 Text(
-                                                    text = viaggio.titolo,
+                                                    text = if (viaggiSelezionatiInMarker.size > 1)
+                                                        "🗺️ ${viaggiSelezionatiInMarker.size} viaggi in questa posizione"
+                                                    else "📍 Viaggio in questa posizione",
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 16.sp
+                                                    fontSize = 15.sp,
+                                                    color = MaterialTheme.colorScheme.primary
                                                 )
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    text = "Clicca per i dettagli",
-                                                    fontSize = 12.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
+                                                IconButton(
+                                                    onClick = { viaggiSelezionatiInMarker = emptyList() },
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Icon(Icons.Default.Close, contentDescription = "Chiudi")
+                                                }
                                             }
 
-                                            Button(
-                                                onClick = {
-                                                    val intent = Intent(context, DettaglioViaggioActivity::class.java)
-                                                    intent.putExtra("VIAGGIO_ID", viaggio.id)
-                                                    context.startActivity(intent)
+                                            Spacer(modifier = Modifier.height(8.dp))
 
-                                                    viaggioSelezionato = null
+                                            // Elenco scrollabile dei viaggi nel marker
+                                            Box(modifier = Modifier.heightIn(max = 180.dp)) {
+                                                LazyColumn(
+                                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    items(viaggiSelezionatiInMarker.size) { index ->
+                                                        val viaggio = viaggiSelezionatiInMarker[index]
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .background(
+                                                                    MaterialTheme.colorScheme.surface,
+                                                                    shape = RoundedCornerShape(8.dp)
+                                                                )
+                                                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Text(
+                                                                text = viaggio.titolo,
+                                                                fontSize = 14.sp,
+                                                                fontWeight = FontWeight.Medium,
+                                                                modifier = Modifier.weight(1f)
+                                                            )
+                                                            Button(
+                                                                onClick = {
+                                                                    val intent = Intent(context, DettaglioViaggioActivity::class.java)
+                                                                    intent.putExtra("VIAGGIO_ID", viaggio.id)
+                                                                    context.startActivity(intent)
+                                                                    viaggiSelezionatiInMarker = emptyList()
+                                                                },
+                                                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                                                modifier = Modifier.height(32.dp)
+                                                            ) {
+                                                                Text("Vedi", fontSize = 12.sp)
+                                                            }
+                                                        }
+                                                    }
                                                 }
-                                            ) {
-                                                Text("Visualizza")
                                             }
                                         }
                                     }

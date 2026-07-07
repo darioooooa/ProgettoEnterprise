@@ -2,6 +2,7 @@ package com.example.enterprisemobile.data.repository
 
 import com.example.enterprisemobile.data.api.ViaggioApiService
 import com.example.enterprisemobile.data.db.ViaggioDAO
+import com.example.enterprisemobile.model.ViaggioDTO
 import com.example.enterprisemobile.model.ViaggioEntity
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -24,7 +25,7 @@ class DettaglioViaggioRepository(
         api.getViaggioById(id)
     }
 
-    suspend fun modificaViaggio(id: Long, payload: Map<String, String>): Response<ResponseBody> = withContext(Dispatchers.IO) {
+    suspend fun modificaViaggio(id: Long, payload: ViaggioDTO): Response<ResponseBody> = withContext(Dispatchers.IO) {
         api.modificaViaggio(id, payload)
     }
 

@@ -19,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping(value="/api/v1/amicizie", produces = "application/json")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('VIAGGIATORE')")
 @Slf4j
 public class AmiciziaController {
 
@@ -26,7 +27,6 @@ public class AmiciziaController {
 
     // ENDPOINT PER INVIO RICHIESTA DI AMICIZIA
     @PostMapping("/richiesta/{riceventeUsername}")
-    @PreAuthorize("isAuthenticated()")
     @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<AmiciziaDTO> inviaRichiesta(
             @PathVariable String riceventeUsername,
@@ -41,7 +41,6 @@ public class AmiciziaController {
 
     // ENDPOINT PER ACCETTAZIONE RICHIESTA DI AMICIZIA
     @PatchMapping("/{amiciziaId}/accetta")
-    @PreAuthorize("isAuthenticated()")
     @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<AmiciziaDTO> accettaRichiesta(
             @PathVariable Long amiciziaId,
@@ -56,7 +55,6 @@ public class AmiciziaController {
 
     // ENDPOINT PER OTTENERE LA LISTA AMICI
     @GetMapping("/miei-amici")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AmiciziaDTO>> getMieiAmici(
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
@@ -67,7 +65,6 @@ public class AmiciziaController {
 
     // ENDPOINT PER OTTENERE LA LISTA RICHIESTE RICEVUTE
     @GetMapping("/richieste/ricevute")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AmiciziaDTO>> getRichiesteRicevute(
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
@@ -77,7 +74,6 @@ public class AmiciziaController {
 
     // ENDPOINT PER OTTENERE LA LISTA RICHIESTE INVIATE
     @GetMapping("/richieste/inviate")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AmiciziaDTO>> getRichiesteInviate(
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
@@ -87,7 +83,6 @@ public class AmiciziaController {
 
     // RIFIUTA UNA RICHIESTA
     @PatchMapping("/{amiciziaId}/rifiuta")
-    @PreAuthorize("isAuthenticated()")
     @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<?> rifiutaRichiesta(
             @PathVariable Long amiciziaId,
@@ -102,7 +97,6 @@ public class AmiciziaController {
 
     // RIMUOVERE UN AMICO
     @DeleteMapping("/rimuovi/{amicoId}")
-    @PreAuthorize("isAuthenticated()")
     @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<?> rimuoviAmico(
             @PathVariable Long amicoId,
@@ -117,7 +111,6 @@ public class AmiciziaController {
 
     // ENDPOINT PER OTTENERE LA LISTA DELLE AMICIZIE RIFIUTATE
     @GetMapping("/richieste/rifiutate")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AmiciziaDTO>> getRichiesteRifiutate(
             @AuthenticationPrincipal UtenteLoggato utenteLoggato) {
 
