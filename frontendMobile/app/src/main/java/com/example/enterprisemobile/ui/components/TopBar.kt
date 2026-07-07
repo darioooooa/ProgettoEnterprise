@@ -132,7 +132,7 @@ fun EnterpriseScaffold(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = WhiteText, modifier = Modifier.size(64.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Ciao, $nomeUtente", color = WhiteText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("$nomeUtente", color = WhiteText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
 
                 HorizontalDivider(color = Color.Gray, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))

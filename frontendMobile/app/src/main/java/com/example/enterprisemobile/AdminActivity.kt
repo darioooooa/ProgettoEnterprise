@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
 import com.example.enterprisemobile.data.security.SessionManager
+import com.example.enterprisemobile.ui.GestioneBanScreen
 import com.example.enterprisemobile.ui.components.TopBar
 import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.AdminViewModel
@@ -70,11 +71,10 @@ fun AdminContent(viewModel: AdminViewModel) {
     val totalePagine by viewModel.totalePagine.observeAsState(0)
     val totaleElementi by viewModel.totaleElementi.observeAsState(0)
 
+    // ✅ 3 TAB: Richieste (0), Segnalazioni (1), Ban (2)
     var selectedBottomTab by remember { mutableIntStateOf(0) }
     var vistaAttuale by remember { mutableStateOf("PENDENTI") }
     var isDownloading by remember { mutableStateOf(false) }
-
-    // ✅ NUOVO: Stato per la ricerca
     var queryRicerca by remember { mutableStateOf("") }
 
     var mostraModaleMotivazione by remember { mutableStateOf(false) }
@@ -107,7 +107,6 @@ fun AdminContent(viewModel: AdminViewModel) {
                             downloadsDir.mkdirs()
                         }
 
-                        // Capiamo se è un Word o un PDF guardando la sua natura reale
                         val tipoContenuto = body.contentType()?.toString()?.lowercase() ?: ""
                         val estensione = if (tipoContenuto.contains("word") || tipoContenuto.contains("document")) {
                             ".docx"
@@ -115,7 +114,6 @@ fun AdminContent(viewModel: AdminViewModel) {
                             ".pdf"
                         }
 
-                        // Assegniamo l'etichetta corretta
                         val fileName = "candidatura_${System.currentTimeMillis()}$estensione"
                         val file = File(downloadsDir, fileName)
 
@@ -157,6 +155,7 @@ fun AdminContent(viewModel: AdminViewModel) {
         }
     }
 
+    // Dialog Motivazione
     if (mostraModaleMotivazione) {
         AlertDialog(
             onDismissRequest = { mostraModaleMotivazione = false },
@@ -169,6 +168,7 @@ fun AdminContent(viewModel: AdminViewModel) {
         )
     }
 
+    // Dialog Biografia
     if (mostraModaleBiografia) {
         AlertDialog(
             onDismissRequest = { mostraModaleBiografia = false },
@@ -181,6 +181,7 @@ fun AdminContent(viewModel: AdminViewModel) {
         )
     }
 
+    // Dialog Rifiuto
     if (mostraModaleRifiuto) {
         AlertDialog(
             onDismissRequest = { mostraModaleRifiuto = false },
@@ -226,6 +227,7 @@ fun AdminContent(viewModel: AdminViewModel) {
         )
     }
 
+    // Dialog Conferma Approvazione
     if (mostraModaleConfermaApprova) {
         AlertDialog(
             onDismissRequest = { mostraModaleConfermaApprova = false },
@@ -272,6 +274,7 @@ fun AdminContent(viewModel: AdminViewModel) {
         nomeUtente = nomeAdmin,
         bottomBar = {
             NavigationBar(containerColor = DarkNavy) {
+                // Tab 0: Richieste
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.List, contentDescription = "Richieste") },
                     label = { Text("Richieste", fontSize = 12.sp) },
@@ -281,6 +284,7 @@ fun AdminContent(viewModel: AdminViewModel) {
                         selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
                     )
                 )
+                // Tab 1: Segnalazioni
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.Warning, contentDescription = "Segnalazioni") },
                     label = { Text("Segnalazioni", fontSize = 12.sp) },
@@ -290,11 +294,23 @@ fun AdminContent(viewModel: AdminViewModel) {
                         selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
                     )
                 )
+                // Tab 2: Ban (apre nuova activity)
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Block, contentDescription = "Ban") },
+                    label = { Text("Ban", fontSize = 12.sp) },
+                    selected = selectedBottomTab == 2,
+                    onClick = {
+                        selectedBottomTab = 2  // ✅ Cambia solo il tab, non apre Activity
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
+                    )
+                )
             }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().background(DarkNavy).padding(innerPadding)) {
-            if (isLoading && richieste.isEmpty()) {
+            if (isLoading && richieste.isEmpty() && selectedBottomTab == 0) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AccentBlue)
             } else {
                 when (selectedBottomTab) {
@@ -311,19 +327,18 @@ fun AdminContent(viewModel: AdminViewModel) {
                                         containerColor = if (vistaAttuale == "PENDENTI") AccentBlue else Color.Gray
                                     ),
                                     modifier = Modifier.weight(1f)
-                                ) { Text("Richieste Pendenti", fontSize = 12.sp) }
+                                ) { Text("Pendenti", fontSize = 12.sp) }
                                 Button(
                                     onClick = { vistaAttuale = "STORICO"; viewModel.filtraPerStato(null) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = if (vistaAttuale == "STORICO") AccentBlue else Color.Gray
                                     ),
                                     modifier = Modifier.weight(1f)
-                                ) { Text("Storico Valutazioni", fontSize = 12.sp) }
+                                ) { Text("Storico", fontSize = 12.sp) }
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // ✅ BARRA DI RICERCA ANDROID
                             OutlinedTextField(
                                 value = queryRicerca,
                                 onValueChange = { queryRicerca = it },
@@ -406,7 +421,6 @@ fun AdminContent(viewModel: AdminViewModel) {
                                         )
                                     }
 
-                                    // PAGINAZIONE
                                     item {
                                         Row(
                                             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -440,6 +454,7 @@ fun AdminContent(viewModel: AdminViewModel) {
                         }
                     }
                     1 -> {
+                        // ✅ TAB SEGNALAZIONI (placeholder)
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Filled.Warning, null, tint = Color.Gray, modifier = Modifier.size(64.dp))
@@ -448,6 +463,9 @@ fun AdminContent(viewModel: AdminViewModel) {
                                 Text("In sviluppo...", color = Color.Gray, fontSize = 14.sp)
                             }
                         }
+                    }
+                    2 -> {
+                        GestioneBanScreen(viewModel = viewModel)
                     }
                 }
             }
@@ -569,8 +587,6 @@ private fun apriFile(context: android.content.Context, file: File) {
     try {
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_VIEW).apply {
-
-            // Scegliamo la "chiave di lettura" giusta in base a come finisce il nome
             val tipoCorretto = if (file.name.endsWith(".docx")) {
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             } else {

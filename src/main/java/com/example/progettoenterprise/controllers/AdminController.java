@@ -94,6 +94,17 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getUtentiBannati());
     }
 
+    @GetMapping("/utenti-bannati/paginati")
+    public ResponseEntity<Page<UtenteDTO>> getUtentiBannatiPaginati(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String ricerca) {
+
+        log.info("Richiesta utenti bannati paginati - page: {}, size: {}, ricerca: {}", page, size, ricerca);
+        Page<UtenteDTO> utentiPage = adminService.getUtentiBannatiPaginati(page, size, ricerca);
+        return ResponseEntity.ok(utentiPage);
+    }
+
     @PutMapping("/utenti/{id}/riattiva")
     @WithRateLimit(RateLimitPolicy.CRITICAL)
     public ResponseEntity<Void> riattivaUtente(@PathVariable Long id) {
