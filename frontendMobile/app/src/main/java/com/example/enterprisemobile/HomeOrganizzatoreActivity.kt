@@ -2,7 +2,6 @@ package com.example.enterprisemobile
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -14,8 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -30,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,9 +35,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.core.content.ContextCompat
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
+import com.example.enterprisemobile.data.repository.AdminRepository
 import com.example.enterprisemobile.data.repository.PrenotazioneRepository
 import com.example.enterprisemobile.data.repository.ViaggioRepository
-import com.example.enterprisemobile.data.repository.AdminRepository
 import com.example.enterprisemobile.model.ViaggioMappaDTO
 import com.example.enterprisemobile.ui.StatisticheOrganizzatoreScreen
 import com.example.enterprisemobile.ui.theme.*
@@ -72,7 +68,7 @@ class HomeOrganizzatoreActivity : ComponentActivity() {
 
         setContent {
             EnterpriseMobileTheme {
-                SchermataOrganizzatore(usernameRicevuto, viaggioViewModel)
+                SchermataOrganizzatore(usernameRicevuto,viaggioViewModel)
             }
         }
     }
@@ -124,8 +120,9 @@ fun MappaItinerari(
 @OptIn(ExperimentalMaterial3Api::class, MapboxExperimental::class)
 @Composable
 fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewModel) {
+
+
     val context = LocalContext.current
-    val sessionManager = remember { com.example.enterprisemobile.data.security.SessionManager(context) }
     val apiService = remember(context) { RetrofitClient.ottieniViaggioService(context) }
     val utenteApiService = remember(context) { RetrofitClient.ottieniUtenteService(context) }
     val prenotazioniApiService = remember(context) { RetrofitClient.ottieniPrenotazioneService(context) }
@@ -134,10 +131,8 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
     val repository = remember(context) { ViaggioRepository(apiService, database.viaggioDao()) }
     val prenotazioneRepository = remember(context) { PrenotazioneRepository(prenotazioniApiService, database.prenotazioneDao()) }
     val adminRepository = remember(context) { AdminRepository(context) }
-
-    // ViewModels
     val viewModel: HomeOrganizzatoreViewModel = viewModel(
-        factory = ViewModelFactory(repository, prenotazioneRepository, adminRepository)
+        factory = ViewModelFactory(repository, prenotazioneRepository,adminRepository)
     )
     val viewModelStatistiche: StatisticheOrganizzatoreViewModel = viewModel()
     val modelloDiVistaChat: ChatViewModel = viewModel(
@@ -160,14 +155,9 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
     val isLoadingPrenotazioni by viewModel.isLoadingPrenotazioni.collectAsState()
     val filtroStato by viewModel.filtroStato.collectAsState()
 
-    // ✅ NUOVI: Stati per dialog segnalazione
-    val showSegnalazioneDialog by viewModel.showSegnalazioneDialog.collectAsState()
-    val viaggiatoreDaSegnalare by viewModel.viaggiatoreDaSegnalare.collectAsState()
-    val isLoadingSegnalazione by viewModel.isLoadingSegnalazione.collectAsState()
-
     val listaViaggiCercati by viaggioViewModel.viaggiSalvati.collectAsState()
 
-    var sottoVistaMappa by remember { mutableStateOf("MAPPA") }
+    var sottoVistaMappa by remember { mutableStateOf("MAPPA")}
 
     // Stati di Navigazione
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
@@ -248,15 +238,15 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                             Button(
                                 onClick = { vistaDashboard = "MAPPA" },
                                 colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "MAPPA") AccentBlue else CardOverlay),
-                                modifier = Modifier.weight(1f).height(56.dp),
-                                shape = RoundedCornerShape(50)
+                                modifier = Modifier.weight(1f).height(56.dp), // Tasto grande
+                                shape = RoundedCornerShape(50) // Forma a pillola
                             ) { Text("Mappa Itinerari", fontSize = 14.sp, color = if (vistaDashboard == "MAPPA") DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
 
                             Button(
                                 onClick = { vistaDashboard = "PRENOTAZIONI" },
                                 colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "PRENOTAZIONI") AccentBlue else CardOverlay),
-                                modifier = Modifier.weight(1f).height(56.dp),
-                                shape = RoundedCornerShape(50)
+                                modifier = Modifier.weight(1f).height(56.dp), // Tasto grande
+                                shape = RoundedCornerShape(50) // Forma a pillola
                             ) { Text("Prenotazioni", fontSize = 14.sp, color = if (vistaDashboard == "PRENOTAZIONI") DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
                         }
 
@@ -265,10 +255,14 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                             val isMappaVisibile = vistaDashboard == "MAPPA"
 
+
                             // STRATO MAPPA / RICERCA
+
                             Column(modifier = Modifier.fillMaxSize().alpha(if (isMappaVisibile) 1f else 0f)) {
 
+
                                 // SOTTO-SWITCH: BARRA UNITA E PICCOLA
+
                                 BarraSottoMappaUnita(
                                     vistaAttuale = sottoVistaMappa,
                                     onVistaCambio = { nuovaVista -> sottoVistaMappa = nuovaVista }
@@ -276,7 +270,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
 
                                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
 
-                                    // LIVELLO INFERIORE: LA MAPPA
+                                    // LIVELLO INFERIORE: LA MAPPA (Sempre presente, si nasconde solo visivamente)
                                     val isSottoMappaAttiva = sottoVistaMappa == "MAPPA"
 
                                     Column(modifier = Modifier.fillMaxSize().alpha(if (isSottoMappaAttiva) 1f else 0f)) {
@@ -366,11 +360,13 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
 
                                     // LIVELLO SUPERIORE: IL BOX DI RICERCA
                                     if (sottoVistaMappa == "CERCA") {
+                                        // un'unica lista scorrevole che contiene tutto per permettere la scorrevolezza adatta
                                         LazyColumn(
                                             modifier = Modifier.fillMaxSize().background(DarkNavy).padding(horizontal = 16.dp),
                                             verticalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
 
+                                            // IL BOX DI RICERCA DIVENTA IL PRIMO ELEMENTO DELLA LISTA
                                             item {
                                                 BoxRicerca(
                                                     onCercaClick = { dest, dMin, dMax, posti, pMin, pMax ->
@@ -379,6 +375,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                 )
                                             }
 
+                                            //I RISULTATI DELLA RICERCA
                                             if (viaggioViewModel.ricercaEffettuata) {
                                                 if (listaViaggiCercati.isEmpty()) {
                                                     item {
@@ -387,6 +384,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                         }
                                                     }
                                                 } else {
+                                                    // LE CARD DEI VIAGGI
                                                     items(listaViaggiCercati, key = { it.id }) { viaggio ->
                                                         Surface(
                                                             color = CardOverlay,
@@ -426,6 +424,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                         }
                                                     }
 
+                                                    // LA PAGINAZIONE
                                                     item {
                                                         Row(
                                                             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -450,7 +449,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                                 colors = ButtonDefaults.buttonColors(containerColor = if (viaggioViewModel.paginaCorrente < viaggioViewModel.totalePagine - 1) AccentBlue else Color.Gray)
                                                             ) { Text("Succ", fontSize = 14.sp, color = DarkNavy) }
                                                         }
-                                                        Spacer(modifier = Modifier.height(80.dp))
+                                                        Spacer(modifier = Modifier.height(80.dp)) // Spazio per non far coprire dalla NavBar
                                                     }
                                                 }
                                             }
@@ -462,54 +461,14 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                             // BLOCCO TOUCH GLOBALE SE STO GUARDANDO LE PRENOTAZIONI
                             if (!isMappaVisibile) Spacer(modifier = Modifier.fillMaxSize().clickable(enabled = false) {})
 
-                            // PRENOTAZIONI
+
+                            //  PRENOTAZIONI
                             if (vistaDashboard == "PRENOTAZIONI") {
                                 Column(modifier = Modifier.fillMaxSize().background(DarkNavy)) {
 
                                     BarraFiltriUnita(
                                         filtroAttuale = filtroStato,
                                         onFiltroCambiato = { nuovoStato -> viewModel.impostaFiltroStato(nuovoStato) }
-                                    )
-
-                                    // ✅ NUOVO: Barra di ricerca username
-                                    var queryRicerca by rememberSaveable { mutableStateOf("") }
-
-                                    OutlinedTextField(
-                                        value = queryRicerca,
-                                        onValueChange = { queryRicerca = it },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                                            .height(56.dp),
-                                        placeholder = { Text("Cerca per username...", color = Color.Gray, fontSize = 12.sp) },
-                                        singleLine = true,
-                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                        keyboardActions = KeyboardActions(
-                                            onSearch = {
-                                                viewModel.impostaFiltroUsername(queryRicerca)
-                                            }
-                                        ),
-                                        leadingIcon = {
-                                            Icon(Icons.Default.Search, "Cerca", tint = AccentBlue)
-                                        },
-                                        trailingIcon = {
-                                            if (queryRicerca.isNotEmpty()) {
-                                                IconButton(onClick = {
-                                                    queryRicerca = ""
-                                                    viewModel.impostaFiltroUsername("")
-                                                }) {
-                                                    Icon(Icons.Default.Clear, "Cancella", tint = Color.Gray)
-                                                }
-                                            }
-                                        },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = AccentBlue,
-                                            unfocusedBorderColor = Color.Gray,
-                                            focusedTextColor = WhiteText,
-                                            unfocusedTextColor = WhiteText,
-                                            focusedContainerColor = CardOverlay,
-                                            unfocusedContainerColor = CardOverlay
-                                        )
                                     )
 
                                     if (isLoadingPrenotazioni) {
@@ -531,43 +490,20 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                     shape = RoundedCornerShape(12.dp),
                                                     modifier = Modifier.fillMaxWidth()
                                                 ) {
-                                                    Row(
-                                                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Column(modifier = Modifier.weight(1f)) {
-                                                            Text("Utente: ${prenotazione.viaggiatoreUsername ?: "Sconosciuto"}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                                            Text("Viaggio: ${prenotazione.viaggioTitolo}", color = Color.LightGray, fontSize = 12.sp)
+                                                    Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                                                        Text("Utente: ${prenotazione.viaggiatoreUsername ?: "Sconosciuto"}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                                        Text("Viaggio: ${prenotazione.viaggioTitolo}", color = Color.LightGray, fontSize = 12.sp)
 
-                                                            Spacer(modifier = Modifier.height(8.dp))
+                                                        Spacer(modifier = Modifier.height(8.dp))
 
-                                                            val (coloreBadge, testoBadge) = when (prenotazione.stato) {
-                                                                "CONFERMATA" -> SuccessGreen to "CONFERMATA"
-                                                                "ANNULLATA" -> DangerRed to "ANNULLATA"
-                                                                else -> Color.Gray to prenotazione.stato
-                                                            }
-
-                                                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(coloreBadge.copy(alpha = 0.2f)).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                                                                Text(testoBadge, color = coloreBadge, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                                            }
+                                                        val (coloreBadge, testoBadge) = when (prenotazione.stato) {
+                                                            "CONFERMATA" -> SuccessGreen to "CONFERMATA"
+                                                            "ANNULLATA" -> DangerRed to "ANNULLATA"
+                                                            else -> Color.Gray to prenotazione.stato
                                                         }
 
-                                                        // ✅ NUOVO: Pulsante Segnala
-                                                        IconButton(
-                                                            onClick = {
-                                                                viewModel.apriDialogSegnalazione(
-                                                                    viaggiatoreId = prenotazione.viaggiatoreId ?: 0L,
-                                                                    viaggiatoreUsername = prenotazione.viaggiatoreUsername ?: "Sconosciuto",
-                                                                    viaggioTitolo = prenotazione.viaggioTitolo ?: ""
-                                                                )
-                                                            }
-                                                        ) {
-                                                            Icon(
-                                                                imageVector = Icons.Default.Flag,
-                                                                contentDescription = "Segnala",
-                                                                tint = Color(0xFFF97316)
-                                                            )
+                                                        Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(coloreBadge.copy(alpha = 0.2f)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                                                            Text(testoBadge, color = coloreBadge, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                                         }
                                                     }
                                                 }
@@ -619,7 +555,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                             ) {
                                 items(listaDelleStanzeReali) { stanzaCorrente ->
                                     Surface(
-                                        color = CardOverlay,
+                                        color = CardOverlay, // Colore scuro
                                         shape = RoundedCornerShape(12.dp),
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -662,210 +598,14 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                             ) { Text(text = "⬅ Torna alla lista delle chat", color = AccentBlue) }
 
+                            // QUI È AVVENUTA LA MAGIA COMPA! 👇
                             SchermataDellaChat(
                                 modelloDiVistaChat = modelloDiVistaChat,
                                 identificativoDellaStanza = identificativoStanzaSelezionata!!,
-                                nomeDelMittenteLocale = nomeUtente
+                                nomeDelMittenteLocale = nomeUtente,
+                                seiOrganizzatore = true, // ⬅️ Sbloccato!
+                                identificativoUtenteLocale = 1L // ⬅️ SOSTITUISCI QUESTO CON L'ID REALE DAL TUO SESSION MANAGER!
                             )
-                        }
-                    }
-                }
-            }
-
-            // ✅ NUOVO: Dialog segnalazione viaggiatore
-            if (showSegnalazioneDialog && viaggiatoreDaSegnalare != null) {
-                DialogSegnalazioneViaggiatore(
-                    username = viaggiatoreDaSegnalare!!.second,
-                    isLoading = isLoadingSegnalazione,
-                    onDismiss = { viewModel.chiudiDialogSegnalazione() },
-                    onInvia = { motivo, descrizione ->
-                        val orgId = sessionManager.ottieniIdUtente()?.toLongOrNull() ?: 0L
-                        viewModel.inviaSegnalazione(
-                            organizzatoreId = orgId,
-                            motivo = motivo,
-                            descrizione = descrizione,
-                            onSuccess = {
-                                Toast.makeText(context, "Segnalazione inviata!", Toast.LENGTH_SHORT).show()
-                            },
-                            onError = {
-                                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                    }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DialogSegnalazioneViaggiatore(
-    username: String,
-    isLoading: Boolean,
-    onDismiss: () -> Unit,
-    onInvia: (String, String) -> Unit
-) {
-    var motivo by remember { mutableStateOf("") }
-    var descrizione by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-
-    // Overlay scuro che copre tutto lo schermo
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.7f))
-            .clickable { if (!isLoading) onDismiss() },
-        contentAlignment = Alignment.Center
-    ) {
-        // Card modale al centro con colore #1E1E2E
-        Surface(
-            color = Color(0xFF1E1E2E),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .wrapContentHeight()
-                .clickable(enabled = false) { }
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "🚩 Segnala viaggiatore",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                    IconButton(onClick = { if (!isLoading) onDismiss() }) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Chiudi",
-                            tint = Color.White
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                Text(
-                    "di $username",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                Text(
-                    "Aiutaci a mantenere la piattaforma sicura. Seleziona il motivo per cui stai segnalando questo utente.",
-                    color = Color.LightGray,
-                    fontSize = 13.sp
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                // Label Motivo
-                Text(
-                    "Motivo della segnalazione *",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-                Spacer(Modifier.height(8.dp))
-
-                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-                    OutlinedTextField(
-                        value = when (motivo) {
-                            "SPAM" -> "Spam o Truffa"
-                            "COMPORTAMENTO_SCORRETTO" -> "Comportamento Scorretto / Non Pagante"
-                            "FALSO" -> "Contenuto Falso / Inappropriato"
-                            "ALTRO" -> "Altro"
-                            else -> "-- Seleziona un motivo --"
-                        },
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentBlue,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        )
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color(0xFF1E1E2E))
-                    ) {
-                        listOf(
-                            "SPAM" to "Spam o Truffa",
-                            "COMPORTAMENTO_SCORRETTO" to "Comportamento Scorretto / Non Pagante",
-                            "FALSO" to "Contenuto Falso / Inappropriato",
-                            "ALTRO" to "Altro"
-                        ).forEach { (value, label) ->
-                            DropdownMenuItem(
-                                text = { Text(label, color = Color.White) },
-                                onClick = { motivo = value; expanded = false }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                // Label Dettagli
-                Text(
-                    "Dettagli aggiuntivi (opzionale)",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = descrizione,
-                    onValueChange = { descrizione = it },
-                    placeholder = { Text("Scrivi qui i dettagli per aiutare gli amministratori...", color = Color.Gray) },
-                    modifier = Modifier.fillMaxWidth().height(100.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentBlue,
-                        unfocusedBorderColor = Color.Gray,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    )
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                // Bottoni
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        enabled = !isLoading
-                    ) {
-                        Text("Annulla", color = Color.Gray)
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = { onInvia(motivo, descrizione) },
-                        enabled = motivo.isNotBlank() && !isLoading,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (motivo.isNotBlank()) Color(0xFFE63946) else Color.Gray
-                        )
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(Modifier.size(16.dp), color = Color.White)
-                        } else {
-                            Text("Invia Segnalazione", color = Color.White)
                         }
                     }
                 }
@@ -873,6 +613,7 @@ fun DialogSegnalazioneViaggiatore(
         }
     }
 }
+
 
 @Composable
 fun BarraSottoMappaUnita(
@@ -885,7 +626,7 @@ fun BarraSottoMappaUnita(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .height(40.dp)
+            .height(40.dp) // Altezza ridotta per gerarchia
             .clip(RoundedCornerShape(10.dp))
             .background(CardOverlay)
     ) {
@@ -903,14 +644,14 @@ fun BarraSottoMappaUnita(
                 Text(
                     text = etichetta,
                     color = if (isSelected) DarkNavy else Color.LightGray,
-                    fontSize = 12.sp,
+                    fontSize = 12.sp, // Font più piccolo
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 )
             }
         }
     }
 }
-
+// COMPONENTE: BARRA FILTRI SEGMENTED
 @Composable
 fun BarraFiltriUnita(
     filtroAttuale: String?,
@@ -952,7 +693,6 @@ fun BarraFiltriUnita(
         }
     }
 }
-
 @Composable
 fun BoxRicerca(
     onCercaClick: (destinazione: String, dataMin: String, dataMax: String, posti: String, prezzoMin: String, prezzoMax: String) -> Unit
@@ -975,6 +715,7 @@ fun BoxRicerca(
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
+
         ) {
             SearchInput("Destinazione", destinazione) { destinazione = it }
             Spacer(modifier = Modifier.height(12.dp))

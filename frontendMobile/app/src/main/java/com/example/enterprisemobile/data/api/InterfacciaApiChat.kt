@@ -3,6 +3,7 @@ import retrofit2.http.Query
 import com.example.enterprisemobile.data.model.MessaggioChatDTO
 import com.example.enterprisemobile.data.model.StanzaChatDTO
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface InterfacciaApiChat {
@@ -26,6 +27,14 @@ interface InterfacciaApiChat {
     suspend fun caricaStanzeOrganizzatore(
         @retrofit2.http.Query("organizzatoreUsername") nomeUtente: String
     ): List<StanzaChatDTO>
+
+
+    @POST("/api/v1/segnalazioni/crea")
+    suspend fun creaSegnalazione(
+        @retrofit2.http.Query("idSegnalatore") idUtenteSegnalatore: Long,
+        @retrofit2.http.Body richiesta: com.example.enterprisemobile.data.model.RichiestaSegnalazioneDTO
+    ): retrofit2.Response<Unit>
+
 
 
 }

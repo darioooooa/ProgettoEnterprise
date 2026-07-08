@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.enterprisemobile.data.api.InterfacciaApiChat
 import com.example.enterprisemobile.data.service.ServizioChat
 import com.example.enterprisemobile.data.model.MessaggioChatDTO
+import com.example.enterprisemobile.data.model.RichiestaSegnalazioneDTO
 import com.example.enterprisemobile.data.model.StanzaChatDTO
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ class ChatViewModel(
     val stanzeVisibili: StateFlow<List<StanzaChatDTO>> = statoStanzeInterno
 
     private val convertitoreJson = Gson()
+
 
     init {
         servizioDiChat.avviaConnessioneGlobale()
@@ -137,4 +139,38 @@ class ChatViewModel(
             }
         }
     }
+
+    fun inviaSegnalazioneMessaggio(
+        identificativoMessaggio: Long,
+        idUtenteSegnalatore: Long,
+        motivo: String,
+        descrizione: String
+    ) {
+        viewModelScope.launch {
+            try {
+                // Prepariamo il pacchetto dicendo al server che è un "MESSAGGIO"
+                val pacchettoSegnalazione = RichiestaSegnalazioneDTO(
+                    tipoEntita = "MESSAGGIO",
+                    identificativoDiRiferimento = identificativoMessaggio,
+                    motivazioneSelezionata = motivo,
+                    descrizioneDettagliata = descrizione
+                )
+
+                val risposta = chiamateApiChat.creaSegnalazione(
+                    idUtenteSegnalatore = idUtenteSegnalatore,
+                    richiesta = pacchettoSegnalazione
+                )
+
+                if (risposta.isSuccessful) {
+                    println("Segnalazione inviata con successo!")
+                } else {
+                    println("Errore nell'invio della segnalazione: ${risposta.code()}")
+                }
+
+            } catch (erroreDiRete: Exception) {
+                println("Impossibile contattare il server: ${erroreDiRete.message}")
+            }
+        }
+    }
+
 }
