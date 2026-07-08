@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,7 +27,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.repository.ViaggioRepository
-import com.example.enterprisemobile.ui.theme.EnterpriseMobileTheme
+import com.example.enterprisemobile.data.security.SessionManager
+import com.example.enterprisemobile.ui.components.EnterpriseScaffold
+import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.CreaViaggioState
 import com.example.enterprisemobile.viewmodels.CreaViaggioViewModel
 import com.example.enterprisemobile.viewmodels.TappaState
@@ -40,20 +43,26 @@ class CreaViaggioActivity : ComponentActivity() {
 
         setContent {
             EnterpriseMobileTheme {
-
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         val apiService = RetrofitClient.ottieniViaggioService(this@CreaViaggioActivity)
                         val dao = AppDatabase.getInstance(this@CreaViaggioActivity).viaggioDao()
                         val repository = ViaggioRepository(apiService, dao)
-
                         return CreaViaggioViewModel(repository) as T
                     }
                 }
 
                 val viewModel = ViewModelProvider(this@CreaViaggioActivity, factory)[CreaViaggioViewModel::class.java]
-                CreaViaggioScreen(viewModel = viewModel)
+
+                // ✅ Recupera il nome utente dal SessionManager
+                val sessionManager = remember { SessionManager(this) }
+                val nomeOrganizzatore = sessionManager.ottieniUsername() ?: "Organizzatore"
+
+                CreaViaggioScreen(
+                    viewModel = viewModel,
+                    nomeUtente = nomeOrganizzatore
+                )
             }
         }
     }
@@ -122,7 +131,7 @@ fun formattaPerDisplay(dataBackend: String): String {
     }
 }
 
-// --- COMPONENTI UI STILIZZATI ---
+// --- COMPONENTI UI STILIZZATI (TEMA SCURO) ---
 
 @Composable
 fun EnterpriseTextField(
@@ -135,17 +144,19 @@ fun EnterpriseTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(text = label, fontWeight = FontWeight.SemiBold) },
+        label = { Text(text = label, fontWeight = FontWeight.SemiBold, color = Color.LightGray) },
         modifier = modifier.fillMaxWidth(),
         readOnly = readOnly,
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFF3F4F6),
-            unfocusedContainerColor = Color(0xFFF3F4F6),
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = Color.Transparent,
-            focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = Color.DarkGray
+            focusedContainerColor = DarkNavy.copy(alpha = 0.5f),
+            unfocusedContainerColor = DarkNavy.copy(alpha = 0.5f),
+            focusedBorderColor = AccentBlue,
+            unfocusedBorderColor = Color.Gray,
+            focusedLabelColor = AccentBlue,
+            unfocusedLabelColor = Color.LightGray,
+            focusedTextColor = WhiteText,
+            unfocusedTextColor = WhiteText
         )
     )
 }
@@ -174,10 +185,15 @@ fun CampoDataClickabile(
     }
 }
 
-// --- SCHERMATE PRINCIPALI ---
+// --- SCHERMATA PRINCIPALE ---
 
 @Composable
-fun CreaViaggioScreen(viewModel: CreaViaggioViewModel) {
+fun CreaViaggioScreen(
+    viewModel: CreaViaggioViewModel,
+    nomeUtente: String
+) {
+    val context = LocalContext.current
+
     val titolo by viewModel.titolo.collectAsState()
     val descrizione by viewModel.descrizione.collectAsState()
     val partenza by viewModel.partenza.collectAsState()
@@ -190,95 +206,104 @@ fun CreaViaggioScreen(viewModel: CreaViaggioViewModel) {
     val tappe by viewModel.tappe.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
-    val context = LocalContext.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "Nuovo Progetto di Viaggio",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF111827)
-        )
-
-        EnterpriseTextField(value = titolo, onValueChange = { viewModel.titolo.value = it }, label = "Titolo Esperienza")
-        EnterpriseTextField(value = descrizione, onValueChange = { viewModel.descrizione.value = it }, label = "Descrizione", modifier = Modifier.height(100.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            EnterpriseTextField(value = partenza, onValueChange = { viewModel.partenza.value = it }, label = "Partenza", modifier = Modifier.weight(1f))
-            EnterpriseTextField(value = destinazione, onValueChange = { viewModel.destinazione.value = it }, label = "Destinazione", modifier = Modifier.weight(1f))
-        }
-
-        EnterpriseTextField(value = prezzo, onValueChange = { viewModel.prezzo.value = it }, label = "Prezzo (€)")
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CampoDataClickabile(
-                valore = dataInizio,
-                etichetta = "Data Inizio",
-                onClick = { apriDatePicker(context) { viewModel.dataInizio.value = it } },
-                modifier = Modifier.weight(1f)
+    // ✅ EnterpriseScaffold con titolo vuoto e nome utente dinamico
+    EnterpriseScaffold(
+        titolo = "",  // ✅ Titolo vuoto per non mostrare "NUOVO VIAGGIO"
+        nomeUtente = nomeUtente,  // ✅ Nome recuperato dal SessionManager
+        mostraFrecciaIndietro = true,
+        onBackClick = { (context as? CreaViaggioActivity)?.finish() }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DarkNavy)
+                .padding(innerPadding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Nuovo Progetto di Viaggio",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = WhiteText
             )
-            CampoDataClickabile(
-                valore = dataFine,
-                etichetta = "Data Fine",
-                onClick = { apriDatePicker(context) { viewModel.dataFine.value = it } },
-                modifier = Modifier.weight(1f)
-            )
-        }
 
-        EnterpriseTextField(value = postiDisponibili, onValueChange = { viewModel.postiDisponibili.value = it }, label = "Posti Disponibili")
+            EnterpriseTextField(value = titolo, onValueChange = { viewModel.titolo.value = it }, label = "Titolo Esperienza")
+            EnterpriseTextField(value = descrizione, onValueChange = { viewModel.descrizione.value = it }, label = "Descrizione", modifier = Modifier.height(100.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                EnterpriseTextField(value = partenza, onValueChange = { viewModel.partenza.value = it }, label = "Partenza", modifier = Modifier.weight(1f))
+                EnterpriseTextField(value = destinazione, onValueChange = { viewModel.destinazione.value = it }, label = "Destinazione", modifier = Modifier.weight(1f))
+            }
 
-        Text("TAPPE DEL VIAGGIO", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color(0xFF111827))
+            EnterpriseTextField(value = prezzo, onValueChange = { viewModel.prezzo.value = it }, label = "Prezzo (€)")
 
-        if (tappe.isEmpty()) {
-            Text("Nessuna tappa aggiunta. Clicca il bottone qui sotto per iniziare!", color = Color.Gray)
-        } else {
-            tappe.forEachIndexed { index, tappa ->
-                TappaFormItem(
-                    tappa = tappa,
-                    numeroTappa = index + 1,
-                    onUpdate = { aggiornamento -> viewModel.aggiornaTappa(tappa.id, aggiornamento) },
-                    onRemove = { viewModel.rimuoviTappa(tappa.id) },
-                    context = context
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                CampoDataClickabile(
+                    valore = dataInizio,
+                    etichetta = "Data Inizio",
+                    onClick = { apriDatePicker(context) { viewModel.dataInizio.value = it } },
+                    modifier = Modifier.weight(1f)
+                )
+                CampoDataClickabile(
+                    valore = dataFine,
+                    etichetta = "Data Fine",
+                    onClick = { apriDatePicker(context) { viewModel.dataFine.value = it } },
+                    modifier = Modifier.weight(1f)
                 )
             }
-        }
 
-        OutlinedButton(
-            onClick = { viewModel.aggiungiTappa() },
-            modifier = Modifier.fillMaxWidth().height(50.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("+ Aggiungi Nuova Tappa", fontWeight = FontWeight.Bold)
-        }
+            EnterpriseTextField(value = postiDisponibili, onValueChange = { viewModel.postiDisponibili.value = it }, label = "Posti Disponibili")
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = { viewModel.salvaViaggio(context) },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)), // Colore verde aziendale
-            enabled = uiState !is CreaViaggioState.Loading
-        ) {
-            if (uiState is CreaViaggioState.Loading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            Text("TAPPE DEL VIAGGIO", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = AccentBlue)
+
+            if (tappe.isEmpty()) {
+                Text("Nessuna tappa aggiunta. Clicca il bottone qui sotto per iniziare!", color = Color.Gray)
             } else {
-                Text("Salva Viaggio e Tappe", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                tappe.forEachIndexed { index, tappa ->
+                    TappaFormItem(
+                        tappa = tappa,
+                        numeroTappa = index + 1,
+                        onUpdate = { aggiornamento -> viewModel.aggiornaTappa(tappa.id, aggiornamento) },
+                        onRemove = { viewModel.rimuoviTappa(tappa.id) },
+                        context = context
+                    )
+                }
             }
-        }
 
-        if (uiState is CreaViaggioState.Error) {
-            Text(text = (uiState as CreaViaggioState.Error).message, color = MaterialTheme.colorScheme.error)
-        } else if (uiState is CreaViaggioState.Success) {
-            Text(text = "Viaggio salvato con successo!", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold)
+            OutlinedButton(
+                onClick = { viewModel.aggiungiTappa() },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentBlue)
+            ) {
+                Text("+ Aggiungi Nuova Tappa", fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { viewModel.salvaViaggio(context) },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                enabled = uiState !is CreaViaggioState.Loading
+            ) {
+                if (uiState is CreaViaggioState.Loading) {
+                    CircularProgressIndicator(color = WhiteText, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Salva Viaggio e Tappe", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = WhiteText)
+                }
+            }
+
+            if (uiState is CreaViaggioState.Error) {
+                Text(text = (uiState as CreaViaggioState.Error).message, color = DangerRed)
+            } else if (uiState is CreaViaggioState.Success) {
+                Text(text = "Viaggio salvato con successo!", color = SuccessGreen, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -295,15 +320,15 @@ fun TappaFormItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+            .border(1.dp, AccentBlue.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(containerColor = CardOverlay),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("📍 Tappa $numeroTappa", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color(0xFF111827))
+                Text(" Tappa $numeroTappa", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = WhiteText)
                 TextButton(onClick = onRemove) {
-                    Text("❌ Rimuovi", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                    Text(" Rimuovi", color = DangerRed, fontWeight = FontWeight.Bold)
                 }
             }
 

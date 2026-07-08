@@ -36,14 +36,13 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
 import com.example.enterprisemobile.data.security.SessionManager
+import com.example.enterprisemobile.ui.*
 import com.example.enterprisemobile.ui.components.TopBar
 import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.AdminViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
-import com.example.enterprisemobile.model.SegnalazioneDTO
-import com.example.enterprisemobile.model.UtenteBannatoDTO
 
 class AdminActivity : ComponentActivity() {
     private val viewModel: AdminViewModel by viewModels()
@@ -75,7 +74,6 @@ fun AdminContent(viewModel: AdminViewModel) {
     var selectedBottomTab by remember { mutableIntStateOf(0) }
     var vistaAttuale by remember { mutableStateOf("PENDENTI") }
     var isDownloading by remember { mutableStateOf(false) }
-
     var queryRicerca by remember { mutableStateOf("") }
 
     var mostraModaleMotivazione by remember { mutableStateOf(false) }
@@ -158,6 +156,7 @@ fun AdminContent(viewModel: AdminViewModel) {
         }
     }
 
+    // Dialog per richieste (mantenuti qui perché specifici delle richieste)
     if (mostraModaleMotivazione) {
         AlertDialog(
             onDismissRequest = { mostraModaleMotivazione = false },
@@ -304,11 +303,12 @@ fun AdminContent(viewModel: AdminViewModel) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().background(DarkNavy).padding(innerPadding)) {
-            if (isLoading && richieste.isEmpty()) {
+            if (isLoading && richieste.isEmpty() && selectedBottomTab == 0) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AccentBlue)
             } else {
                 when (selectedBottomTab) {
                     0 -> {
+                        // TAB RICHIESTE - Mantenuto inline perché ha dialog specifici
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Richieste di Promozione", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -321,14 +321,14 @@ fun AdminContent(viewModel: AdminViewModel) {
                                         containerColor = if (vistaAttuale == "PENDENTI") AccentBlue else Color.Gray
                                     ),
                                     modifier = Modifier.weight(1f)
-                                ) { Text("Richieste Pendenti", fontSize = 12.sp) }
+                                ) { Text("Richieste Pendenti", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                                 Button(
                                     onClick = { vistaAttuale = "STORICO"; viewModel.filtraPerStato(null) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = if (vistaAttuale == "STORICO") AccentBlue else Color.Gray
                                     ),
                                     modifier = Modifier.weight(1f)
-                                ) { Text("Storico Valutazioni", fontSize = 12.sp) }
+                                ) { Text("Storico Valutazioni", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -447,296 +447,11 @@ fun AdminContent(viewModel: AdminViewModel) {
                             }
                         }
                     }
-                    1 -> SchermataSegnalazioni(viewModel)
-                    2 -> SchermataUtentiBannati(viewModel)
+                    1 -> GestioneSegnalazioniScreen(viewModel)
+                    2 -> GestioneBanScreen(viewModel)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun SchermataSegnalazioni(viewModel: AdminViewModel) {
-    val context = LocalContext.current
-    val sessionManager = remember { SessionManager(context) }
-    val adminId = sessionManager.ottieniIdUtente()?.toLongOrNull() ?: 0L
-
-    val segnalazioni by viewModel.segnalazioni.observeAsState(emptyList())
-    var mostraArchivio by remember { mutableStateOf(false) }
-
-    var mostraModaleRisolvi by remember { mutableStateOf(false) }
-    var mostraModaleBanna by remember { mutableStateOf(false) }
-    var segnalazioneSelezionata by remember { mutableStateOf<Long?>(null) }
-
-    val segnalazioniFiltrate = if (mostraArchivio) {
-        segnalazioni.filter { it.stato.toString() == "CHIUSA" || it.stato.toString() == "RIFIUTATA" }
-    } else {
-        segnalazioni.filter { it.stato.toString() == "APERTA" || it.stato.toString() == "IN_LAVORAZIONE" }
-    }
-
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Centro Segnalazioni", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = {
-                    mostraArchivio = false
-                    viewModel.caricaSegnalazioni()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = if (!mostraArchivio) AccentBlue else Color.Gray),
-                modifier = Modifier.weight(1f)
-            ) { Text("Da Gestire", color = if (!mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
-
-            Button(
-                onClick = {
-                    mostraArchivio = true
-                    viewModel.caricaSegnalazioni()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = if (mostraArchivio) AccentBlue else Color.Gray),
-                modifier = Modifier.weight(1f)
-            ) { Text("Archivio", color = if (mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
-        }
-
-        if (segnalazioniFiltrate.isEmpty()) {
-            Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                Text(
-                    text = if (mostraArchivio) "Nessuna segnalazione in archivio." else "Nessuna segnalazione da gestire.",
-                    color = Color.Gray
-                )
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(segnalazioniFiltrate) { segnalazione ->
-                    CartaSegnalazione(
-                        segnalazione = segnalazione,
-                        mostraAzioni = !mostraArchivio,
-                        onPrendiInCarico = {
-                            viewModel.prendiInCaricoSegnalazione(segnalazione.id.toLong(), adminId,
-                                onSuccess = {
-                                    Toast.makeText(context, "Presa in carico!", Toast.LENGTH_SHORT).show()
-                                    viewModel.caricaSegnalazioni()
-                                },
-                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
-                            )
-                        },
-                        onRisolvi = {
-                            segnalazioneSelezionata = segnalazione.id.toLong()
-                            mostraModaleRisolvi = true
-                        },
-                        onBanna = {
-                            segnalazioneSelezionata = segnalazione.id.toLong()
-                            mostraModaleBanna = true
-                        },
-                        onRifiuta = {
-                            viewModel.rifiutaSegnalazione(segnalazione.id.toLong(), adminId,
-                                onSuccess = {
-                                    Toast.makeText(context, "Segnalazione rifiutata.", Toast.LENGTH_SHORT).show()
-                                    viewModel.caricaSegnalazioni()
-                                },
-                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
-                            )
-                        }
-                    )
-                }
-            }
-        }
-    }
-
-    if (mostraModaleRisolvi) {
-        AlertDialog(
-            onDismissRequest = { mostraModaleRisolvi = false },
-            title = { Text("Conferma Risoluzione", color = WhiteText) },
-            text = { Text("Confermi la risoluzione della segnalazione (con eventuale rimozione dell'elemento)?", color = Color.LightGray) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        segnalazioneSelezionata?.let { id ->
-                            viewModel.risolviSegnalazione(id, adminId, false,
-                                onSuccess = {
-                                    Toast.makeText(context, "Segnalazione risolta!", Toast.LENGTH_SHORT).show()
-                                    mostraModaleRisolvi = false
-                                    viewModel.caricaSegnalazioni()
-                                },
-                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
-                            )
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                ) { Text("Conferma") }
-            },
-            dismissButton = { TextButton(onClick = { mostraModaleRisolvi = false }) { Text("Annulla", color = Color.Gray) } },
-            containerColor = DarkNavy
-        )
-    }
-
-    if (mostraModaleBanna) {
-        AlertDialog(
-            onDismissRequest = { mostraModaleBanna = false },
-            title = { Text("⚠ ATTENZIONE BAN", color = DangerRed, fontWeight = FontWeight.Bold) },
-            text = { Text("Stai per applicare la sanzione più dura sull'elemento e sospendere definitivamente l'utente. Confermi?", color = Color.LightGray) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        segnalazioneSelezionata?.let { id ->
-                            viewModel.risolviSegnalazione(id, adminId, true,
-                                onSuccess = {
-                                    Toast.makeText(context, "Utente bannato con successo!", Toast.LENGTH_LONG).show()
-                                    mostraModaleBanna = false
-                                    viewModel.caricaSegnalazioni()
-                                    viewModel.caricaUtentiBannati()
-                                },
-                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
-                            )
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
-                ) { Text("Sì, Banna Utente") }
-            },
-            dismissButton = { TextButton(onClick = { mostraModaleBanna = false }) { Text("Annulla", color = Color.Gray) } },
-            containerColor = DarkNavy
-        )
-    }
-}
-
-@Composable
-fun CartaSegnalazione(
-    segnalazione: SegnalazioneDTO,
-    mostraAzioni: Boolean,
-    onPrendiInCarico: () -> Unit,
-    onRisolvi: () -> Unit,
-    onBanna: () -> Unit,
-    onRifiuta: () -> Unit
-) {
-    Surface(
-        color = CardOverlay,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("${segnalazione.id} - ${segnalazione.tipo}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("Inviata da: ${segnalazione.segnalatoreUsername ?: "N/D"}", color = Color.LightGray, fontSize = 12.sp)
-                    Text("Riferimento: ${segnalazione.riferimentoNome ?: "N/D"}", color = DangerRed, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-
-                val (statoColore, statoTesto) = when (segnalazione.stato.toString()) {
-                    "APERTA" -> Color(0xFFF59E0B) to "APERTA"
-                    "IN_LAVORAZIONE" -> AccentBlue to "IN LAVORAZIONE"
-                    "CHIUSA" -> SuccessGreen to "RISOLTA"
-                    "RIFIUTATA" -> DangerRed to "RIFIUTATA"
-                    else -> Color.Gray to segnalazione.stato.toString()
-                }
-
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(statoColore.copy(alpha = 0.2f)).padding(horizontal = 8.dp, vertical = 4.dp)
-                ) { Text(statoTesto, color = statoColore, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "Motivo: ${segnalazione.motivo}", color = Color(0xFFF59E0B), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text(text = segnalazione.descrizione ?: "Nessuna descrizione", color = Color.Gray, fontSize = 12.sp)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (mostraAzioni) {
-                if (segnalazione.stato.toString() == "APERTA") {
-                    Button(onClick = onPrendiInCarico, colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), modifier = Modifier.fillMaxWidth()) {
-                        Text("Prendi in carico", color = DarkNavy, fontWeight = FontWeight.Bold)
-                    }
-                } else if (segnalazione.stato.toString() == "IN_LAVORAZIONE") {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen), modifier = Modifier.weight(1f)) {
-                            Text("✅ Risolvi", fontSize = 12.sp)
-                        }
-                        Button(onClick = onBanna, colors = ButtonDefaults.buttonColors(containerColor = DangerRed), modifier = Modifier.weight(1f)) {
-                            Text("⛔ Banna", fontSize = 12.sp)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = onRifiuta, colors = ButtonDefaults.buttonColors(containerColor = DangerRed), modifier = Modifier.fillMaxWidth()) {
-                        Text("Rifiuta", color = WhiteText, fontWeight = FontWeight.Bold)
-                    }
-                }
-            } else {
-                Text("Segnalazione archiviata", color = Color.Gray, fontSize = 12.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
-            }
-        }
-    }
-}
-
-@Composable
-fun SchermataUtentiBannati(viewModel: AdminViewModel) {
-    val context = LocalContext.current
-    var mostraModaleSbanna by remember { mutableStateOf(false) }
-    var utenteDaSbannare by remember { mutableStateOf<Long?>(null) }
-
-    val utentiBannati by viewModel.utentiBannati.observeAsState(emptyList())
-
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Utenti Bannati", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (utentiBannati.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Nessun utente bannato.", color = Color.Gray)
-            }
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 16.dp), modifier = Modifier.fillMaxSize()) {
-                items(utentiBannati) { utente ->
-                    Surface(color = CardOverlay, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("👤 ${utente.username}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                Text("Data: ${utente.dataBan}", color = Color.LightGray, fontSize = 12.sp)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Motivo: ${utente.motivoBan}", color = DangerRed, fontSize = 14.sp)
-                            }
-
-                            Button(
-                                onClick = {
-                                    utenteDaSbannare = utente.id.toLong()
-                                    mostraModaleSbanna = true
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                            ) { Text("🔓 Sbanna", color = WhiteText, fontWeight = FontWeight.Bold) }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (mostraModaleSbanna) {
-        AlertDialog(
-            onDismissRequest = { mostraModaleSbanna = false },
-            title = { Text("Riattiva Utente", color = WhiteText, fontWeight = FontWeight.Bold) },
-            text = { Text("Sei sicuro di voler riattivare questo utente? Potrà nuovamente accedere alla piattaforma.", color = Color.LightGray) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        utenteDaSbannare?.let { id ->
-                            viewModel.sbannaUtente(id,
-                                onSuccess = {
-                                    Toast.makeText(context, "Utente riattivato con successo!", Toast.LENGTH_SHORT).show()
-                                    mostraModaleSbanna = false
-                                    viewModel.caricaUtentiBannati()
-                                },
-                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
-                            )
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                ) { Text("Conferma") }
-            },
-            dismissButton = { TextButton(onClick = { mostraModaleSbanna = false }) { Text("Annulla", color = Color.Gray) } },
-            containerColor = DarkNavy
-        )
     }
 }
 
@@ -854,7 +569,6 @@ private fun apriFile(context: android.content.Context, file: File) {
     try {
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_VIEW).apply {
-
             val tipoCorretto = if (file.name.endsWith(".docx")) {
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             } else {

@@ -66,7 +66,6 @@ class HomeOrganizzatoreActivity : ComponentActivity() {
     }
 }
 
-// LOGICA DEI COMPAGNI MANTENUTA INTATTA: Clustering e stabilità marker Mapbox
 @OptIn(MapboxExperimental::class)
 @Composable
 fun MappaItinerari(
@@ -150,7 +149,7 @@ fun SchermataOrganizzatore(nomeUtente: String) {
 
     // Stati di Navigazione
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
-    var vistaDashboard by remember { mutableStateOf("MAPPA") }
+    var vistaDashboard by rememberSaveable { mutableStateOf("MAPPA") }
 
     // Caricamento asincrono iniziale
     LaunchedEffect(Unit) {

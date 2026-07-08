@@ -4,6 +4,7 @@ import com.example.progettoenterprise.data.entities.Segnalazione;
 import com.example.progettoenterprise.data.entities.Segnalazione.TipoEntita;
 import com.example.progettoenterprise.data.entities.Segnalazione.StatoSegnalazione;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 import lombok.Data;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -11,37 +12,46 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SegnalazioneSpecification {
+
     @Data
-    public static class SegnalazioneFilter{
+    public static class SegnalazioneFilter {
         private TipoEntita tipo;
-        private StatoSegnalazione stato;
+        private List<StatoSegnalazione> stato;
         private Long segnalatoreId;
         private Long adminId;
+        private String usernameSegnalatore;
     }
 
     public static Specification<Segnalazione> withFilter(SegnalazioneSpecification.SegnalazioneFilter filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Filtra per tipo
             if (filter.getTipo() != null) {
                 predicates.add(cb.equal(root.get("tipo"), filter.getTipo()));
             }
-            // Filtra per stato
-            if (filter.getStato() != null) {
-                predicates.add(cb.equal(root.get("stato"), filter.getStato()));
+
+            if (filter.getStato() != null && !filter.getStato().isEmpty()) {
+                predicates.add(root.get("stato").in(filter.getStato()));
             }
 
-            // Filtra per utente che ha effettuato la segnalazione
             if (filter.getSegnalatoreId() != null) {
                 predicates.add(cb.equal(root.get("segnalatoreId"), filter.getSegnalatoreId()));
             }
 
-            // Filtra per amministratore che ha preso in carico la segnalazione
             if (filter.getAdminId() != null) {
                 predicates.add(cb.equal(root.get("adminId"), filter.getAdminId()));
             }
 
+            if (filter.getUsernameSegnalatore() != null && !filter.getUsernameSegnalatore().isBlank()) {
+                Subquery<Long> subquery = query.subquery(Long.class);
+                var subRoot = subquery.from(com.example.progettoenterprise.data.entities.Utente.class);
+                subquery.select(subRoot.get("id"));
+                subquery.where(cb.like(
+                        cb.lower(subRoot.get("username")),
+                        "%" + filter.getUsernameSegnalatore().toLowerCase() + "%"
+                ));
+                predicates.add(root.get("segnalatoreId").in(subquery));
+            }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

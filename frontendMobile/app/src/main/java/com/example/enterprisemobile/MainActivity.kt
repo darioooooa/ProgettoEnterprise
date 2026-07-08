@@ -33,7 +33,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Stato che controlla quale vista mostrare (Landing, Login o Registrazione)
                     var schermataAttuale by remember { mutableStateOf(SchermataIniziale.LANDING) }
 
                     when (schermataAttuale) {
@@ -58,13 +57,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun reindirizzaAHome(ruolo: String?, username: String?) {
-        val intentHome = if (ruolo == "ROLE_ORGANIZZATORE") {
-            Intent(this, HomeOrganizzatoreActivity::class.java).apply {
+        val intentHome = when (ruolo) {
+            "ROLE_ADMIN" -> Intent(this, AdminActivity::class.java)  // ✅ AGGIUNGI QUESTO
+            "ROLE_ORGANIZZATORE" -> Intent(this, HomeOrganizzatoreActivity::class.java).apply {
                 putExtra("CHIAVE_USERNAME", username)
             }
-        } else {
-            Intent(this, HomeViaggiatoreActivity::class.java)
+            "ROLE_VIAGGIATORE" -> Intent(this, HomeViaggiatoreActivity::class.java)
+            else -> {
+                // Ruolo non valido, fai logout
+                SessionManager(this).cancellaSessione()
+                return
+            }
         }
+
+        intentHome.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intentHome)
         finish()
     }
