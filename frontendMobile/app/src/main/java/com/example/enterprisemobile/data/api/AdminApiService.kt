@@ -8,6 +8,12 @@ import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
+data class CreaSegnalazioneRequest(
+    val tipo: String,
+    val idRiferimento: Long,
+    val motivo: String,
+    val descrizione: String
+)
 interface AdminApiService {
     @GET("admin/richieste")
     suspend fun getRichiestePromozione(
@@ -57,6 +63,11 @@ interface AdminApiService {
         @Query("idAdmin") idAdmin: Long
     ): Response<Unit>
 
+    @POST("segnalazioni/crea")
+    suspend fun creaSegnalazione(
+        @Body segnalazione: CreaSegnalazioneRequest,
+        @Query("idSegnalatore") idSegnalatore: Long
+    ): Response<Unit>
     @GET("admin/richieste/utenti-bannati")
     suspend fun getUtentiBannati(): Response<List<UtenteBannatoDTO>>
 

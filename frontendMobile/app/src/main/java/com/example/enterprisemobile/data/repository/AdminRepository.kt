@@ -2,6 +2,7 @@ package com.example.enterprisemobile.data.repository
 
 import android.content.Context
 import com.example.enterprisemobile.data.api.AdminApiService
+import com.example.enterprisemobile.data.api.CreaSegnalazioneRequest
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
@@ -77,7 +78,6 @@ class AdminRepository(private val context: Context) {
         return adminApiService.scaricaDocumento(id)
     }
 
-
     suspend fun getSegnalazioni(
         tipo: String? = null,
         stati: List<String>? = null,
@@ -87,6 +87,7 @@ class AdminRepository(private val context: Context) {
     ): Response<PageResponse<SegnalazioneDTO>> {
         return adminApiService.getSegnalazioni(tipo, stati, usernameSegnalatore, page, size)
     }
+
     suspend fun prendiInCarico(id: Long, adminId: Long) =
         adminApiService.prendiInCarico(id, adminId)
 
@@ -95,6 +96,23 @@ class AdminRepository(private val context: Context) {
 
     suspend fun rifiutaSegnalazione(id: Long, adminId: Long) =
         adminApiService.rifiutaSegnalazione(id, adminId)
+
+    suspend fun creaSegnalazione(
+        tipo: String,
+        idRiferimento: Long,
+        motivo: String,
+        descrizione: String,
+        idSegnalatore: Long
+    ): Response<Unit> {
+        // Creiamo l'oggetto specifico invece della Mappa
+        val richiesta = CreaSegnalazioneRequest(
+            tipo = tipo,
+            idRiferimento = idRiferimento,
+            motivo = motivo,
+            descrizione = descrizione
+        )
+        return adminApiService.creaSegnalazione(richiesta, idSegnalatore)
+    }
 
     suspend fun getUtentiBannati() =
         adminApiService.getUtentiBannati()

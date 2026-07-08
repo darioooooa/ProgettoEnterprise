@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
+import com.example.enterprisemobile.data.repository.AdminRepository
 import com.example.enterprisemobile.data.repository.CommunityRepository
 import com.example.enterprisemobile.data.security.SessionManager
 import com.example.enterprisemobile.model.RecensioneViaggioEntity
@@ -42,9 +43,14 @@ class CommunityViewModel(application: Application) : AndroidViewModel(applicatio
 
     // Variabili per i filtri
     var filtroParolaChiave by mutableStateOf("")
-    var filtroVotoEsatto by mutableStateOf("") // "1", "2", "3", "4", "5" o "" (qualsiasi)
-    var filtroDataDa by mutableStateOf("") // Formato YYYY-MM-DD dai picker
-    var filtroDataA by mutableStateOf("")  // Formato YYYY-MM-DD dai picker
+    var filtroVotoEsatto by mutableStateOf("")
+    var filtroDataDa by mutableStateOf("")
+    var filtroDataA by mutableStateOf("")
+
+    // ✅ NUOVI: Stati per segnalazione recensione
+    var showSegnalazioneRecensioneDialog by mutableStateOf(false)
+    var recensioneDaSegnalare by mutableStateOf<RecensioneViaggioEntity?>(null)
+    var isLoadingSegnalazione by mutableStateOf(false)
 
     init {
         mioUsername = sessionManager.ottieniUsername() ?: ""
@@ -77,7 +83,6 @@ class CommunityViewModel(application: Application) : AndroidViewModel(applicatio
                 mappaFiltri["dataA"] = "${filtroDataA}T23:59:59"
             }
 
-            // Invio dei filtri al repository
             totalePagineRecensioni = repository.sincronizzaRecensioni(viaggioId, paginaRecensioni, mappaFiltri)
 
             val locali = repository.getRecensioniLocali(viaggioId)
@@ -199,5 +204,51 @@ class CommunityViewModel(application: Application) : AndroidViewModel(applicatio
         commentoInput = ""
         inModifica = false
         idRecensioneInModifica = null
+    }
+
+
+    fun apriDialogSegnalazioneRecensione(recensione: RecensioneViaggioEntity) {
+        recensioneDaSegnalare = recensione
+        showSegnalazioneRecensioneDialog = true
+    }
+
+    fun chiudiDialogSegnalazioneRecensione() {
+        showSegnalazioneRecensioneDialog = false
+        recensioneDaSegnalare = null
+    }
+
+    fun inviaSegnalazioneRecensione(
+        context: Context,
+        motivo: String,
+        descrizione: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            isLoadingSegnalazione = true
+            try {
+                val recensione = recensioneDaSegnalare ?: return@launch
+                val adminRepo = AdminRepository(context)
+
+                val response = adminRepo.creaSegnalazione(
+                    tipo = "RECENSIONE",
+                    idRiferimento = recensione.id,
+                    motivo = motivo,
+                    descrizione = descrizione,
+                    idSegnalatore = sessionManager.ottieniIdUtente()?.toLongOrNull() ?: 0L
+                )
+
+                if (response.isSuccessful) {
+                    onSuccess()
+                    chiudiDialogSegnalazioneRecensione()
+                } else {
+                    onError("Errore nell'invio della segnalazione")
+                }
+            } catch (e: Exception) {
+                onError("Errore: ${e.message}")
+            } finally {
+                isLoadingSegnalazione = false
+            }
+        }
     }
 }

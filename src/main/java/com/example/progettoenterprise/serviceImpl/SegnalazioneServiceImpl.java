@@ -54,26 +54,44 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
             throw new IllegalArgumentException("Tipo di segnalazione non valido. È possibile segnalare solo Utenti, Messaggi o Recensioni.");
         }
 
+        // ✅ NUOVO: Controllo per evitare segnalazioni duplicate
+        List<Segnalazione.StatoSegnalazione> statiAttivi = List.of(
+                Segnalazione.StatoSegnalazione.APERTA,
+                Segnalazione.StatoSegnalazione.IN_LAVORAZIONE
+        );
+
+        boolean esisteGia = segnalazioneRepository.existsBySegnalatoreIdAndTipoAndIdRiferimentoAndStatoIn(
+                idSegnalatore,
+                Segnalazione.TipoEntita.valueOf(tipoInArrivo),
+                segnalazioneDTO.getIdRiferimento(),
+                statiAttivi
+        );
+
+        if (esisteGia) {
+            log.warn("Tentativo di segnalazione duplicata da utente {} per {} con ID {}",
+                    idSegnalatore, tipoInArrivo, segnalazioneDTO.getIdRiferimento());
+            throw new IllegalArgumentException("Hai già segnalato questo elemento. Attendi che gli amministratori valutino la tua segnalazione.");
+        }
+
         Segnalazione segnalazione = modelMapper.map(segnalazioneDTO, Segnalazione.class);
         segnalazione.setStato(Segnalazione.StatoSegnalazione.APERTA);
         segnalazione.setSegnalatoreId(idSegnalatore);
         Segnalazione salvata = segnalazioneRepository.save(segnalazione);
         log.info("Nuova segnalazione creata con ID: {}", salvata.getId());
+
         // per notifica segnalazione
         if (salvata.getTipo() == Segnalazione.TipoEntita.UTENTE && salvata.getIdRiferimento() != null) {
-
             utenteRepository.findById(salvata.getIdRiferimento()).ifPresent(utenteSegnalato -> {
                 String tokenSegnalato = utenteSegnalato.getFirebaseToken();
 
                 if (tokenSegnalato != null && !tokenSegnalato.trim().isEmpty()) {
                     SegnalazioneUtenteEvent evento = new SegnalazioneUtenteEvent(tokenSegnalato);
                     applicationEventPublisher.publishEvent(evento);
-                    log.info("✅  Evento inviato a Firebase per l'utente {}", utenteSegnalato.getUsername());
+                    log.info("✅ Evento inviato a Firebase per l'utente {}", utenteSegnalato.getUsername());
                 } else {
-                    log.warn("⚠️L'utente segnalato ({}) non ha un token Firebase salvato.", utenteSegnalato.getUsername());
+                    log.warn("⚠️ L'utente segnalato ({}) non ha un token Firebase salvato.", utenteSegnalato.getUsername());
                 }
             });
-
         }
         return convertiConNomi(salvata);
     }

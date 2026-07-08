@@ -10,6 +10,7 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 val DarkNavy = Color(0xFF101624)
 val CardOverlay = Color(0xCC1A2338) // Trasparente scuro
+val containerColor = Color(0xFF1E1E2E)
 val WhiteText = Color(0xFFFFFFFF)
 val ButtonColor = Color(0xFFFFFFFF)
 val TextColor = Color(0xFF101624)
