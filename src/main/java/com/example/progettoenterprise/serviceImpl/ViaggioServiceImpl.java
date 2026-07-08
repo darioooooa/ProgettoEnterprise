@@ -54,6 +54,7 @@ public class ViaggioServiceImpl implements ViaggioService {
             MessageLang messageLang,
             PagamentoService pagamentoService,
             PrenotazioneRepository prenotazioneRepository,
+            EmailServiceImpl emailService,
             ApplicationEventPublisher eventPublisher) {
         this.viaggioRepository = viaggioRepository;
         this.utenteRepository = utenteRepository;
@@ -62,6 +63,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         this.messageLang = messageLang;
         this.pagamentoService = pagamentoService;
         this.prenotazioneRepository = prenotazioneRepository;
+        this.emailService = emailService;
         this.eventPublisher = eventPublisher;
     }
 

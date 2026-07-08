@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -36,6 +38,36 @@ import com.example.enterprisemobile.viewmodels.TappaState
 import java.util.Calendar
 import java.util.Locale
 
+// ===== MAPPA EMOJI PER I TAG =====
+val emojiMap = mapOf(
+    "Mare" to "🏖️",
+    "Montagna" to "🏔️",
+    "Città d'arte" to "🎨",
+    "Relax" to "🧘",
+    "Avventura" to "🏕️",
+    "Cultura" to "🏛️",
+    "Enogastronomia" to "🍷",
+    "Economico" to "💰",
+    "Lusso" to "💎",
+    "Inverno" to "❄️",
+    "Estate" to "☀️"
+)
+
+// ===== MAPPA COLORI PER I TAG (adattati al tema scuro) =====
+val colorMap = mapOf(
+    "Mare" to Color(0xFF60A5FA),         // Blu chiaro
+    "Montagna" to Color(0xFF34D399),     // Verde chiaro
+    "Città d'arte" to Color(0xFFA78BFA), // Viola chiaro
+    "Relax" to Color(0xFFF472B6),        // Rosa chiaro
+    "Avventura" to Color(0xFFFB923C),    // Arancione chiaro
+    "Cultura" to Color(0xFF818CF8),      // Indaco chiaro
+    "Enogastronomia" to Color(0xFFF87171), // Rosso chiaro
+    "Economico" to Color(0xFF34D399),    // Verde
+    "Lusso" to Color(0xFFFBBF24),        // Oro
+    "Inverno" to Color(0xFF22D3EE),      // Azzurro chiaro
+    "Estate" to Color(0xFFFCD34D)        // Giallo chiaro
+)
+
 class CreaViaggioActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,13 +81,14 @@ class CreaViaggioActivity : ComponentActivity() {
                         val apiService = RetrofitClient.ottieniViaggioService(this@CreaViaggioActivity)
                         val dao = AppDatabase.getInstance(this@CreaViaggioActivity).viaggioDao()
                         val repository = ViaggioRepository(apiService, dao)
-                        return CreaViaggioViewModel(repository) as T
-                    }
-                }
+                        return CreaViaggioViewModel(
+                            application = this@CreaViaggioActivity.application,
+                            repository = repository
+                        ) as T                } }
 
                 val viewModel = ViewModelProvider(this@CreaViaggioActivity, factory)[CreaViaggioViewModel::class.java]
 
-                // ✅ Recupera il nome utente dal SessionManager
+                // Recupera il nome utente dal SessionManager
                 val sessionManager = remember { SessionManager(this) }
                 val nomeOrganizzatore = sessionManager.ottieniUsername() ?: "Organizzatore"
 
@@ -185,6 +218,67 @@ fun CampoDataClickabile(
     }
 }
 
+// ===== COMPONENTE TAG CON EMOJI E COLORI (TEMA SCURO) =====
+@Composable
+fun TagChip(
+    tag: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    val emoji = emojiMap[tag] ?: ""
+    val colore = colorMap[tag] ?: Color.Gray
+
+    val backgroundColor = if (isSelected) {
+        colore.copy(alpha = 0.85f) // Colore pieno ma leggermente trasparente per tema scuro
+    } else {
+        colore.copy(alpha = 0.15f) // Pastello scuro
+    }
+
+    val textColor = if (isSelected) {
+        Color.White
+    } else {
+        WhiteText.copy(alpha = 0.85f)
+    }
+
+    val borderColor = if (isSelected) {
+        BorderStroke(2.dp, colore)
+    } else {
+        BorderStroke(1.dp, colore.copy(alpha = 0.4f))
+    }
+
+    Surface(
+        modifier = Modifier
+            .width(100.dp)
+            .clickable(enabled = enabled) { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        color = backgroundColor,
+        border = borderColor,
+        shadowElevation = if (isSelected) 6.dp else 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = emoji,
+                fontSize = 22.sp,
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+            Text(
+                text = tag,
+                textAlign = TextAlign.Center,
+                fontSize = 11.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = textColor,
+                maxLines = 1
+            )
+        }
+    }
+}
+
 // --- SCHERMATA PRINCIPALE ---
 
 @Composable
@@ -206,10 +300,15 @@ fun CreaViaggioScreen(
     val tappe by viewModel.tappe.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
-    // ✅ EnterpriseScaffold con titolo vuoto e nome utente dinamico
+    // Stato per i tag
+    val tagDisponibili by viewModel.tagDisponibili.collectAsState()
+    val tagSelezionati by viewModel.tagSelezionati.collectAsState()
+    val isLoadingTag by viewModel.isLoadingTag.collectAsState()
+
+    // EnterpriseScaffold con titolo vuoto e nome utente dinamico
     EnterpriseScaffold(
-        titolo = "",  // ✅ Titolo vuoto per non mostrare "NUOVO VIAGGIO"
-        nomeUtente = nomeUtente,  // ✅ Nome recuperato dal SessionManager
+        titolo = "",
+        nomeUtente = nomeUtente,
         mostraFrecciaIndietro = true,
         onBackClick = { (context as? CreaViaggioActivity)?.finish() }
     ) { innerPadding ->
@@ -255,6 +354,139 @@ fun CreaViaggioScreen(
             }
 
             EnterpriseTextField(value = postiDisponibili, onValueChange = { viewModel.postiDisponibili.value = it }, label = "Posti Disponibili")
+
+            // ===== SEZIONE SELEZIONE TAG CON EMOJI E COLORI =====
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "🏷️ TAG DEL VIAGGIO",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp,
+                color = AccentBlue
+            )
+            Text(
+                "Scegli da 1 a 3 tag per descrivere il tuo viaggio",
+                fontSize = 13.sp,
+                color = WhiteText.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (isLoadingTag) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = AccentBlue)
+                }
+            } else if (tagDisponibili.isEmpty()) {
+                Text("Nessun tag disponibile.", color = Color.Gray)
+            } else {
+                // Layout a griglia per i tag (3 per riga)
+                val chunks = tagDisponibili.chunked(3)
+                chunks.forEach { riga ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        riga.forEach { tag ->
+                            val isSelected = tagSelezionati.contains(tag)
+                            val canSelect = isSelected || tagSelezionati.size < 3
+
+                            TagChip(
+                                tag = tag,
+                                isSelected = isSelected,
+                                onClick = { viewModel.toggleTag(tag) },
+                                enabled = canSelect
+                            )
+                        }
+                        // Riempi gli spazi vuoti
+                        repeat(3 - riga.size) {
+                            Spacer(modifier = Modifier.width(100.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Contatore tag selezionati con feedback visivo
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = when {
+                            tagSelezionati.isEmpty() -> DangerRed.copy(alpha = 0.15f)
+                            tagSelezionati.size == 3 -> SuccessGreen.copy(alpha = 0.15f)
+                            else -> CardOverlay
+                        }
+                    ),
+                    border = if (tagSelezionati.isEmpty()) {
+                        BorderStroke(1.dp, DangerRed)
+                    } else if (tagSelezionati.size == 3) {
+                        BorderStroke(1.dp, SuccessGreen)
+                    } else {
+                        null
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = when {
+                                tagSelezionati.isEmpty() -> "⚠️ "
+                                tagSelezionati.size == 3 -> "✅ "
+                                else -> "📌 "
+                            },
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = when {
+                                tagSelezionati.isEmpty() -> "Seleziona almeno 1 tag (obbligatorio)"
+                                tagSelezionati.size == 3 -> "3/3 tag selezionati (completato)"
+                                else -> "${tagSelezionati.size}/3 tag selezionati"
+                            },
+                            fontSize = 13.sp,
+                            color = when {
+                                tagSelezionati.isEmpty() -> DangerRed
+                                tagSelezionati.size == 3 -> SuccessGreen
+                                else -> WhiteText.copy(alpha = 0.8f)
+                            },
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Mostra i tag selezionati con emoji
+                if (tagSelezionati.isNotEmpty()) {
+                    Text(
+                        text = "I tuoi tag:",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = WhiteText.copy(alpha = 0.6f)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        tagSelezionati.forEach { tag ->
+                            val emoji = emojiMap[tag] ?: ""
+                            val colore = colorMap[tag] ?: Color.Gray
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = colore.copy(alpha = 0.2f),
+                                border = BorderStroke(1.dp, colore)
+                            ) {
+                                Text(
+                                    text = "$emoji $tag",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colore
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            // ===== FINE SEZIONE TAG =====
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -326,9 +558,9 @@ fun TappaFormItem(
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(" Tappa $numeroTappa", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = WhiteText)
+                Text("📍 Tappa $numeroTappa", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = WhiteText)
                 TextButton(onClick = onRemove) {
-                    Text(" Rimuovi", color = DangerRed, fontWeight = FontWeight.Bold)
+                    Text("❌ Rimuovi", color = DangerRed, fontWeight = FontWeight.Bold)
                 }
             }
 
