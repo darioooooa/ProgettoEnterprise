@@ -4,12 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
@@ -41,7 +45,9 @@ import com.example.enterprisemobile.viewmodels.ChatViewModel
 import com.example.enterprisemobile.viewmodels.GeneratoreChatViewModel
 import com.example.enterprisemobile.viewmodels.HomeOrganizzatoreViewModel
 import com.example.enterprisemobile.viewmodels.StatisticheOrganizzatoreViewModel
+import com.example.enterprisemobile.viewmodels.ViaggioViewModel
 import com.example.enterprisemobile.viewmodels.ViewModelFactory
+import com.google.firebase.messaging.FirebaseMessaging
 import com.mapbox.common.MapboxOptions
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
@@ -52,21 +58,23 @@ import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import kotlinx.coroutines.launch
 
 class HomeOrganizzatoreActivity : ComponentActivity() {
+    private val viaggioViewModel: ViaggioViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val usernameRicevuto = intent.getStringExtra("CHIAVE_USERNAME") ?: "Organizzatore"
 
-        MapboxOptions.accessToken = "pk.eyJ1IjoibG9sbG8xOSIsImEiOiJjbXAzNzhuMDAwMmxzMnJzZDh5azZ6ajRpIn0.pYRkM98DgyohuPpF3pf_cQ"
+        MapboxOptions.accessToken = com.example.enterprisemobile.BuildConfig.MAPBOX_TOKEN
 
         setContent {
             EnterpriseMobileTheme {
-                SchermataOrganizzatore(usernameRicevuto)
+                SchermataOrganizzatore(usernameRicevuto,viaggioViewModel)
             }
         }
     }
 }
 
-@OptIn(MapboxExperimental::class)
+// Clustering e stabilità marker Mapbox
+@OptIn(ExperimentalMaterial3Api::class, MapboxExperimental::class)
 @Composable
 fun MappaItinerari(
     viaggi: List<ViaggioMappaDTO>,
@@ -110,7 +118,7 @@ fun MappaItinerari(
 
 @OptIn(ExperimentalMaterial3Api::class, MapboxExperimental::class)
 @Composable
-fun SchermataOrganizzatore(nomeUtente: String) {
+fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewModel) {
 
 
     val context = LocalContext.current
@@ -147,6 +155,10 @@ fun SchermataOrganizzatore(nomeUtente: String) {
     val isLoadingPrenotazioni by viewModel.isLoadingPrenotazioni.collectAsState()
     val filtroStato by viewModel.filtroStato.collectAsState()
 
+    val listaViaggiCercati by viaggioViewModel.viaggiSalvati.collectAsState()
+
+    var sottoVistaMappa by remember { mutableStateOf("MAPPA")}
+
     // Stati di Navigazione
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
     var vistaDashboard by rememberSaveable { mutableStateOf("MAPPA") }
@@ -157,7 +169,7 @@ fun SchermataOrganizzatore(nomeUtente: String) {
         modelloDiVistaChat.caricaLeMieStanzeOrganizzatore(nomeUtente)
         modelloDiVistaChat.attivaAscoltoNotificheOrganizzatore(nomeUtente)
 
-        com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val tokenRicevuto = task.result
                 launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -218,118 +230,239 @@ fun SchermataOrganizzatore(nomeUtente: String) {
         ) {
             when (selectedItem) {
                 0 -> {
-                    // TAB DASHBOARD (MAPPA / PRENOTAZIONI CON Z-INDEX)
+                    // TAB DASHBOARD
                     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Bottoni per switchare
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(
                                 onClick = { vistaDashboard = "MAPPA" },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "MAPPA") AccentBlue else Color.Gray),
-                                modifier = Modifier.weight(1f)
-                            ) { Text("Mappa Itinerari", fontSize = 12.sp, color = DarkNavy, fontWeight = FontWeight.Bold) }
+                                colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "MAPPA") AccentBlue else CardOverlay),
+                                modifier = Modifier.weight(1f).height(56.dp), // Tasto grande
+                                shape = RoundedCornerShape(50) // Forma a pillola
+                            ) { Text("Mappa Itinerari", fontSize = 14.sp, color = if (vistaDashboard == "MAPPA") DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
 
                             Button(
                                 onClick = { vistaDashboard = "PRENOTAZIONI" },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "PRENOTAZIONI") AccentBlue else Color.Gray),
-                                modifier = Modifier.weight(1f)
-                            ) { Text("Prenotazioni", fontSize = 12.sp, color = if (vistaDashboard == "PRENOTAZIONI") DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
+                                colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "PRENOTAZIONI") AccentBlue else CardOverlay),
+                                modifier = Modifier.weight(1f).height(56.dp), // Tasto grande
+                                shape = RoundedCornerShape(50) // Forma a pillola
+                            ) { Text("Prenotazioni", fontSize = 14.sp, color = if (vistaDashboard == "PRENOTAZIONI") DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
-                        //per evitare che la mappa venga ricaricata ogni volta che si andava nella sua schermata
-                        //ora semplicemente va in background e diventa invisibile per permettere di mostrarele prenotazioni
+
                         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                             val isMappaVisibile = vistaDashboard == "MAPPA"
+
+
+                            // STRATO MAPPA / RICERCA
+
                             Column(modifier = Modifier.fillMaxSize().alpha(if (isMappaVisibile) 1f else 0f)) {
-                                val mapViewportState = rememberMapViewportState()
-                                LaunchedEffect(Unit) {
-                                    mapViewportState.setCameraOptions {
-                                        center(Point.fromLngLat(12.4964, 41.9028))
-                                        zoom(5.0)
-                                    }
-                                }
-                                //marker per mostrare i viaggi sulla mappa
-                                val markerIcon = remember(context) { ContextCompat.getDrawable(context, R.drawable.viaggio_marker)?.toBitmap() }
-                                var viaggiSelezionatiInMarker by remember { mutableStateOf<List<ViaggioMappaDTO>>(emptyList()) }
+
+
+                                // SOTTO-SWITCH: BARRA UNITA E PICCOLA
+
+                                BarraSottoMappaUnita(
+                                    vistaAttuale = sottoVistaMappa,
+                                    onVistaCambio = { nuovaVista -> sottoVistaMappa = nuovaVista }
+                                )
 
                                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                                    MappaItinerari(
-                                        viaggi = viaggi,
-                                        mapViewportState = mapViewportState,
-                                        markerIcon = markerIcon,
-                                        onMarkerClick = { listaViaggi -> if (isMappaVisibile) viaggiSelezionatiInMarker = listaViaggi }
-                                    )
 
-                                    if (isLoading) CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AccentBlue)
+                                    // LIVELLO INFERIORE: LA MAPPA (Sempre presente, si nasconde solo visivamente)
+                                    val isSottoMappaAttiva = sottoVistaMappa == "MAPPA"
 
-                                    // Popup Cluster in Stile Scuro
-                                    if (viaggiSelezionatiInMarker.isNotEmpty()) {
-                                        Card(
-                                            modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp).fillMaxWidth().wrapContentHeight(),
-                                            colors = CardDefaults.cardColors(containerColor = CardOverlay),
-                                            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-                                        ) {
-                                            Column(modifier = Modifier.padding(12.dp)) {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
+                                    Column(modifier = Modifier.fillMaxSize().alpha(if (isSottoMappaAttiva) 1f else 0f)) {
+                                        val mapViewportState = rememberMapViewportState()
+                                        LaunchedEffect(Unit) {
+                                            mapViewportState.setCameraOptions {
+                                                center(Point.fromLngLat(12.4964, 41.9028))
+                                                zoom(5.0)
+                                            }
+                                        }
+                                        val markerIcon = remember(context) { ContextCompat.getDrawable(context, R.drawable.viaggio_marker)?.toBitmap() }
+                                        var viaggiSelezionatiInMarker by remember { mutableStateOf<List<ViaggioMappaDTO>>(emptyList()) }
+
+                                        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                                            MappaItinerari(
+                                                viaggi = viaggi,
+                                                mapViewportState = mapViewportState,
+                                                markerIcon = markerIcon,
+                                                onMarkerClick = { listaViaggi -> if (isSottoMappaAttiva && isMappaVisibile) viaggiSelezionatiInMarker = listaViaggi }
+                                            )
+
+                                            if (isLoading) CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AccentBlue)
+
+                                            // Popup Cluster in Stile Scuro
+                                            if (viaggiSelezionatiInMarker.isNotEmpty()) {
+                                                Card(
+                                                    modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp).fillMaxWidth().wrapContentHeight(),
+                                                    colors = CardDefaults.cardColors(containerColor = CardOverlay),
+                                                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                                                 ) {
-                                                    Text(
-                                                        //se ci sono piu viaggi in un stesso punto
-                                                        text = if (viaggiSelezionatiInMarker.size > 1) "🗺️ ${viaggiSelezionatiInMarker.size} viaggi qui" else "📍 Viaggio in questa posizione",
-                                                        fontWeight = FontWeight.Bold, fontSize = 15.sp, color = AccentBlue
-                                                    )
-                                                    IconButton(onClick = { viaggiSelezionatiInMarker = emptyList() }, modifier = Modifier.size(24.dp)) {
-                                                        Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Color.Gray)
-                                                    }
-                                                }
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Box(modifier = Modifier.heightIn(max = 180.dp)) {
-                                                    LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                        items(viaggiSelezionatiInMarker.size) { index ->
-                                                            val viaggio = viaggiSelezionatiInMarker[index]
-                                                            Row(
-                                                                modifier = Modifier.fillMaxWidth().background(DarkNavy, shape = RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
-                                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                                verticalAlignment = Alignment.CenterVertically
-                                                            ) {
-                                                                Text(viaggio.titolo, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = WhiteText, modifier = Modifier.weight(1f))
-                                                                Button(
-                                                                    onClick = {
-                                                                        val intent = Intent(context, DettaglioViaggioActivity::class.java)
-                                                                        intent.putExtra("VIAGGIO_ID", viaggio.id)
-                                                                        context.startActivity(intent)
-                                                                        viaggiSelezionatiInMarker = emptyList()
-                                                                    },
-                                                                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-                                                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                                                    modifier = Modifier.height(32.dp)
-                                                                ) { Text("Vedi", fontSize = 12.sp, color = DarkNavy, fontWeight = FontWeight.Bold) }
+                                                    Column(modifier = Modifier.padding(12.dp)) {
+                                                        Row(
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Text(
+                                                                text = if (viaggiSelezionatiInMarker.size > 1) "🗺️ ${viaggiSelezionatiInMarker.size} viaggi qui" else "📍 Viaggio in questa posizione",
+                                                                fontWeight = FontWeight.Bold, fontSize = 15.sp, color = AccentBlue
+                                                            )
+                                                            IconButton(onClick = { viaggiSelezionatiInMarker = emptyList() }, modifier = Modifier.size(24.dp)) {
+                                                                Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Color.Gray)
+                                                            }
+                                                        }
+                                                        Spacer(modifier = Modifier.height(8.dp))
+                                                        Box(modifier = Modifier.heightIn(max = 180.dp)) {
+                                                            LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                                items(viaggiSelezionatiInMarker.size) { index ->
+                                                                    val viaggio = viaggiSelezionatiInMarker[index]
+                                                                    Row(
+                                                                        modifier = Modifier.fillMaxWidth().background(DarkNavy, shape = RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                                        verticalAlignment = Alignment.CenterVertically
+                                                                    ) {
+                                                                        Text(viaggio.titolo, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = WhiteText, modifier = Modifier.weight(1f))
+                                                                        Button(
+                                                                            onClick = {
+                                                                                val intent = Intent(context, DettaglioViaggioActivity::class.java)
+                                                                                intent.putExtra("VIAGGIO_ID", viaggio.id)
+                                                                                context.startActivity(intent)
+                                                                                viaggiSelezionatiInMarker = emptyList()
+                                                                            },
+                                                                            colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                                                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                                                            modifier = Modifier.height(32.dp)
+                                                                        ) { Text("Vedi", fontSize = 12.sp, color = DarkNavy, fontWeight = FontWeight.Bold) }
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Button(
+                                            onClick = { if (isSottoMappaAttiva && isMappaVisibile) context.startActivity(Intent(context, CreaViaggioActivity::class.java)) },
+                                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                                        ) { Text("+ Crea Nuovo Viaggio", color = WhiteText, fontWeight = FontWeight.Bold) }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+
+                                    // BLOCCO TOUCH DELLA MAPPA SE STO USANDO LA RICERCA
+                                    if (!isSottoMappaAttiva) Spacer(modifier = Modifier.fillMaxSize().clickable(enabled = false) {})
+
+                                    // LIVELLO SUPERIORE: IL BOX DI RICERCA
+                                    if (sottoVistaMappa == "CERCA") {
+                                        // un'unica lista scorrevole che contiene tutto per permettere la scorrevolezza adatta
+                                        LazyColumn(
+                                            modifier = Modifier.fillMaxSize().background(DarkNavy).padding(horizontal = 16.dp),
+                                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+
+                                            // IL BOX DI RICERCA DIVENTA IL PRIMO ELEMENTO DELLA LISTA
+                                            item {
+                                                BoxRicerca(
+                                                    onCercaClick = { dest, dMin, dMax, posti, pMin, pMax ->
+                                                        viaggioViewModel.cercaViaggi(dest, dMin, dMax, posti, pMin, pMax, 0)
+                                                    }
+                                                )
+                                            }
+
+                                            //I RISULTATI DELLA RICERCA
+                                            if (viaggioViewModel.ricercaEffettuata) {
+                                                if (listaViaggiCercati.isEmpty()) {
+                                                    item {
+                                                        Box(modifier = Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
+                                                            Text("Nessun viaggio trovato.", color = Color.Gray, fontSize = 16.sp)
+                                                        }
+                                                    }
+                                                } else {
+                                                    // LE CARD DEI VIAGGI
+                                                    items(listaViaggiCercati, key = { it.id }) { viaggio ->
+                                                        Surface(
+                                                            color = CardOverlay,
+                                                            shape = RoundedCornerShape(12.dp),
+                                                            modifier = Modifier.fillMaxWidth().clickable {
+                                                                val intent = Intent(context, DettaglioViaggioActivity::class.java).apply {
+                                                                    putExtra("VIAGGIO_ID", viaggio.id)
+                                                                }
+                                                                context.startActivity(intent)
+                                                            }
+                                                        ) {
+                                                            Row(
+                                                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                                verticalAlignment = Alignment.CenterVertically
+                                                            ) {
+                                                                Column(modifier = Modifier.weight(1f)) {
+                                                                    Text(viaggio.titolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                                    Text("🌍 ${viaggio.destinazione}", color = Color.LightGray, fontSize = 14.sp)
+                                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                                    Text("💰 ${viaggio.prezzo} €", color = AccentBlue, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                                                }
+
+                                                                Button(
+                                                                    onClick = {
+                                                                        val intent = Intent(context, DettaglioViaggioActivity::class.java)
+                                                                        intent.putExtra("VIAGGIO_ID", viaggio.id)
+                                                                        context.startActivity(intent)
+                                                                    },
+                                                                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                                                                    modifier = Modifier.height(36.dp)
+                                                                ) {
+                                                                    Text("Vedi", fontWeight = FontWeight.Bold, color = DarkNavy, fontSize = 12.sp)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    // LA PAGINAZIONE
+                                                    item {
+                                                        Row(
+                                                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Button(
+                                                                onClick = {
+                                                                    viaggioViewModel.cercaViaggi("", "", "", "", "0", "5000", viaggioViewModel.paginaCorrente - 1)
+                                                                },
+                                                                enabled = viaggioViewModel.paginaCorrente > 0,
+                                                                colors = ButtonDefaults.buttonColors(containerColor = if (viaggioViewModel.paginaCorrente > 0) AccentBlue else Color.Gray)
+                                                            ) { Text("Prec", fontSize = 14.sp, color = DarkNavy) }
+
+                                                            Text(text = "Pagina ${viaggioViewModel.paginaCorrente + 1} di ${viaggioViewModel.totalePagine.coerceAtLeast(1)}", color = WhiteText, fontWeight = FontWeight.Medium)
+
+                                                            Button(
+                                                                onClick = {
+                                                                    viaggioViewModel.cercaViaggi("", "", "", "", "0", "5000", viaggioViewModel.paginaCorrente + 1)
+                                                                },
+                                                                enabled = viaggioViewModel.paginaCorrente < viaggioViewModel.totalePagine - 1,
+                                                                colors = ButtonDefaults.buttonColors(containerColor = if (viaggioViewModel.paginaCorrente < viaggioViewModel.totalePagine - 1) AccentBlue else Color.Gray)
+                                                            ) { Text("Succ", fontSize = 14.sp, color = DarkNavy) }
+                                                        }
+                                                        Spacer(modifier = Modifier.height(80.dp)) // Spazio per non far coprire dalla NavBar
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(
-                                    onClick = { if (isMappaVisibile) context.startActivity(Intent(context, CreaViaggioActivity::class.java)) },
-                                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                                ) { Text("+ Crea Nuovo Viaggio", color = WhiteText, fontWeight = FontWeight.Bold) }
-                                Spacer(modifier = Modifier.height(16.dp))
                             }
 
-                            // Blocco touch
+                            // BLOCCO TOUCH GLOBALE SE STO GUARDANDO LE PRENOTAZIONI
                             if (!isMappaVisibile) Spacer(modifier = Modifier.fillMaxSize().clickable(enabled = false) {})
 
-                            // strato 2: prenotazione che va a piazzarsi sopra la mappa per non doverla ricaricare ogni volta
+
+                            //  PRENOTAZIONI
                             if (vistaDashboard == "PRENOTAZIONI") {
                                 Column(modifier = Modifier.fillMaxSize().background(DarkNavy)) {
 
@@ -478,6 +611,43 @@ fun SchermataOrganizzatore(nomeUtente: String) {
     }
 }
 
+
+@Composable
+fun BarraSottoMappaUnita(
+    vistaAttuale: String,
+    onVistaCambio: (String) -> Unit
+) {
+    val opzioni = listOf("MAPPA" to "La tua Mappa", "CERCA" to "Cerca Viaggi")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .height(40.dp) // Altezza ridotta per gerarchia
+            .clip(RoundedCornerShape(10.dp))
+            .background(CardOverlay)
+    ) {
+        opzioni.forEach { (valore, etichetta) ->
+            val isSelected = vistaAttuale == valore
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSelected) AccentBlue else Color.Transparent)
+                    .clickable { onVistaCambio(valore) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = etichetta,
+                    color = if (isSelected) DarkNavy else Color.LightGray,
+                    fontSize = 12.sp, // Font più piccolo
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                )
+            }
+        }
+    }
+}
 // COMPONENTE: BARRA FILTRI SEGMENTED
 @Composable
 fun BarraFiltriUnita(
@@ -516,6 +686,67 @@ fun BarraFiltriUnita(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
+            }
+        }
+    }
+}
+@Composable
+fun BoxRicerca(
+    onCercaClick: (destinazione: String, dataMin: String, dataMax: String, posti: String, prezzoMin: String, prezzoMax: String) -> Unit
+) {
+    var destinazione by rememberSaveable { mutableStateOf("") }
+    var dataMin by rememberSaveable { mutableStateOf("") }
+    var dataMax by rememberSaveable { mutableStateOf("") }
+    var posti by rememberSaveable { mutableStateOf("") }
+    var prezzoMin by rememberSaveable { mutableStateOf("") }
+    var prezzoMax by rememberSaveable { mutableStateOf("") }
+    var mostraAvanzati by rememberSaveable { mutableStateOf(false) }
+
+    Surface(
+        color = CardOverlay,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .animateContentSize()
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+
+        ) {
+            SearchInput("Destinazione", destinazione) { destinazione = it }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SearchInput("Dal", dataMin, Modifier.weight(1f)) { dataMin = it }
+                SearchInput("Al", dataMax, Modifier.weight(1f)) { dataMax = it }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SearchInput("Posti minimi", posti) { posti = it }
+
+            TextButton(onClick = { mostraAvanzati = !mostraAvanzati }) {
+                Text(
+                    text = if (mostraAvanzati) "🔼 Nascondi filtri prezzo" else "🔽 Mostra filtri prezzo",
+                    color = AccentBlue
+                )
+            }
+
+            if (mostraAvanzati) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SearchInput("Min €", prezzoMin, Modifier.weight(1f)) { prezzoMin = it }
+                    SearchInput("Max €", prezzoMax, Modifier.weight(1f)) { prezzoMax = it }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { onCercaClick(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax) },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+            ) {
+                Text("Cerca Viaggi", fontWeight = FontWeight.Bold, color = DarkNavy)
             }
         }
     }
