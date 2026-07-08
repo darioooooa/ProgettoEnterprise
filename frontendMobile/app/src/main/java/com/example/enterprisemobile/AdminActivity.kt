@@ -45,7 +45,6 @@ import java.io.FileOutputStream
 import com.example.enterprisemobile.model.SegnalazioneDTO
 import com.example.enterprisemobile.model.UtenteBannatoDTO
 
-
 class AdminActivity : ComponentActivity() {
     private val viewModel: AdminViewModel by viewModels()
 
@@ -214,7 +213,7 @@ fun AdminContent(viewModel: AdminViewModel) {
                                     mostraModaleRifiuto = false
                                     motivazioneRifiuto = ""
                                 },
-                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                             )
                         }
                     },
@@ -250,7 +249,7 @@ fun AdminContent(viewModel: AdminViewModel) {
                                     Toast.makeText(context, "Approvata!", Toast.LENGTH_SHORT).show()
                                     mostraModaleConfermaApprova = false
                                 },
-                                onError = { err ->
+                                onError = { err: String ->
                                     Toast.makeText(context, "Errore: $err", Toast.LENGTH_LONG).show()
                                     mostraModaleConfermaApprova = false
                                 }
@@ -481,15 +480,19 @@ fun SchermataSegnalazioni(viewModel: AdminViewModel) {
 
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
-                onClick = { mostraArchivio = false
-                          viewModel.caricaSegnalazioni(null)},
+                onClick = {
+                    mostraArchivio = false
+                    viewModel.caricaSegnalazioni()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = if (!mostraArchivio) AccentBlue else Color.Gray),
                 modifier = Modifier.weight(1f)
             ) { Text("Da Gestire", color = if (!mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
 
             Button(
-                onClick = { mostraArchivio = true
-                          viewModel.caricaSegnalazioni("CHIUSA")},
+                onClick = {
+                    mostraArchivio = true
+                    viewModel.caricaSegnalazioni()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = if (mostraArchivio) AccentBlue else Color.Gray),
                 modifier = Modifier.weight(1f)
             ) { Text("Archivio", color = if (mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
@@ -518,7 +521,7 @@ fun SchermataSegnalazioni(viewModel: AdminViewModel) {
                                     Toast.makeText(context, "Presa in carico!", Toast.LENGTH_SHORT).show()
                                     viewModel.caricaSegnalazioni()
                                 },
-                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                             )
                         },
                         onRisolvi = {
@@ -535,7 +538,7 @@ fun SchermataSegnalazioni(viewModel: AdminViewModel) {
                                     Toast.makeText(context, "Segnalazione rifiutata.", Toast.LENGTH_SHORT).show()
                                     viewModel.caricaSegnalazioni()
                                 },
-                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                             )
                         }
                     )
@@ -553,13 +556,13 @@ fun SchermataSegnalazioni(viewModel: AdminViewModel) {
                 Button(
                     onClick = {
                         segnalazioneSelezionata?.let { id ->
-                            viewModel.risolviSegnalazione(id, adminId, sospendiAutore = false,
+                            viewModel.risolviSegnalazione(id, adminId, false,
                                 onSuccess = {
                                     Toast.makeText(context, "Segnalazione risolta!", Toast.LENGTH_SHORT).show()
                                     mostraModaleRisolvi = false
                                     viewModel.caricaSegnalazioni()
                                 },
-                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                             )
                         }
                     },
@@ -580,14 +583,14 @@ fun SchermataSegnalazioni(viewModel: AdminViewModel) {
                 Button(
                     onClick = {
                         segnalazioneSelezionata?.let { id ->
-                            viewModel.risolviSegnalazione(id, adminId, sospendiAutore = true,
+                            viewModel.risolviSegnalazione(id, adminId, true,
                                 onSuccess = {
                                     Toast.makeText(context, "Utente bannato con successo!", Toast.LENGTH_LONG).show()
                                     mostraModaleBanna = false
                                     viewModel.caricaSegnalazioni()
                                     viewModel.caricaUtentiBannati()
                                 },
-                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                             )
                         }
                     },
@@ -724,7 +727,7 @@ fun SchermataUtentiBannati(viewModel: AdminViewModel) {
                                     mostraModaleSbanna = false
                                     viewModel.caricaUtentiBannati()
                                 },
-                                onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
+                                onError = { err: String -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                             )
                         }
                     },

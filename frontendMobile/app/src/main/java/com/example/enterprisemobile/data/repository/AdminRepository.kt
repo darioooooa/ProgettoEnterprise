@@ -101,17 +101,12 @@ class AdminRepository(private val context: Context) {
     suspend fun getUtentiBannati() =
         adminApiService.getUtentiBannati()
 
-    // ✅ NUOVO: Utenti bannati paginati
     suspend fun getUtentiBannatiPaginati(
         page: Int = 0,
         size: Int = 10,
         ricerca: String? = null
-    ): Response<PageResponse<UtenteBannatoDTO>> {
-        return adminApiService.getUtentiBannatiPaginati(page, size, ricerca)
-    }
-
-    suspend fun riattivaUtente(id: Long): Response<Unit> {
-        return adminApiService.riattivaUtente(id)
+    ): Response<List<UtenteBannatoDTO>> {
+        return adminApiService.getUtentiBannati()
     }
 
     private fun mappaDtoAEntity(dto: RichiestaPromozioneResponse): RichiestaPromozioneEntity {

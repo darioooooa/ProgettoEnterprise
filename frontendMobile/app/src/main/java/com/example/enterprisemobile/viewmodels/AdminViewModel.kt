@@ -1,17 +1,17 @@
 package com.example.enterprisemobile.viewmodels
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
 import com.example.enterprisemobile.data.repository.AdminRepository
+import com.example.enterprisemobile.model.SegnalazioneDTO
+import com.example.enterprisemobile.model.UtenteBannatoDTO
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
-import com.example.enterprisemobile.model.UtenteBannatoDTO
-import com.example.enterprisemobile.model.SegnalazioneDTO
-import android.util.Log
 
 class AdminViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -29,7 +29,6 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     private val _documentoScaricato = MutableLiveData<ResponseBody?>()
     val documentoScaricato: LiveData<ResponseBody?> = _documentoScaricato
 
-    // Paginazione
     private val _paginaCorrente = MutableLiveData(0)
     val paginaCorrente: LiveData<Int> = _paginaCorrente
 
@@ -39,17 +38,17 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     private val _totaleElementi = MutableLiveData(0)
     val totaleElementi: LiveData<Int> = _totaleElementi
 
-    // ✅ NUOVO: Filtri
     private var filtroStato: String? = null
     private var filtroUsername: String? = null
     private val dimensionePagina = 10
 
-    private val _mostraArchivio = MutableLiveData(false)
-    val mostraArchivio: LiveData<Boolean> = _mostraArchivio
+    private val _segnalazioni = MutableLiveData<List<SegnalazioneDTO>>()
+    val segnalazioni: LiveData<List<SegnalazioneDTO>> = _segnalazioni
 
-    fun cambiaVisualizzazione(archivio: Boolean) {
-        _mostraArchivio.value = archivio
-    }
+    private val _utentiBannati = MutableLiveData<List<UtenteBannatoDTO>>()
+    val utentiBannati: LiveData<List<UtenteBannatoDTO>> = _utentiBannati
+
+    // --- METODI RICHIESTE PROMOZIONE ---
 
     fun caricaRichieste(page: Int = 0) {
         viewModelScope.launch {
@@ -57,7 +56,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val response = repository.getRichiestePromozione(
                     stato = filtroStato,
-                    username = filtroUsername,  // ✅ NUOVO
+                    username = filtroUsername,
                     page = page,
                     size = dimensionePagina
                 )
@@ -75,28 +74,20 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
 
     fun filtraPerStato(stato: String?) {
         filtroStato = stato
-        caricaRichieste(page = 0)
+        caricaRichieste(0)
     }
 
-    // ✅ NUOVO: Ricerca per username
     fun cercaPerUsername(username: String) {
         filtroUsername = username.ifBlank { null }
-        caricaRichieste(page = 0)
+        caricaRichieste(0)
     }
 
     fun paginaSuccessiva() {
-        val corrente = _paginaCorrente.value ?: 0
-        val totale = _totalePagine.value ?: 0
-        if (corrente < totale - 1) {
-            caricaRichieste(corrente + 1)
-        }
+        if ((_paginaCorrente.value ?: 0) < (_totalePagine.value ?: 0) - 1) caricaRichieste((_paginaCorrente.value ?: 0) + 1)
     }
 
     fun paginaPrecedente() {
-        val corrente = _paginaCorrente.value ?: 0
-        if (corrente > 0) {
-            caricaRichieste(corrente - 1)
-        }
+        if ((_paginaCorrente.value ?: 0) > 0) caricaRichieste((_paginaCorrente.value ?: 0) - 1)
     }
 
     fun approvaRichiesta(id: Long, adminId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
@@ -107,14 +98,9 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.isSuccessful) {
                     onSuccess()
                     caricaRichieste(_paginaCorrente.value ?: 0)
-                } else {
-                    onError("Errore nell'approvazione")
-                }
-            } catch (e: Exception) {
-                onError("Errore: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
+                } else onError("Errore nell'approvazione")
+            } catch (e: Exception) { onError("Errore: ${e.message}")
+            } finally { _isLoading.value = false }
         }
     }
 
@@ -126,14 +112,9 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.isSuccessful) {
                     onSuccess()
                     caricaRichieste(_paginaCorrente.value ?: 0)
-                } else {
-                    onError("Errore nel rifiuto: ${response.code()}")
-                }
-            } catch (e: Exception) {
-                onError("Errore: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
+                } else onError("Errore nel rifiuto")
+            } catch (e: Exception) { onError("Errore: ${e.message}")
+            } finally { _isLoading.value = false }
         }
     }
 
@@ -142,60 +123,24 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             try {
                 val response = repository.scaricaDocumento(id)
-                if (response.isSuccessful) {
-                    _documentoScaricato.value = response.body()
-                } else {
-                    _errorMessage.value = "Errore nel download del documento"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Errore: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
+                if (response.isSuccessful) _documentoScaricato.value = response.body()
+                else _errorMessage.value = "Errore nel download del documento"
+            } catch (e: Exception) { _errorMessage.value = "Errore: ${e.message}"
+            } finally { _isLoading.value = false }
         }
     }
 
-    fun resetDocumentoScaricato() {
-        _documentoScaricato.value = null
-    }
-    private val _segnalazioni = MutableLiveData<List<SegnalazioneDTO>>()
-    val segnalazioni: LiveData<List<SegnalazioneDTO>> = _segnalazioni
+    fun resetDocumentoScaricato() { _documentoScaricato.value = null }
 
-    private val _utentiBannati = MutableLiveData<List<UtenteBannatoDTO>>()
-    val utentiBannati: LiveData<List<UtenteBannatoDTO>> = _utentiBannati
-
-    fun caricaSegnalazioni(statoFiltro: String? = null) {
+    fun caricaSegnalazioni() {
         viewModelScope.launch {
             try {
                 val response = repository.getSegnalazioni()
-                if (response.isSuccessful) {
-                    _segnalazioni.value = response.body()?.content ?: emptyList()
-                }
-            }catch (e: Exception) {
-                Log.e("ADMIN_DEBUG", "Eccezione Rete/App: ${e.message}")
-                _errorMessage.value = "Impossibile collegarsi al server: ${e.message}"
-            }
+                if (response.isSuccessful) _segnalazioni.value = response.body()?.content ?: emptyList()
+            } catch (e: Exception) { Log.e("ADMIN_DEBUG", "Errore Segnalazioni: ${e.message}") }
         }
     }
 
-    fun caricaUtentiBannati() {
-        viewModelScope.launch {
-            try {
-                val response = repository.getUtentiBannati()
-                if (response.isSuccessful) {
-                    // Nessun .content qui, Spring Boot restituisce direttamente la lista
-                    _utentiBannati.value = response.body() ?: emptyList()
-                } else {
-                    val errorBodyString = response.errorBody()?.string()
-                    Log.e("ADMIN_DEBUG", "API Ban Fallita: ${response.code()} - $errorBodyString")
-                    _errorMessage.value = "Errore Server: ${response.code()}"
-                }
-            } catch (e: Exception) {
-                Log.e("ADMIN_DEBUG", "Eccezione API Ban: ${e.message}")
-                _errorMessage.value = "Impossibile collegarsi: ${e.message}"
-            }
-        }
-    }
     fun prendiInCaricoSegnalazione(id: Long, adminId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
@@ -209,7 +154,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val response = repository.risolviSegnalazione(id, adminId, sospendiAutore)
-                if (response.isSuccessful) onSuccess() else onError("Errore durante la risoluzione")
+                if (response.isSuccessful) onSuccess() else onError("Errore risoluzione")
             } catch (e: Exception) { onError(e.message ?: "Errore di rete") }
         }
     }
@@ -218,8 +163,18 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val response = repository.rifiutaSegnalazione(id, adminId)
-                if (response.isSuccessful) onSuccess() else onError("Errore nel rifiuto")
+                if (response.isSuccessful) onSuccess() else onError("Errore rifiuto")
             } catch (e: Exception) { onError(e.message ?: "Errore di rete") }
+        }
+    }
+
+
+    fun caricaUtentiBannati() {
+        viewModelScope.launch {
+            try {
+                val response = repository.getUtentiBannati()
+                if (response.isSuccessful) _utentiBannati.value = response.body() ?: emptyList()
+            } catch (e: Exception) { Log.e("ADMIN_DEBUG", "Errore Ban: ${e.message}") }
         }
     }
 
@@ -227,9 +182,8 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val response = repository.riattivaUtente(id)
-                if (response.isSuccessful) onSuccess() else onError("Errore durante lo sblocco")
+                if (response.isSuccessful) onSuccess() else onError("Errore sblocco")
             } catch (e: Exception) { onError(e.message ?: "Errore di rete") }
         }
     }
-
 }
