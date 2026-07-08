@@ -83,4 +83,12 @@ public class Viaggio {
 
     @OneToMany(mappedBy = "viaggio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImmagineViaggio> galleria;
+
+    @ManyToMany
+    @JoinTable(
+            name = "viaggio_tag",
+            joinColumns = @JoinColumn(name = "viaggio_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags;
 }

@@ -137,4 +137,11 @@ interface ViaggioApiService {
         @Path("immagineId") immagineId: Long,
         @Query("pubblica") pubblica: Boolean
     ): Response<ResponseBody>
+
+    @GET("viaggi/consigliati")
+    suspend fun getViaggiConsigliati(): Response<List<ViaggioDTO>>
+
+    // tutti i tag disponibili
+    @GET("tag")
+    suspend fun getAllTag(): Response<List<String>>
 }

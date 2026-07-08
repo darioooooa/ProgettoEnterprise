@@ -73,5 +73,6 @@ public class ViaggioDTO {
     private String organizzatoreUsername;
 
     private List<AttivitaViaggioDTO> tappe;
+    private List<String> tags;
 }
 

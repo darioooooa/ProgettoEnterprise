@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.example.enterprisemobile.model.ViaggioDTO
 
 class ViaggioViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -27,6 +28,9 @@ class ViaggioViewModel(application: Application) : AndroidViewModel(application)
     var totalePagine by mutableIntStateOf(1)
     var ricercaEffettuata by mutableStateOf(false)
 
+    var viaggiConsigliati by mutableStateOf<List<ViaggioDTO>>(emptyList())
+    var isLoadingConsigliati by mutableStateOf(false)
+    var erroreConsigliati by mutableStateOf<String?>(null)
     init {
         val apiService = RetrofitClient.ottieniViaggioService(application)
         val dao = AppDatabase.getInstance(application).viaggioDao()
@@ -55,6 +59,27 @@ class ViaggioViewModel(application: Application) : AndroidViewModel(application)
                 paginaCorrente = pagina
             } catch (e: Exception) {
                 android.util.Log.e("RETE", "Errore: ${e.message}")
+            }
+        }
+    }
+
+    fun caricaViaggiConsigliati() {
+        viewModelScope.launch {
+            isLoadingConsigliati = true
+            erroreConsigliati = null
+            try {
+                val apiService = RetrofitClient.ottieniViaggioService(getApplication())
+                val response = apiService.getViaggiConsigliati()
+                if (response.isSuccessful && response.body() != null) {
+                    viaggiConsigliati = response.body()!!
+                } else {
+                    erroreConsigliati = "Errore nel caricamento dei consigli"
+                }
+            } catch (e: Exception) {
+                erroreConsigliati = e.message
+                android.util.Log.e("CONSIGLIATI", "Errore: ${e.message}")
+            } finally {
+                isLoadingConsigliati = false
             }
         }
     }

@@ -20,5 +20,6 @@ data class ViaggioDTO(
     @SerializedName("numeroRecensioni") val numeroRecensioni: Int = 0,
     @SerializedName("organizzatoreId") val organizzatoreId: Long? = null,
     @SerializedName("organizzatoreUsername") val organizzatoreUsername: String? = null,
-    @SerializedName("tappe") val tappe: List<AttivitaViaggioDTO> = emptyList()
+    @SerializedName("tappe") val tappe: List<AttivitaViaggioDTO> = emptyList(),
+    @SerializedName("tags") val tags: List<String> = emptyList()
 )

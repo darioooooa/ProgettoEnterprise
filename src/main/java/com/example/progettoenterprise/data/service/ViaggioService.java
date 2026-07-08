@@ -28,4 +28,5 @@ public interface ViaggioService {
     List<ViaggioDTO> getViaggiByOrganizzatore(Long organizzatoreId);
     // Trova i viaggi che iniziano tra 'oggi' e 'limite',ad esempio tra 3 giorni e che sono ancora aperti
     List<Viaggio> getViaggiInPartenza(LocalDate oggi, LocalDate limite);
+    List<ViaggioDTO> getConsigliatiPerUtente(Long utenteId);
 }

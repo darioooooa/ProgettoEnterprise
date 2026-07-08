@@ -20,5 +20,6 @@ data class CreaViaggioDTO(
     val maxPartecipanti: Int,
     val latitudine: Double = 0.0,
     val longitudine: Double = 0.0,
-    val tappe: List<TappaDTO>
+    val tappe: List<TappaDTO>,
+    val tags: List<String> = emptyList()
 )

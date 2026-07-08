@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,8 +54,8 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     val listaViaggi by viewModel.viaggiSalvati.collectAsState()
     val mieiItinerari by itinerarioViewModel.itinerari.collectAsState()
     val isItinerarioLoading by itinerarioViewModel.isLoading.collectAsState()
-
     val contestoAttuale = LocalContext.current
+
     val modelloDiVistaChat: ChatViewModel = viewModel(
         factory = GeneratoreChatViewModel(contestoAttuale)
     )
@@ -77,9 +79,9 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     LaunchedEffect(Unit) {
         itinerarioViewModel.caricaItinerari()
         modelloDiVistaChat.caricaLeMieStanze(viewModel.nomeUtente)
-
-        // ACCENDIAMO LA RADIO DELLE NOTIFICHE GLOBALI IN BACKGROUND
         modelloDiVistaChat.attivaAscoltoNotifiche(viewModel.nomeUtente)
+        // Carica i viaggi consigliati all'avvio della Home
+        viewModel.caricaViaggiConsigliati()
     }
 
     val totaleNotifiche = listaDelleStanzeReali.sumOf { it.numeroMessaggiNonLetti }
@@ -133,6 +135,148 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         item {
+                            if (viewModel.isLoadingConsigliati) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            } else if (viewModel.erroreConsigliati != null) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer
+                                    )
+                                ) {
+                                    Text(
+                                        text = "⚠️ Impossibile caricare i consigli: ${viewModel.erroreConsigliati}",
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.padding(16.dp),
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            } else if (viewModel.viaggiConsigliati.isNotEmpty()) {
+                                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "✨ Consigliati per te",
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
+                                        TextButton(onClick = { viewModel.caricaViaggiConsigliati() }) {
+                                            Text("Aggiorna", fontSize = 12.sp)
+                                        }
+                                    }
+                                    LazyRow(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
+                                    ) {
+                                        items(viewModel.viaggiConsigliati) { viaggio ->
+                                            Surface(
+                                                color = MaterialTheme.colorScheme.surface,
+                                                shape = RoundedCornerShape(16.dp),
+                                                tonalElevation = 4.dp,
+                                                modifier = Modifier
+                                                    .width(240.dp)
+                                                    .clickable {
+                                                        val idPassato = viaggio.id
+                                                        if (idPassato != null && idPassato > 0) {
+                                                            val intent = Intent(
+                                                                contestoAttuale,
+                                                                DettaglioViaggioActivity::class.java
+                                                            ).apply {
+                                                                putExtra("VIAGGIO_ID", idPassato)
+                                                            }
+                                                            contestoAttuale.startActivity(intent)
+                                                        } else {
+                                                            Toast.makeText(
+                                                                contestoAttuale,
+                                                                "Errore: id viaggio non valido",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
+                                                        }
+                                                    }
+                                            ) {
+                                                Column(modifier = Modifier.padding(16.dp)) {
+                                                    Text(
+                                                        text = viaggio.titolo,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 16.sp,
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(
+                                                        text = "🌍 ${viaggio.destinazione}",
+                                                        fontSize = 14.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(
+                                                        text = "💰 ${viaggio.prezzo} €",
+                                                        fontSize = 14.sp,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    if (viaggio.tags.isNotEmpty()) {
+                                                        Spacer(modifier = Modifier.height(8.dp))
+                                                        Row(
+                                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        ) {
+                                                            viaggio.tags.take(2).forEach { tag ->
+                                                                AssistChip(
+                                                                    onClick = { },
+                                                                    label = {
+                                                                        Text(
+                                                                            tag,
+                                                                            fontSize = 10.sp,
+                                                                            maxLines = 1
+                                                                        )
+                                                                    },
+                                                                    modifier = Modifier.height(24.dp)
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(20.dp)) {
+                                        Text(
+                                            text = "💡 Inizia a salvare i tuoi preferiti!",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 15.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Aggiungi viaggi ai tuoi itinerari per ricevere consigli personalizzati.",
+                                            fontSize = 13.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        item {
                             Spacer(modifier = Modifier.height(8.dp))
                             Surface(
                                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -142,32 +286,37 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                 Column(modifier = Modifier.padding(20.dp)) {
                                     SearchInput("Destinazione", destinazione) { destinazione = it }
                                     Spacer(modifier = Modifier.height(12.dp))
-
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
                                         SearchInput("Dal", dataMin, Modifier.weight(1f)) { dataMin = it }
                                         SearchInput("Al", dataMax, Modifier.weight(1f)) { dataMax = it }
                                     }
-
                                     SearchInput("Posti minimi", posti) { posti = it }
-
                                     TextButton(onClick = { mostraAvanzati = !mostraAvanzati }) {
                                         Text(
                                             text = if (mostraAvanzati) "🔼 Nascondi filtri prezzo" else "🔽 Mostra filtri prezzo",
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     }
-
                                     if (mostraAvanzati) {
-                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
                                             SearchInput("Min €", prezzoMin, Modifier.weight(1f)) { prezzoMin = it }
                                             SearchInput("Max €", prezzoMax, Modifier.weight(1f)) { prezzoMax = it }
                                         }
                                     }
-
                                     Spacer(modifier = Modifier.height(8.dp))
-
                                     Button(
-                                        onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, 0) },
+                                        onClick = {
+                                            viewModel.cercaViaggi(
+                                                destinazione, dataMin, dataMax, posti,
+                                                prezzoMin, prezzoMax, 0
+                                            )
+                                        },
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.primary,
@@ -177,11 +326,14 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                 }
                             }
                         }
-
                         if (viewModel.ricercaEffettuata) {
                             if (listaViaggi.isEmpty()) {
                                 item {
-                                    Text("Nessun viaggio trovato.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 20.dp))
+                                    Text(
+                                        "Nessun viaggio trovato.",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 20.dp)
+                                    )
                                 }
                             } else {
                                 items(listaViaggi) { viaggio ->
@@ -192,13 +344,20 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                         modifier = Modifier.fillMaxWidth()
                                             .clickable {
                                                 val idPassato = viaggio.id
-                                                if (idPassato > 0) {
-                                                    val intent = Intent(contestoAttuale, DettaglioViaggioActivity::class.java).apply {
+                                                if (idPassato != null && idPassato > 0) {
+                                                    val intent = Intent(
+                                                        contestoAttuale,
+                                                        DettaglioViaggioActivity::class.java
+                                                    ).apply {
                                                         putExtra("VIAGGIO_ID", idPassato)
                                                     }
                                                     contestoAttuale.startActivity(intent)
                                                 } else {
-                                                    Toast.makeText(contestoAttuale, "Errore: id viaggio non valido", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        contestoAttuale,
+                                                        "Errore: id viaggio non valido",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
                                             }
                                             .padding(4.dp)
@@ -209,17 +368,34 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Column(modifier = Modifier.weight(1f)) {
-                                                Text(viaggio.titolo, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                                Text(
+                                                    viaggio.titolo,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 16.sp
+                                                )
                                                 Spacer(modifier = Modifier.height(4.dp))
-                                                Text("🌍 ${viaggio.destinazione}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                                                Text(
+                                                    "🌍 ${viaggio.destinazione}",
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 14.sp
+                                                )
                                                 Spacer(modifier = Modifier.height(2.dp))
                                                 if (viaggio.dataInizio != null && viaggio.dataFine != null) {
-                                                    Text("📅 ${viaggio.dataInizio} / ${viaggio.dataFine}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                                    Text(
+                                                        "📅 ${viaggio.dataInizio} / ${viaggio.dataFine}",
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 12.sp
+                                                    )
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                 }
-                                                Text("💰 ${viaggio.prezzo} €", color = MaterialTheme.colorScheme.primary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                                Text(
+                                                    " ${viaggio.prezzo} €",
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
                                             }
-
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 IconButton(
                                                     onClick = {
@@ -228,16 +404,25 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                                     },
                                                     modifier = Modifier.padding(end = 4.dp)
                                                 ) {
-                                                    Icon(Icons.Filled.Add, contentDescription = "Aggiungi a itinerario", tint = MaterialTheme.colorScheme.primary)
+                                                    Icon(
+                                                        Icons.Filled.Add,
+                                                        contentDescription = "Aggiungi a itinerario",
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                    )
                                                 }
-
                                                 Button(
                                                     onClick = {
-                                                        val intent = Intent(contestoAttuale, PrenotaViaggioActivity::class.java)
+                                                        val intent = Intent(
+                                                            contestoAttuale,
+                                                            PrenotaViaggioActivity::class.java
+                                                        )
                                                         intent.putExtra("VIAGGIO_ID", viaggio.id)
                                                         contestoAttuale.startActivity(intent)
                                                     },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary, contentColor = MaterialTheme.colorScheme.onTertiary)
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        containerColor = MaterialTheme.colorScheme.tertiary,
+                                                        contentColor = MaterialTheme.colorScheme.onTertiary
+                                                    )
                                                 ) {
                                                     Text("Prenota", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                                 }
@@ -247,23 +432,44 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                 }
                             }
                         }
-
                         if (viewModel.ricercaEffettuata) {
                             item {
-                                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Button(onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, viewModel.paginaCorrente - 1) }, enabled = viewModel.paginaCorrente > 0) { Text("Prec") }
-                                    Text(text = "Pagina ${viewModel.paginaCorrente + 1} di ${viewModel.totalePagine.coerceAtLeast(1)}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-                                    Button(onClick = { viewModel.cercaViaggi(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax, viewModel.paginaCorrente + 1) }, enabled = viewModel.paginaCorrente < viewModel.totalePagine - 1) { Text("Succ") }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            viewModel.cercaViaggi(
+                                                destinazione, dataMin, dataMax, posti,
+                                                prezzoMin, prezzoMax, viewModel.paginaCorrente - 1
+                                            )
+                                        },
+                                        enabled = viewModel.paginaCorrente > 0
+                                    ) { Text("Prec") }
+                                    Text(
+                                        text = "Pagina ${viewModel.paginaCorrente + 1} di ${viewModel.totalePagine.coerceAtLeast(1)}",
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Button(
+                                        onClick = {
+                                            viewModel.cercaViaggi(
+                                                destinazione, dataMin, dataMax, posti,
+                                                prezzoMin, prezzoMax, viewModel.paginaCorrente + 1
+                                            )
+                                        },
+                                        enabled = viewModel.paginaCorrente < viewModel.totalePagine - 1
+                                    ) { Text("Succ") }
                                 }
                             }
                         }
                     }
                 }
-
                 1 -> {
                     ItinerariScreen(viewModel = itinerarioViewModel)
                 }
-
                 2 -> {
                     if (identificativoStanzaSelezionata == null) {
                         LazyColumn(
@@ -303,7 +509,6 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
-
                                         if (stanzaCorrente.numeroMessaggiNonLetti > 0) {
                                             Surface(
                                                 shape = RoundedCornerShape(50),
@@ -332,7 +537,6 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                             ) {
                                 Text(text = "⬅ Torna alla lista delle chat")
                             }
-
                             SchermataDellaChat(
                                 modelloDiVistaChat = modelloDiVistaChat,
                                 identificativoDellaStanza = identificativoStanzaSelezionata!!,
@@ -342,7 +546,6 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                     }
                 }
             }
-
             if (mostraModaleSceltaItinerario && viaggioSelezionatoId != null) {
                 AlertDialog(
                     onDismissRequest = { mostraModaleSceltaItinerario = false },
@@ -356,28 +559,50 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("Seleziona una delle tue liste di viaggio:")
                             if (mieiItinerari.isEmpty()) {
-                                Text("Non hai ancora creato nessun itinerario personale.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                                Text(
+                                    "Non hai ancora creato nessun itinerario personale.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 13.sp
+                                )
                             } else {
                                 LazyColumn(
                                     modifier = Modifier.heightIn(max = 200.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     items(mieiItinerari) { itn ->
-                                        val giaPresente = itn.viaggiContenuti?.any { it.id == viaggioSelezionatoId } == true
+                                        val giaPresente =
+                                            itn.viaggiContenuti?.any { it.id == viaggioSelezionatoId } == true
                                         Surface(
-                                            color = if (giaPresente) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceVariant,
+                                            color = if (giaPresente) MaterialTheme.colorScheme.surfaceVariant.copy(
+                                                alpha = 0.4f
+                                            ) else MaterialTheme.colorScheme.surfaceVariant,
                                             shape = RoundedCornerShape(8.dp),
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clickable(enabled = !isItinerarioLoading) {
                                                     if (giaPresente) {
-                                                        Toast.makeText(contestoAttuale, "Questo viaggio è già presente in ${itn.nome}!", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(
+                                                            contestoAttuale,
+                                                            "Questo viaggio è già presente in ${itn.nome}!",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
                                                     } else {
-                                                        itinerarioViewModel.aggiungiViaggioAItinerario(itn.idItinerario ?: 0L, viaggioSelezionatoId!!) { successo ->
+                                                        itinerarioViewModel.aggiungiViaggioAItinerario(
+                                                            itn.idItinerario ?: 0L,
+                                                            viaggioSelezionatoId!!
+                                                        ) { successo ->
                                                             if (successo) {
-                                                                Toast.makeText(contestoAttuale, "Viaggio aggiunto con successo!", Toast.LENGTH_SHORT).show()
+                                                                Toast.makeText(
+                                                                    contestoAttuale,
+                                                                    "Viaggio aggiunto con successo!",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
                                                             } else {
-                                                                Toast.makeText(contestoAttuale, "Errore durante l'aggiunta.", Toast.LENGTH_SHORT).show()
+                                                                Toast.makeText(
+                                                                    contestoAttuale,
+                                                                    "Errore durante l'aggiunta.",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
                                                             }
                                                             mostraModaleSceltaItinerario = false
                                                         }
@@ -391,7 +616,12 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                             ) {
                                                 Text(itn.nome, fontWeight = FontWeight.Medium)
                                                 if (giaPresente) {
-                                                    Text("Già incluso", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                    Text(
+                                                        "Già incluso",
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
                                                 }
                                             }
                                         }

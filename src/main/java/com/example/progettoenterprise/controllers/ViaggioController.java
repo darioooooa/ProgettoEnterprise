@@ -112,4 +112,13 @@ public class ViaggioController {
 
         return ResponseEntity.ok(viaggioAggiornato);
     }
+
+    @GetMapping("/consigliati")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ViaggioDTO>> getViaggiConsigliati(@AuthenticationPrincipal UtenteLoggato utenteLoggato) {
+        log.info("L'utente {} sta richiedendo i viaggi consigliati", utenteLoggato.getUsername());
+        List<ViaggioDTO> consigliati = viaggioService.getConsigliatiPerUtente(utenteLoggato.getId());
+        return ResponseEntity.ok(consigliati);
+    }
+
 }
