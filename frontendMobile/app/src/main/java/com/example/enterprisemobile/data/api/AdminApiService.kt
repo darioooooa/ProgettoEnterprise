@@ -4,14 +4,17 @@ import com.example.enterprisemobile.data.model.RichiestaPromozioneResponse
 import com.example.enterprisemobile.model.PageResponse
 import com.example.enterprisemobile.model.SegnalazioneDTO
 import com.example.enterprisemobile.model.UtenteBannatoDTO
-import com.example.enterprisemobile.model.SegnalazioneFiltroDTO
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
+data class CreaSegnalazioneRequest(
+    val tipo: String,
+    val idRiferimento: Long,
+    val motivo: String,
+    val descrizione: String
+)
 interface AdminApiService {
-
-    // --- RICHIESTE PROMOZIONE ---
     @GET("admin/richieste")
     suspend fun getRichiestePromozione(
         @Query("stato") stato: String? = null,
@@ -32,15 +35,13 @@ interface AdminApiService {
     @GET("admin/richieste/promozioni/{id}/documento")
     suspend fun scaricaDocumento(@Path("id") id: Long): Response<ResponseBody>
 
-    // --- SEGNALAZIONI (Allineato al SegnalazioneController) ---
-
-    // NOTA: Il tuo SegnalazioneController usa @PostMapping("/cerca")
     @GET("segnalazioni/ricerca")
-        suspend fun getSegnalazioni(
+    suspend fun getSegnalazioni(
         @Query("tipo") tipo: String? = null,
-        @Query("stato") stato: String? = null,
-        @Query("pagina") pagina: Int = 0,
-        @Query("dimensione") dimensione: Int = 50
+        @Query("stato") stato: List<String>? = null,
+        @Query("usernameSegnalatore") usernameSegnalatore: String? = null,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10
     ): Response<PageResponse<SegnalazioneDTO>>
 
     @PUT("segnalazioni/{id}/prendi-in-carico")
@@ -56,8 +57,17 @@ interface AdminApiService {
     @PUT("segnalazioni/{id}/rifiuta")
     suspend fun rifiutaSegnalazione(@Path("id") id: Long, @Query("idAdmin") idAdmin: Long): Response<SegnalazioneDTO>
 
-    // --- UTENTI BANNATI (Allineato ad AdminController) ---
+    @POST("segnalazioni/{id}/invia-avvertimento")
+    suspend fun inviaAvvertimentoUtente(
+        @Path("id") id: Long,
+        @Query("idAdmin") idAdmin: Long
+    ): Response<Unit>
 
+    @POST("segnalazioni/crea")
+    suspend fun creaSegnalazione(
+        @Body segnalazione: CreaSegnalazioneRequest,
+        @Query("idSegnalatore") idSegnalatore: Long
+    ): Response<Unit>
     @GET("admin/richieste/utenti-bannati")
     suspend fun getUtentiBannati(): Response<List<UtenteBannatoDTO>>
 

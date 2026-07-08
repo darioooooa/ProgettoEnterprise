@@ -7,5 +7,8 @@ data class SegnalazioneDTO(
     val descrizione: String,
     val segnalatoreUsername: String,
     val riferimentoNome: String,
-    val stato: String
+    val stato: String,
+    val dataCreazione: String? = null,
+    val adminUsername: String? = null,
+    val adminId: Int? = null
 )

@@ -1,7 +1,9 @@
 package com.example.enterprisemobile.ui.components
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,10 +14,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.viewmodels.CommunityViewModel
 import java.time.Instant
@@ -34,24 +39,20 @@ fun SezioneRecensioniViaggioInPage(
 ) {
     val recensioni by viewModel.recensioni.collectAsState()
 
-    // Sincronizzazione iniziale e caricamento delle recensioni native
     LaunchedEffect(viaggioId) {
         if (viaggioId != -1L) {
             viewModel.caricaRecensioni(viaggioId)
         }
     }
 
-    // Stati per controllare la visibilità dei DatePicker dei filtri
     var dDaAperto by remember { mutableStateOf(false) }
     var dAAperto by remember { mutableStateOf(false) }
-
     var filtriEspansi by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Titolo della sezione integrata
         Column {
             Text(
                 text = "Recensioni della community",
@@ -66,7 +67,6 @@ fun SezioneRecensioniViaggioInPage(
             )
         }
 
-        // Banner messaggi d'errore o successo interni
         viewModel.messaggioAvviso?.let { avviso ->
             val colore = if (viewModel.tipoAvviso == "successo") SuccessGreen else MaterialTheme.colorScheme.error
             Surface(
@@ -91,14 +91,12 @@ fun SezioneRecensioniViaggioInPage(
             }
         }
 
-        // Sezione filtri di ricerca recensioni
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -135,12 +133,10 @@ fun SezioneRecensioniViaggioInPage(
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Filtro data da
                             Box(modifier = Modifier.weight(1f)) {
                                 OutlinedTextField(value = viewModel.filtroDataDa, onValueChange = {}, label = { Text("Da data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
                                 Box(modifier = Modifier.matchParentSize().clickable { dDaAperto = true })
                             }
-                            // Filtro data a
                             Box(modifier = Modifier.weight(1f)) {
                                 OutlinedTextField(value = viewModel.filtroDataA, onValueChange = {}, label = { Text("A data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
                                 Box(modifier = Modifier.matchParentSize().clickable { dAAperto = true })
@@ -162,10 +158,8 @@ fun SezioneRecensioniViaggioInPage(
         }
 
         val haPartecipatoEIniziato = isGiaAcquistato && (statoSvolgimentoIscrizione == "IN_CORSO" || statoSvolgimentoIscrizione == "COMPLETATO")
-
         val mostraFormScrittura = !viewModel.haGiaRecensito || viewModel.inModifica
 
-        // Form viaggiatore: aggiungi / modifica la propria recensione
         if (!isMioViaggio && viewModel.mioRuolo == "ROLE_VIAGGIATORE" && haPartecipatoEIniziato) {
             if (mostraFormScrittura) {
                 Card(
@@ -208,9 +202,7 @@ fun SezioneRecensioniViaggioInPage(
                         }
                     }
                 }
-            }
-            else {
-                // Messaggio se l'utente ha già lasciato una recensione
+            } else {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)),
                     shape = RoundedCornerShape(12.dp),
@@ -224,7 +216,6 @@ fun SezioneRecensioniViaggioInPage(
             }
         }
 
-        // Render e ciclo iterativo delle recensioni degli utenti
         if (recensioni.isEmpty()) {
             Text(
                 text = "Nessuna recensione corrispondente ai criteri impostati.",
@@ -246,7 +237,6 @@ fun SezioneRecensioniViaggioInPage(
                                 Text(text = if (miaRecensione) "Tu (${rec.utenteUsername ?: "Anonimo"})" else rec.utenteUsername ?: "Utente Anonimo", color = if (miaRecensione) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                 Text(text = rec.dataCreazione?.replace("T", " ")?.take(10) ?: "Data non disponibile", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 11.sp)
                             }
-                            // Visualizzazione stelle del commento
                             Row {
                                 (1..5).forEach { s ->
                                     Text(text = "★", color = if (rec.voto >= s) Color(0xFFFBBF24) else Color.LightGray, fontSize = 16.sp)
@@ -259,21 +249,36 @@ fun SezioneRecensioniViaggioInPage(
                             Text(rec.commento ?: "", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 19.sp)
                         }
 
-                        // Controlli per l'autore del commento (modifica ed eliminazione con ritardo)
-                        if (miaRecensione || isMioViaggio) {
-                            Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
-                                if (miaRecensione) {
-                                    Text(text = "Modifica", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { viewModel.avviaModifica(rec) }.padding(end = 16.dp))
-                                }
-                                Text(text = if (viewModel.idRecensioneDaEliminare == rec.id) "⚠️ Confermi?" else "Elimina", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { viewModel.cancellaRecensione(context, viaggioId, rec.id) })
+                        // ✅ MODIFICATO: Controlli con pulsante Segnala
+                        Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
+                            if (miaRecensione) {
+                                Text(text = "Modifica", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { viewModel.avviaModifica(rec) }.padding(end = 16.dp))
                             }
+
+                            // ✅ NUOVO: Pulsante Segnala (solo per recensioni di altri utenti)
+                            if (!miaRecensione) {
+                                Text(
+                                    text = "🚩 Segnala",
+                                    color = Color(0xFFF97316),
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier
+                                        .clickable { viewModel.apriDialogSegnalazioneRecensione(rec) }
+                                        .padding(end = 16.dp)
+                                )
+                            }
+
+                            Text(
+                                text = if (viewModel.idRecensioneDaEliminare == rec.id) "⚠️ Confermi?" else "Elimina",
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable { viewModel.cancellaRecensione(context, viaggioId, rec.id) }
+                            )
                         }
                     }
                 }
             }
         }
 
-        // Logica di paginazione nativa delle recensioni
         if (viewModel.totalePagineRecensioni > 1) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -304,9 +309,28 @@ fun SezioneRecensioniViaggioInPage(
         }
     }
 
-    // Modali di date picker
+    // ✅ NUOVO: Dialog segnalazione recensione
+    if (viewModel.showSegnalazioneRecensioneDialog && viewModel.recensioneDaSegnalare != null) {
+        DialogSegnalazioneRecensione(
+            username = viewModel.recensioneDaSegnalare!!.utenteUsername ?: "Utente",
+            isLoading = viewModel.isLoadingSegnalazione,
+            onDismiss = { viewModel.chiudiDialogSegnalazioneRecensione() },
+            onInvia = { motivo, descrizione ->
+                viewModel.inviaSegnalazioneRecensione(
+                    context = context,
+                    motivo = motivo,
+                    descrizione = descrizione,
+                    onSuccess = {
+                        Toast.makeText(context, "Segnalazione inviata!", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = {
+                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+        )
+    }
 
-    // Selettore filtro "Da data"
     if (dDaAperto) {
         val state = rememberDatePickerState()
         DatePickerDialog(
@@ -324,7 +348,6 @@ fun SezioneRecensioniViaggioInPage(
         ) { DatePicker(state = state) }
     }
 
-    // Selettore filtro "A data"
     if (dAAperto) {
         val state = rememberDatePickerState()
         DatePickerDialog(
@@ -340,5 +363,215 @@ fun SezioneRecensioniViaggioInPage(
             },
             dismissButton = { TextButton(onClick = { dAAperto = false }) { Text("Annulla") } }
         ) { DatePicker(state = state) }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialogSegnalazioneRecensione(
+    username: String,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onInvia: (String, String) -> Unit
+) {
+    var motivo by remember { mutableStateOf("") }
+    var descrizione by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
+
+    Dialog(
+        onDismissRequest = {
+            if (!isLoading) onDismiss()
+        }
+    ) {
+
+        Surface(
+            color = Color(0xFF1E1E2E),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+
+            Column(modifier = Modifier.padding(20.dp)) {
+
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🚩 Segnala recensione",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+
+                    IconButton(
+                        onClick = {
+                            if (!isLoading) onDismiss()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Chiudi",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "di $username",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Aiutaci a mantenere la piattaforma sicura. Seleziona il motivo per cui stai segnalando questa recensione.",
+                    color = Color.LightGray,
+                    fontSize = 13.sp
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Motivo della segnalazione *",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+
+                    OutlinedTextField(
+                        value = when (motivo) {
+                            "SPAM" -> "Spam o Truffa"
+                            "COMPORTAMENTO_SCORRETTO" -> "Comportamento Scorretto"
+                            "FALSO" -> "Contenuto Falso / Inappropriato"
+                            "ALTRO" -> "Altro"
+                            else -> "-- Seleziona un motivo --"
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF3B82F6),
+                            unfocusedBorderColor = Color.Gray,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(Color(0xFF1E1E2E))
+                    ) {
+                        listOf(
+                            "SPAM" to "Spam o Truffa",
+                            "COMPORTAMENTO_SCORRETTO" to "Comportamento Scorretto",
+                            "FALSO" to "Contenuto Falso / Inappropriato",
+                            "ALTRO" to "Altro"
+                        ).forEach { (value, label) ->
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(label, color = Color.White)
+                                },
+                                onClick = {
+                                    motivo = value
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Dettagli aggiuntivi (opzionale)",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = descrizione,
+                    onValueChange = { descrizione = it },
+                    placeholder = {
+                        Text(
+                            "Scrivi qui i dettagli per aiutare gli amministratori...",
+                            color = Color.Gray
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF3B82F6),
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+
+                    TextButton(
+                        onClick = onDismiss,
+                        enabled = !isLoading
+                    ) {
+                        Text("Annulla", color = Color.Gray)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            onInvia(motivo, descrizione)
+                        },
+                        enabled = motivo.isNotBlank() && !isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (motivo.isNotBlank())
+                                Color(0xFFE63946)
+                            else
+                                Color.Gray
+                        )
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White
+                            )
+                        } else {
+                            Text(
+                                "Invia Segnalazione",
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

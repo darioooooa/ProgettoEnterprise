@@ -54,10 +54,14 @@ class PrenotazioneRepository(
     }
 
     // QUESTO SERVE ALL'ORGANIZZATORE
-    suspend fun getPrenotazioniPerImeiViaggi(page: Int,stato: String?=null): com.example.enterprisemobile.model.PageResponse<PrenotazioneDTO>? {
+    suspend fun getPrenotazioniPerImeiViaggi(page: Int,stato: String?=null, usernameViaggiatore: String? = null): com.example.enterprisemobile.model.PageResponse<PrenotazioneDTO>? {
         return withContext(Dispatchers.IO) {
             try {
-                val response = api.getMiePrenotazioni(page = page,  stato=stato)
+                val response = api.getMiePrenotazioni(
+                    page = page,
+                    stato = stato,
+                    usernameViaggiatore = usernameViaggiatore
+                )
 
                 if (response.isSuccessful) {
                     // Restituiamo tutto il blocco intero (dati + info sulle pagine)

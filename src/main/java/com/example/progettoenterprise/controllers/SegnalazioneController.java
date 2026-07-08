@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/segnalazioni")
@@ -37,11 +39,11 @@ public class SegnalazioneController {
     @GetMapping("/ricerca")
     public ResponseEntity<Page<SegnalazioneDTO>> cercaSegnalazioni(
             @ModelAttribute SegnalazioneSpecification.SegnalazioneFilter filtro,
-            @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int dimensione) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
 
-        log.info("Ricerca segnalazioni in corso. Pagina: {}, Dimensione: {}", pagina, dimensione);
-        Page<SegnalazioneDTO> risultati = segnalazioneService.cercaSegnalazioni(filtro, pagina, dimensione);
+        log.info("Ricerca segnalazioni in corso. Pagina: {}, Size: {}", page, size);
+        Page<SegnalazioneDTO> risultati = segnalazioneService.cercaSegnalazioni(filtro, page, size);
         return ResponseEntity.ok(risultati);
     }
 

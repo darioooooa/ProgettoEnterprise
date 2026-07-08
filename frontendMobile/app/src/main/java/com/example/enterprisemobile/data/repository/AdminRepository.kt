@@ -2,16 +2,16 @@ package com.example.enterprisemobile.data.repository
 
 import android.content.Context
 import com.example.enterprisemobile.data.api.AdminApiService
+import com.example.enterprisemobile.data.api.CreaSegnalazioneRequest
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.model.RichiestaPromozioneEntity
 import com.example.enterprisemobile.data.model.RichiestaPromozioneResponse
 import com.example.enterprisemobile.model.PageResponse
+import com.example.enterprisemobile.model.SegnalazioneDTO
 import com.example.enterprisemobile.model.UtenteBannatoDTO
 import okhttp3.ResponseBody
 import retrofit2.Response
-import com.example.enterprisemobile.model.SegnalazioneDTO
-import com.example.enterprisemobile.model.SegnalazioneFiltroDTO
 
 class AdminRepository(private val context: Context) {
 
@@ -77,6 +77,17 @@ class AdminRepository(private val context: Context) {
     suspend fun scaricaDocumento(id: Long): Response<ResponseBody> {
         return adminApiService.scaricaDocumento(id)
     }
+
+    suspend fun getSegnalazioni(
+        tipo: String? = null,
+        stati: List<String>? = null,
+        usernameSegnalatore: String? = null,
+        page: Int = 0,
+        size: Int = 10
+    ): Response<PageResponse<SegnalazioneDTO>> {
+        return adminApiService.getSegnalazioni(tipo, stati, usernameSegnalatore, page, size)
+    }
+
     suspend fun prendiInCarico(id: Long, adminId: Long) =
         adminApiService.prendiInCarico(id, adminId)
 
@@ -86,16 +97,21 @@ class AdminRepository(private val context: Context) {
     suspend fun rifiutaSegnalazione(id: Long, adminId: Long) =
         adminApiService.rifiutaSegnalazione(id, adminId)
 
-    suspend fun riattivaUtente(id: Long) =
-        adminApiService.riattivaUtente(id)
-
-    suspend fun getSegnalazioni(): Response<PageResponse<SegnalazioneDTO>> {
-        return adminApiService.getSegnalazioni(
-            tipo = null,
-            stato = null,
-            pagina = 0,
-            dimensione = 50
+    suspend fun creaSegnalazione(
+        tipo: String,
+        idRiferimento: Long,
+        motivo: String,
+        descrizione: String,
+        idSegnalatore: Long
+    ): Response<Unit> {
+        // Creiamo l'oggetto specifico invece della Mappa
+        val richiesta = CreaSegnalazioneRequest(
+            tipo = tipo,
+            idRiferimento = idRiferimento,
+            motivo = motivo,
+            descrizione = descrizione
         )
+        return adminApiService.creaSegnalazione(richiesta, idSegnalatore)
     }
 
     suspend fun getUtentiBannati() =
@@ -108,6 +124,9 @@ class AdminRepository(private val context: Context) {
     ): Response<List<UtenteBannatoDTO>> {
         return adminApiService.getUtentiBannati()
     }
+
+    suspend fun riattivaUtente(id: Long) =
+        adminApiService.riattivaUtente(id)
 
     private fun mappaDtoAEntity(dto: RichiestaPromozioneResponse): RichiestaPromozioneEntity {
         return RichiestaPromozioneEntity(

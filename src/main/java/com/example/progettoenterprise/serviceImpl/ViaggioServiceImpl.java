@@ -44,6 +44,7 @@ public class ViaggioServiceImpl implements ViaggioService {
     private final PagamentoService pagamentoService;
     private final PrenotazioneRepository prenotazioneRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final EmailServiceImpl emailService;
 
     public ViaggioServiceImpl(
             ViaggioRepository viaggioRepository,
@@ -157,16 +158,43 @@ public class ViaggioServiceImpl implements ViaggioService {
 
         for (Prenotazione prenotazione : prenotazioniDaRimborsare) {
             try {
+                // Calcola l'importo del rimborso prima di processarlo
+                double importoRimborso = prenotazione.getNumeroPersone() * viaggio.getPrezzo();
+
                 pagamentoService.rimborsaPrenotazione(prenotazione.getId());
                 log.info("Rimborso Stripe automatico effettuato per la prenotazione ID: {}", prenotazione.getId());
-                //per notifica rimborso
+
+                // ✅ Notifica push
                 String token = prenotazione.getViaggiatore().getFirebaseToken();
                 if (token != null && !token.trim().isEmpty()) {
                     RimborsoErogatoEvent evento = new RimborsoErogatoEvent(token, viaggio.getTitolo());
                     eventPublisher.publishEvent(evento);
                 }
+
+                // ✅ NUOVO: Invio email di rimborso al viaggiatore
+                try {
+                    String emailViaggiatore = prenotazione.getViaggiatore().getEmail();
+                    String usernameViaggiatore = prenotazione.getViaggiatore().getUsername();
+
+                    if (emailViaggiatore != null && !emailViaggiatore.trim().isEmpty()) {
+                        emailService.inviaEmailRimborsoViaggioEliminato(
+                                emailViaggiatore,
+                                usernameViaggiatore,
+                                viaggio.getTitolo(),
+                                viaggio.getDestinazione(),
+                                viaggio.getDataInizio(),
+                                viaggio.getDataFine(),
+                                importoRimborso
+                        );
+                        log.info("✅ Email di rimborso inviata a {} per viaggio ID {}", emailViaggiatore, viaggioId);
+                    }
+                } catch (Exception emailEx) {
+                    // Non bloccare il flusso se l'email fallisce
+                    log.error("⚠️ Errore invio email rimborso per prenotazione ID {}: {}",
+                            prenotazione.getId(), emailEx.getMessage());
+                }
+
             } catch (Exception e) {
-                // Se una carta è bloccata, stampiamo l'errore ma il ciclo continua per rimborsare gli altri
                 log.error("Rimborso Stripe fallito per la prenotazione id {} (motivo: {}). Forzo annullamento prenotazione.",
                         prenotazione.getId(), e.getMessage());
                 prenotazione.setStato(Prenotazione.StatoPrenotazione.ANNULLATA);
