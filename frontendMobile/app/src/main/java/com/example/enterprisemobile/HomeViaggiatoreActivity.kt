@@ -87,7 +87,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     val totaleNotifiche = listaDelleStanzeReali.sumOf { it.numeroMessaggiNonLetti }
 
     EnterpriseScaffold(
-        titolo = "ENTERPRISE",
+        titolo = "MOVEON",
         nomeUtente = viewModel.nomeUtente,
         mostraFrecciaIndietro = false,
         bottomBar = {

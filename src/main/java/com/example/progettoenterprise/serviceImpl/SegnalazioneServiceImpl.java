@@ -54,7 +54,6 @@ public class SegnalazioneServiceImpl implements SegnalazioneService {
             throw new IllegalArgumentException("Tipo di segnalazione non valido. È possibile segnalare solo Utenti, Messaggi o Recensioni.");
         }
 
-        // ✅ NUOVO: Controllo per evitare segnalazioni duplicate
         List<Segnalazione.StatoSegnalazione> statiAttivi = List.of(
                 Segnalazione.StatoSegnalazione.APERTA,
                 Segnalazione.StatoSegnalazione.IN_LAVORAZIONE

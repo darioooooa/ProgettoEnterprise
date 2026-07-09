@@ -268,7 +268,7 @@ fun AdminContent(viewModel: AdminViewModel) {
     }
 
     AdminScaffold(
-        titolo = "PANNELLO ADMIN",
+        titolo = "MOVEON",
         nomeUtente = nomeAdmin,
         bottomBar = {
             NavigationBar(containerColor = DarkNavy) {

@@ -125,7 +125,7 @@ class HomeOrganizzatoreViewModel(
                 val viaggiatore = _viaggiatoreDaSegnalare.value
                 if (viaggiatore != null) {
                     val response = adminRepository.creaSegnalazione(
-                        tipo = "UTENTE",
+                        tipo = "UTENTE", // Dalla lista prenotazioni si segnala l'Utente
                         idRiferimento = viaggiatore.first,
                         motivo = motivo,
                         descrizione = descrizione,
@@ -136,7 +136,13 @@ class HomeOrganizzatoreViewModel(
                         onSuccess()
                         chiudiDialogSegnalazione()
                     } else {
-                        onError("Errore nell'invio della segnalazione")
+                        val errorJson = response.errorBody()?.string()
+                        val messaggioAvviso = try {
+                            org.json.JSONObject(errorJson ?: "").getString("messaggio")
+                        } catch (e: Exception) {
+                            "Errore nell'invio della segnalazione"
+                        }
+                        onError(messaggioAvviso)
                     }
                 }
             } catch (e: Exception) {
@@ -146,4 +152,5 @@ class HomeOrganizzatoreViewModel(
             }
         }
     }
+
 }

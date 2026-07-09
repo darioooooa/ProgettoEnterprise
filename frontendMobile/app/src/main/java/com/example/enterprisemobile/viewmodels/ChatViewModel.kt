@@ -11,7 +11,9 @@ import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 class ChatViewModel(
     private val servizioDiChat: ServizioChat,
     private val chiamateApiChat: InterfacciaApiChat
@@ -25,6 +27,12 @@ class ChatViewModel(
 
     private val convertitoreJson = Gson()
 
+    // Stati per messaggi di avviso (successo/errore)
+    var messaggioAvviso by mutableStateOf<String?>(null)
+        private set
+
+    var tipoAvviso by mutableStateOf("errore")
+        private set
 
     init {
         servizioDiChat.avviaConnessioneGlobale()
@@ -34,7 +42,6 @@ class ChatViewModel(
     fun caricaLeMieStanze(nomeUtente: String) {
         viewModelScope.launch {
             try {
-                // Passiamo il nome utente a Retrofit
                 val stanzeRecuperate = chiamateApiChat.caricaLeMieStanze(nomeUtente)
                 statoStanzeInterno.value = stanzeRecuperate
             } catch (erroreDiRete: Exception) {
@@ -65,7 +72,6 @@ class ChatViewModel(
     fun entraNellaStanza(identificativoStanza: Long) {
         viewModelScope.launch {
             try {
-                // Recuperiamo lo storico dal database
                 val cronologiaPassata = chiamateApiChat.ottieniCronologiaStorica(identificativoStanza)
                 statoMessaggiInterno.value = cronologiaPassata
             } catch (erroreDiRete: Exception) {
@@ -95,6 +101,7 @@ class ChatViewModel(
             }
         }
     }
+
     fun azzeraNotificheStanzaOrganizzatore(identificativoStanza: Long, nomeUtente: String) {
         viewModelScope.launch {
             try {
@@ -111,7 +118,6 @@ class ChatViewModel(
 
         viewModelScope.launch {
             servizioDiChat.notificheGlobali.collect {
-                // Ricarica le stanze del viaggiatore
                 caricaLeMieStanze(nomeUtente)
             }
         }
@@ -122,7 +128,6 @@ class ChatViewModel(
 
         viewModelScope.launch {
             servizioDiChat.notificheGlobali.collect {
-                // Ricarica le stanze dell'organizzatore
                 caricaLeMieStanzeOrganizzatore(nomeUtente)
             }
         }
@@ -132,7 +137,6 @@ class ChatViewModel(
         viewModelScope.launch {
             try {
                 val stanzeRecuperate = chiamateApiChat.caricaStanzeOrganizzatore(nomeUtente)
-                // Salviamo le stanze nel contenitore unificato
                 statoStanzeInterno.value = stanzeRecuperate
             } catch (erroreDiRete: Exception) {
                 println("Errore nel caricamento delle stanze organizzatore: ${erroreDiRete.message}")
@@ -140,15 +144,21 @@ class ChatViewModel(
         }
     }
 
+    // Metodo per azzerare il messaggio di avviso
+    fun azzeraMessaggioAvviso() {
+        messaggioAvviso = null
+    }
+
     fun inviaSegnalazioneMessaggio(
         identificativoMessaggio: Long,
         idUtenteSegnalatore: Long,
         motivo: String,
-        descrizione: String
+        descrizione: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
     ) {
         viewModelScope.launch {
             try {
-                // Prepariamo il pacchetto dicendo al server che è un "MESSAGGIO"
                 val pacchettoSegnalazione = RichiestaSegnalazioneDTO(
                     tipoEntita = "MESSAGGIO",
                     identificativoDiRiferimento = identificativoMessaggio,
@@ -162,15 +172,32 @@ class ChatViewModel(
                 )
 
                 if (risposta.isSuccessful) {
-                    println("Segnalazione inviata con successo!")
+                    // SUCCESSO: Mostra messaggio verde
+                    messaggioAvviso = "Segnalazione inviata con successo!"
+                    tipoAvviso = "successo"
+                    onSuccess()
                 } else {
-                    println("Errore nell'invio della segnalazione: ${risposta.code()}")
+                    // ERRORE: Estrae il messaggio dal JSON (es. "Hai già segnalato...")
+                    val errorJson = risposta.errorBody()?.string()
+                    val messaggioAvvisoEstratto = try {
+                        org.json.JSONObject(errorJson ?: "").getString("messaggio")
+                    } catch (e: Exception) {
+                        "Errore nell'invio della segnalazione"
+                    }
+
+                    // Aggiorna gli stati per mostrare il banner
+                    messaggioAvviso = messaggioAvvisoEstratto
+                    tipoAvviso = "errore"
+
+                    onError(messaggioAvvisoEstratto)
                 }
 
             } catch (erroreDiRete: Exception) {
-                println("Impossibile contattare il server: ${erroreDiRete.message}")
+                val messaggioErrore = "Impossibile contattare il server: ${erroreDiRete.message}"
+                messaggioAvviso = messaggioErrore
+                tipoAvviso = "errore"
+                onError(messaggioErrore)
             }
         }
     }
-
 }
