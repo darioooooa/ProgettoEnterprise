@@ -5,8 +5,8 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
@@ -27,9 +26,9 @@ import com.example.enterprisemobile.model.InvitoSospesoDTO
 import com.example.enterprisemobile.model.ItinerarioPreferitoDTO
 import com.example.enterprisemobile.model.ViaggioDTO
 import com.example.enterprisemobile.model.Visibilita
-import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItinerariScreen(viewModel: ItinerarioViewModel) {
     val mieiItinerari by viewModel.itinerari.collectAsState()
@@ -47,6 +46,13 @@ fun ItinerariScreen(viewModel: ItinerarioViewModel) {
     var nuovoNome by remember { mutableStateOf("") }
     var nuovaVisibilita by remember { mutableStateOf(Visibilita.PRIVATA) }
     var emailDaInvitare by remember { mutableStateOf("") }
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+    )
 
     LaunchedEffect(Unit) {
         viewModel.caricaItinerari()
@@ -86,7 +92,8 @@ fun ItinerariScreen(viewModel: ItinerarioViewModel) {
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
-                    )                ) {
+                    )
+                ) {
                     Text("+ Crea nuovo itinerario", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
@@ -159,37 +166,42 @@ fun ItinerariScreen(viewModel: ItinerarioViewModel) {
     if (mostraModaleCreazione) {
         AlertDialog(
             onDismissRequest = { if (!inCaricamento) mostraModaleCreazione = false },
-            title = { Text("Nuovo itinerario", fontWeight = FontWeight.Bold) },
+            title = { Text("Nuovo itinerario", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = nuovoNome, onValueChange = { nuovoNome = it },
-                        label = { Text("Nome dell'itinerario") }, modifier = Modifier.fillMaxWidth(), enabled = !inCaricamento
+                        label = { Text("Nome dell'itinerario") }, modifier = Modifier.fillMaxWidth(), enabled = !inCaricamento,
+                        colors = textFieldColors
                     )
                     Column {
-                        Text("Visibilità:", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text("Visibilità:", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(selected = nuovaVisibilita == Visibilita.PRIVATA, onClick = { nuovaVisibilita = Visibilita.PRIVATA }, enabled = !inCaricamento)
-                            Text("Privata (solo per me)", fontSize = 14.sp)
+                            Text("Privata (solo per me)", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(selected = nuovaVisibilita == Visibilita.PUBBLICA, onClick = { nuovaVisibilita = Visibilita.PUBBLICA }, enabled = !inCaricamento)
-                            Text("Pubblica (visibile a tutti)", fontSize = 14.sp)
+                            Text("Pubblica (visibile a tutti)", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    if (nuovoNome.trim().isBlank()) {
-                        Toast.makeText(context, "Inserisci un nome per l'itinerario!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        viewModel.creaItinerario(nuovoNome.trim(), nuovaVisibilita)
-                        mostraModaleCreazione = false
-                    }
-                }, enabled = !inCaricamento) { Text("Crea") }
+                        if (nuovoNome.trim().isBlank()) {
+                            Toast.makeText(context, "Inserisci un nome per l'itinerario!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            viewModel.creaItinerario(nuovoNome.trim(), nuovaVisibilita)
+                            mostraModaleCreazione = false
+                        }
+                    },
+                    enabled = !inCaricamento,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                ) { Text("Crea") }
             },
-            dismissButton = { TextButton(onClick = { mostraModaleCreazione = false }, enabled = !inCaricamento) { Text("Annulla") } }
+            dismissButton = { TextButton(onClick = { mostraModaleCreazione = false }, enabled = !inCaricamento) { Text("Annulla", color = MaterialTheme.colorScheme.outline) } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
@@ -197,27 +209,31 @@ fun ItinerariScreen(viewModel: ItinerarioViewModel) {
     if (mostraModaleCondivisione) {
         AlertDialog(
             onDismissRequest = { if (!inCaricamento) mostraModaleCondivisione = false },
-            title = { Text("Invita Collaboratore", fontWeight = FontWeight.Bold) },
+            title = { Text("Invita Collaboratore", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Inserisci l'email dell'utente con cui collaborare.", fontSize = 13.sp)
-                    OutlinedTextField(value = emailDaInvitare, onValueChange = { emailDaInvitare = it }, label = { Text("Email dell'amico") }, modifier = Modifier.fillMaxWidth(), enabled = !inCaricamento)
+                    Text("Inserisci l'email dell'utente con cui collaborare.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedTextField(value = emailDaInvitare, onValueChange = { emailDaInvitare = it }, label = { Text("Email dell'amico") }, modifier = Modifier.fillMaxWidth(), enabled = !inCaricamento, colors = textFieldColors)
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    val idLista = idItinerarioDaCondividere
-                    if (emailDaInvitare.trim().isBlank()) {
-                        Toast.makeText(context, "Inserisci un email!", Toast.LENGTH_SHORT).show()
-                    } else if (idLista != null) {
-                        viewModel.invitaCollaboratoreInItinerario(idLista, emailDaInvitare.trim()) { _, msg ->
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        val idLista = idItinerarioDaCondividere
+                        if (emailDaInvitare.trim().isBlank()) {
+                            Toast.makeText(context, "Inserisci un email!", Toast.LENGTH_SHORT).show()
+                        } else if (idLista != null) {
+                            viewModel.invitaCollaboratoreInItinerario(idLista, emailDaInvitare.trim()) { _, msg ->
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                            mostraModaleCondivisione = false
                         }
-                        mostraModaleCondivisione = false
-                    }
-                }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen), enabled = !inCaricamento) { Text("Invia invito", color = Color.White) }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                    enabled = !inCaricamento
+                ) { Text("Invia invito") }
             },
-            dismissButton = { TextButton(onClick = { mostraModaleCondivisione = false }, enabled = !inCaricamento) { Text("Annulla") } }
+            dismissButton = { TextButton(onClick = { mostraModaleCondivisione = false }, enabled = !inCaricamento) { Text("Annulla", color = MaterialTheme.colorScheme.outline) } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 }
@@ -235,8 +251,8 @@ fun CardItinerarioCompleta(
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -271,7 +287,7 @@ fun CardItinerarioCompleta(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = itinerario.nome, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = itinerario.nome, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 Icon(
                     imageVector = if (espansa) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
@@ -285,7 +301,7 @@ fun CardItinerarioCompleta(
 
                     val viajes = itinerario.viaggiContenuti ?: emptyList()
                     if (viajes.isEmpty()) {
-                        Text("Nessun viaggio aggiunto.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontStyle = FontStyle.Italic, fontSize = 13.sp)
+                        Text("Nessun viaggio aggiunto.", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontStyle = FontStyle.Italic, fontSize = 13.sp)
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             viajes.forEach { viaggio ->
@@ -307,15 +323,18 @@ fun CardItinerarioCompleta(
     if (mostraConfermaElimina) {
         AlertDialog(
             onDismissRequest = { mostraConfermaElimina = false },
-            title = { Text("Elimina itinerario") },
-            text = { Text("Sei sicuro di voler cancellare interamente l'itinerario \"${itinerario.nome}\"?") },
+            title = { Text("Elimina itinerario", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Sei sicuro di voler cancellare interamente l'itinerario \"${itinerario.nome}\"?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(onClick = {
-                    itinerario.idItinerario?.let { viewModel.avviaEliminazioneItinerario(it) }
-                    mostraConfermaElimina = false
-                }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Elimina") }
+                        itinerario.idItinerario?.let { viewModel.avviaEliminazioneItinerario(it) }
+                        mostraConfermaElimina = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
+                ) { Text("Elimina") }
             },
-            dismissButton = { TextButton(onClick = { mostraConfermaElimina = false }) { Text("Annulla") } }
+            dismissButton = { TextButton(onClick = { mostraConfermaElimina = false }) { Text("Annulla", color = MaterialTheme.colorScheme.outline) } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 }
@@ -323,13 +342,12 @@ fun CardItinerarioCompleta(
 @Composable
 fun CardItinerarioCondivisoCompleta(itinerario: ItinerarioPreferitoDTO, disabilitato: Boolean) {
     val context = LocalContext.current
-
     var espansa by remember { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -341,8 +359,8 @@ fun CardItinerarioCondivisoCompleta(itinerario: ItinerarioPreferitoDTO, disabili
                 Surface(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(4.dp)) {
                     Text("🤝 Condiviso", color = MaterialTheme.colorScheme.onPrimary, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp), fontWeight = FontWeight.Bold)
                 }
-                Text("Proprietario:", color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f), fontSize = 12.sp)
-                Text(itinerario.proprietarioUsername ?: "Anonimo", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text("Proprietario:", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 12.sp)
+                Text(itinerario.proprietarioUsername ?: "Anonimo", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -352,12 +370,12 @@ fun CardItinerarioCondivisoCompleta(itinerario: ItinerarioPreferitoDTO, disabili
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = itinerario.nome, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = itinerario.nome, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 Icon(
                     imageVector = if (espansa) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = if (espansa) "Riduci" else "Espandi",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
             AnimatedVisibility(visible = espansa) {
@@ -366,7 +384,7 @@ fun CardItinerarioCondivisoCompleta(itinerario: ItinerarioPreferitoDTO, disabili
 
                     val viaggi = itinerario.viaggiContenuti ?: emptyList()
                     if (viaggi.isEmpty()) {
-                        Text("Nessun viaggio aggiunto in questa lista.", color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f), fontStyle = FontStyle.Italic, fontSize = 13.sp)
+                        Text("Nessun viaggio aggiunto in questa lista.", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontStyle = FontStyle.Italic, fontSize = 13.sp)
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             viaggi.forEach { viaggio ->
@@ -387,8 +405,8 @@ fun CardItinerarioCondivisoCompleta(itinerario: ItinerarioPreferitoDTO, disabili
                                         .padding(vertical = 4.dp)
                                 ) {
                                     Column {
-                                        Text(viaggio.titolo, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-                                        Text("📍 ${viaggio.destinazione}", color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f), fontSize = 12.sp)
+                                        Text(viaggio.titolo, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("📍 ${viaggio.destinazione}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -463,8 +481,8 @@ fun RowViaggioContenuto(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(viaggio.titolo, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-                Text("📍 ${viaggio.destinazione}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                Text(viaggio.titolo, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("📍 ${viaggio.destinazione}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 12.sp)
             }
             Row {
                 IconButton(onClick = { if (!disabilitato) viewModel.menuSpostaAperto[chiaveMenu] = !menuSpostaAperto }, enabled = !disabilitato) {
@@ -478,12 +496,12 @@ fun RowViaggioContenuto(
 
         AnimatedVisibility(visible = menuSpostaAperto && !disabilitato) {
             Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                color = MaterialTheme.colorScheme.background,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
-                    Text("Sposta in:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Sposta in:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                     tuttiGliItinerari.forEach { destinazioneIt ->
                         if (destinazioneIt.idItinerario != idItinerarioSorgente) {
                             Text(
@@ -512,18 +530,19 @@ fun RowViaggioContenuto(
     if (mostraConfermaRimuovi) {
         AlertDialog(
             onDismissRequest = { mostraConfermaRimuovi = false },
-            title = { Text("Rimuovi Viaggio") },
-            text = { Text("Vuoi davvero togliere il viaggio \"${viaggio.titolo}\" da questo itinerario?") },
+            title = { Text("Rimuovi Viaggio", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Vuoi davvero togliere il viaggio \"${viaggio.titolo}\" da questo itinerario?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
                         viaggio.id?.let { viewModel.rimuoviViaggioDaLista(idItinerarioSorgente, it) }
                         mostraConfermaRimuovi = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
                 ) { Text("Rimuovi") }
             },
-            dismissButton = { TextButton(onClick = { mostraConfermaRimuovi = false }) { Text("Annulla") } }
+            dismissButton = { TextButton(onClick = { mostraConfermaRimuovi = false }) { Text("Annulla", color = MaterialTheme.colorScheme.outline) } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 }

@@ -11,13 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.enterprisemobile.model.UtenteBannatoDTO
-import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.AdminViewModel
 
 @Composable
@@ -28,14 +25,19 @@ fun GestioneBanScreen(viewModel: AdminViewModel) {
 
     val utentiBannati by viewModel.utentiBannati.observeAsState(emptyList())
 
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
+            .padding(horizontal = 16.dp)
+    ) {
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Utenti Bannati", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Utenti Bannati", color = MaterialTheme.colorScheme.onBackground, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
         if (utentiBannati.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Nessun utente bannato.", color = Color.Gray)
+                Text("Nessun utente bannato.", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
             }
         } else {
             LazyColumn(
@@ -48,7 +50,7 @@ fun GestioneBanScreen(viewModel: AdminViewModel) {
                     key = { utente -> utente.id }
                 ) { utente ->
                     Surface(
-                        color = CardOverlay,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -58,10 +60,10 @@ fun GestioneBanScreen(viewModel: AdminViewModel) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("👤 ${utente.username}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                Text("Data: ${utente.dataBan ?: "N/D"}", color = Color.LightGray, fontSize = 12.sp)
+                                Text("👤 ${utente.username}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                Text("Data: ${utente.dataBan ?: "N/D"}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 12.sp)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("Motivo: ${utente.motivoBan ?: "N/D"}", color = DangerRed, fontSize = 14.sp)
+                                Text("Motivo: ${utente.motivoBan ?: "N/D"}", color = MaterialTheme.colorScheme.error, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             }
 
                             Button(
@@ -69,9 +71,12 @@ fun GestioneBanScreen(viewModel: AdminViewModel) {
                                     utenteDaSbannare = utente.id.toLong()
                                     mostraModaleSbanna = true
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
                             ) {
-                                Text("🔓 Sbanna", color = WhiteText, fontWeight = FontWeight.Bold)
+                                Text("🔓 Sbanna", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -83,8 +88,8 @@ fun GestioneBanScreen(viewModel: AdminViewModel) {
     if (mostraModaleSbanna) {
         AlertDialog(
             onDismissRequest = { mostraModaleSbanna = false },
-            title = { Text("Riattiva Utente", color = WhiteText, fontWeight = FontWeight.Bold) },
-            text = { Text("Sei sicuro di voler riattivare questo utente? Potrà nuovamente accedere alla piattaforma.", color = Color.LightGray) },
+            title = { Text("Riattiva Utente", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
+            text = { Text("Sei sicuro di voler riattivare questo utente? Potrà nuovamente accedere alla piattaforma.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -99,11 +104,18 @@ fun GestioneBanScreen(viewModel: AdminViewModel) {
                             )
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) { Text("Conferma") }
             },
-            dismissButton = { TextButton(onClick = { mostraModaleSbanna = false }) { Text("Annulla", color = Color.Gray) } },
-            containerColor = DarkNavy
+            dismissButton = {
+                TextButton(onClick = { mostraModaleSbanna = false }) {
+                    Text("Annulla", color = MaterialTheme.colorScheme.outline)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 }

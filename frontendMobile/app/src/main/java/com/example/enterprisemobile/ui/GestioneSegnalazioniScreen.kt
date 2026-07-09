@@ -20,15 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.material.icons.filled.Close
 import com.example.enterprisemobile.data.security.SessionManager
 import com.example.enterprisemobile.model.SegnalazioneDTO
 import com.example.enterprisemobile.ui.theme.*
@@ -58,6 +55,13 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
     var segnalazioneSelezionata by rememberSaveable { mutableStateOf<Long?>(null) }
     var contenutoDaVisualizzare by rememberSaveable { mutableStateOf("") }
 
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+    )
+
     LaunchedEffect(Unit) {
         viewModel.impostaStatiSegnalazioni(false)
     }
@@ -65,45 +69,56 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
     val segnalazioniFiltrate = segnalazioni
         .filter { filtroTipo == null || it.tipo == filtroTipo }
 
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
+            .padding(horizontal = 16.dp)
+    ) {
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Centro Segnalazioni", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text("Totale: $totaleElementi segnalazioni", color = Color.Gray, fontSize = 12.sp)
+        Text("Centro Segnalazioni", color = MaterialTheme.colorScheme.onBackground, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Totale: $totaleElementi segnalazioni", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontSize = 12.sp)
 
-        // Toggle Archivio/Da Gestire
+        // Toggle archivio / da gestire
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 onClick = {
                     mostraArchivio = false
                     viewModel.impostaStatiSegnalazioni(false)
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = if (!mostraArchivio) AccentBlue else Color.Gray),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (!mostraArchivio) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (!mostraArchivio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                ),
                 modifier = Modifier.weight(1f)
-            ) { Text("Da Gestire", color = if (!mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
+            ) { Text("Da Gestire", fontWeight = FontWeight.Bold) }
 
             Button(
                 onClick = {
                     mostraArchivio = true
                     viewModel.impostaStatiSegnalazioni(true)
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = if (mostraArchivio) AccentBlue else Color.Gray),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (mostraArchivio) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (mostraArchivio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                ),
                 modifier = Modifier.weight(1f)
-            ) { Text("Archivio", color = if (mostraArchivio) DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
+            ) { Text("Archivio", fontWeight = FontWeight.Bold) }
         }
 
         // Filtro tipo + ricerca username
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             var expanded by rememberSaveable { mutableStateOf(false) }
-            // FILTRO TIPO STILIZZATO CON FRECCIA
+
             Box(modifier = Modifier.weight(1f)) {
                 OutlinedButton(
                     onClick = { expanded = true },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = WhiteText,
-                        containerColor = CardOverlay
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, if (expanded) AccentBlue else Color.Gray)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (expanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -117,13 +132,12 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                                 "RECENSIONE" -> "Recensioni"
                                 else -> "Tutti i tipi"
                             },
-                            color = WhiteText,
                             fontSize = 12.sp
                         )
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = "Apri menu",
-                            tint = AccentBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.rotate(if (expanded) 180f else 0f)
                         )
                     }
@@ -133,52 +147,40 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
                     modifier = Modifier
-                        .background(CardOverlay)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .padding(4.dp)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Tutti i tipi", color = WhiteText) },
+                        text = { Text("Tutti i tipi", color = MaterialTheme.colorScheme.onSurface) },
                         onClick = {
                             filtroTipo = null
                             expanded = false
                             viewModel.filtraSegnalazioniPerTipo(null)
-                        },
-                        colors = MenuDefaults.itemColors(
-                            textColor = if (filtroTipo == null) AccentBlue else WhiteText
-                        )
+                        }
                     )
                     DropdownMenuItem(
-                        text = { Text("Utenti", color = WhiteText) },
+                        text = { Text("Utenti", color = MaterialTheme.colorScheme.onSurface) },
                         onClick = {
                             filtroTipo = "UTENTE"
                             expanded = false
                             viewModel.filtraSegnalazioniPerTipo("UTENTE")
-                        },
-                        colors = MenuDefaults.itemColors(
-                            textColor = if (filtroTipo == "UTENTE") AccentBlue else WhiteText
-                        )
+                        }
                     )
                     DropdownMenuItem(
-                        text = { Text("Messaggi", color = WhiteText) },
+                        text = { Text("Messaggi", color = MaterialTheme.colorScheme.onSurface) },
                         onClick = {
                             filtroTipo = "MESSAGGIO"
                             expanded = false
                             viewModel.filtraSegnalazioniPerTipo("MESSAGGIO")
-                        },
-                        colors = MenuDefaults.itemColors(
-                            textColor = if (filtroTipo == "MESSAGGIO") AccentBlue else WhiteText
-                        )
+                        }
                     )
                     DropdownMenuItem(
-                        text = { Text("Recensioni", color = WhiteText) },
+                        text = { Text("Recensioni", color = MaterialTheme.colorScheme.onSurface) },
                         onClick = {
                             filtroTipo = "RECENSIONE"
                             expanded = false
                             viewModel.filtraSegnalazioniPerTipo("RECENSIONE")
-                        },
-                        colors = MenuDefaults.itemColors(
-                            textColor = if (filtroTipo == "RECENSIONE") AccentBlue else WhiteText
-                        )
+                        }
                     )
                 }
             }
@@ -188,7 +190,7 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                 value = queryRicerca,
                 onValueChange = { queryRicerca = it },
                 modifier = Modifier.weight(1f).height(56.dp),
-                placeholder = { Text("Cerca username...", color = Color.Gray, fontSize = 12.sp) },
+                placeholder = { Text("Cerca username...", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 12.sp) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
@@ -200,7 +202,7 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                     IconButton(onClick = {
                         viewModel.cercaSegnalazioniPerUsername(queryRicerca)
                     }) {
-                        Icon(Icons.Default.Search, "Cerca", tint = AccentBlue)
+                        Icon(Icons.Default.Search, "Cerca", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 trailingIcon = {
@@ -209,16 +211,11 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                             queryRicerca = ""
                             viewModel.cercaSegnalazioniPerUsername("")
                         }) {
-                            Icon(Icons.Default.Clear, "Cancella", tint = Color.Gray)
+                            Icon(Icons.Default.Clear, "Cancella", tint = MaterialTheme.colorScheme.outline)
                         }
                     }
                 },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AccentBlue,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedTextColor = WhiteText,
-                    unfocusedTextColor = WhiteText
-                )
+                colors = textFieldColors
             )
         }
 
@@ -226,7 +223,7 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
 
         if (isLoadingSegnalazioni && segnalazioni.isEmpty()) {
             Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = AccentBlue)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else if (segnalazioniFiltrate.isEmpty()) {
             Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
@@ -234,7 +231,7 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                     text = if (queryRicerca.isNotBlank()) "Nessun risultato per \"$queryRicerca\""
                     else if (mostraArchivio) "Nessuna segnalazione in archivio."
                     else "Nessuna segnalazione da gestire.",
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
             }
         } else {
@@ -275,7 +272,7 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                     )
                 }
 
-                // ✅ PAGINAZIONE: Mostra sempre se ci sono elementi
+                // Paginazione: mostra sempre se ci sono elementi
                 if (totaleElementi > 0) {
                     item {
                         Row(
@@ -287,13 +284,14 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                                 onClick = { viewModel.paginaPrecedenteSegnalazioni() },
                                 enabled = paginaCorrente > 0,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (paginaCorrente > 0) AccentBlue else Color.Gray
+                                    containerColor = if (paginaCorrente > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (paginaCorrente > 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             ) { Text("Prec", fontSize = 14.sp) }
 
                             Text(
                                 text = "Pagina ${paginaCorrente + 1} di $totalePagine",
-                                color = WhiteText,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 fontWeight = FontWeight.Medium
                             )
 
@@ -301,7 +299,8 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                                 onClick = { viewModel.paginaSuccessivaSegnalazioni() },
                                 enabled = paginaCorrente < totalePagine - 1,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (paginaCorrente < totalePagine - 1) AccentBlue else Color.Gray
+                                    containerColor = if (paginaCorrente < totalePagine - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (paginaCorrente < totalePagine - 1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             ) { Text("Succ", fontSize = 14.sp) }
                         }
@@ -311,12 +310,12 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
         }
     }
 
-    // Dialog Risolvi
+    // Dialog risolvi
     if (mostraModaleRisolvi) {
         AlertDialog(
             onDismissRequest = { mostraModaleRisolvi = false },
-            title = { Text("Conferma Risoluzione", color = WhiteText) },
-            text = { Text("Confermi la risoluzione della segnalazione (con eventuale rimozione dell'elemento)?", color = Color.LightGray) },
+            title = { Text("Conferma Risoluzione", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Confermi la risoluzione della segnalazione (con eventuale rimozione dell'elemento)?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -331,20 +330,20 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                             )
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
                 ) { Text("Conferma") }
             },
-            dismissButton = { TextButton(onClick = { mostraModaleRisolvi = false }) { Text("Annulla", color = Color.Gray) } },
-            containerColor = DarkNavy
+            dismissButton = { TextButton(onClick = { mostraModaleRisolvi = false }) { Text("Annulla", color = MaterialTheme.colorScheme.outline) } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
-    // Dialog Banna
+    // Dialog banna
     if (mostraModaleBanna) {
         AlertDialog(
             onDismissRequest = { mostraModaleBanna = false },
-            title = { Text("⚠ ATTENZIONE BAN", color = DangerRed, fontWeight = FontWeight.Bold) },
-            text = { Text("Stai per applicare la sanzione più dura sull'elemento e sospendere definitivamente l'utente. Confermi?", color = Color.LightGray) },
+            title = { Text("⚠ ATTENZIONE BAN", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) },
+            text = { Text("Stai per applicare la sanzione più dura sull'elemento e sospendere definitivamente l'utente. Confermi?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -360,20 +359,20 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                             )
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
                 ) { Text("Sì, Banna Utente") }
             },
-            dismissButton = { TextButton(onClick = { mostraModaleBanna = false }) { Text("Annulla", color = Color.Gray) } },
-            containerColor = DarkNavy
+            dismissButton = { TextButton(onClick = { mostraModaleBanna = false }) { Text("Annulla", color = MaterialTheme.colorScheme.outline) } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
-    // Dialog Rifiuta
+    // Dialog rifiuta
     if (mostraModaleRifiuta) {
         AlertDialog(
             onDismissRequest = { mostraModaleRifiuta = false },
-            title = { Text("❌ Rifiuta Segnalazione", color = Color.Gray, fontWeight = FontWeight.Bold) },
-            text = { Text("Rifiutando questa segnalazione, l'elemento segnalato NON verrà rimosso e l'utente non riceverà alcuna sanzione. Confermi?", color = Color.LightGray) },
+            title = { Text("❌ Rifiuta Segnalazione", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
+            text = { Text("Rifiutando questa segnalazione, l'elemento segnalato NON verrà rimosso e l'utente non riceverà alcuna sanzione. Confermi?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -388,11 +387,11 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
                             )
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-                ) { Text("Rifiuta", color = WhiteText, fontWeight = FontWeight.Bold) }
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                ) { Text("Rifiuta", fontWeight = FontWeight.Bold) }
             },
-            dismissButton = { TextButton(onClick = { mostraModaleRifiuta = false }) { Text("Annulla", color = Color.Gray) } },
-            containerColor = DarkNavy
+            dismissButton = { TextButton(onClick = { mostraModaleRifiuta = false }) { Text("Annulla", color = MaterialTheme.colorScheme.outline) } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
@@ -400,16 +399,16 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
     if (mostraModaleContenuto) {
         AlertDialog(
             onDismissRequest = { mostraModaleContenuto = false },
-            title = { Text("📄 Dettagli Contenuto", color = AccentBlue, fontWeight = FontWeight.Bold) },
+            title = { Text("📄 Dettagli Contenuto", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
             text = {
                 Surface(
-                    color = DarkNavy.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.background,
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = contenutoDaVisualizzare,
-                        color = Color.LightGray,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 14.sp,
                         fontStyle = FontStyle.Italic,
                         modifier = Modifier.padding(16.dp)
@@ -419,10 +418,10 @@ fun GestioneSegnalazioniScreen(viewModel: AdminViewModel) {
             confirmButton = {
                 Button(
                     onClick = { mostraModaleContenuto = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
-                ) { Text("Chiudi", color = DarkNavy, fontWeight = FontWeight.Bold) }
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                ) { Text("Chiudi", fontWeight = FontWeight.Bold) }
             },
-            containerColor = DarkNavy
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 }
@@ -440,7 +439,7 @@ fun CartaSegnalazione(
     var isExpanded by rememberSaveable { mutableStateOf(false) }
 
     Surface(
-        color = CardOverlay,
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded }
     ) {
@@ -448,26 +447,26 @@ fun CartaSegnalazione(
             // Header
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("${segnalazione.id} - ${segnalazione.tipo}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("Inviata da: ${segnalazione.segnalatoreUsername ?: "N/D"}", color = Color.LightGray, fontSize = 12.sp)
+                    Text("${segnalazione.id} - ${segnalazione.tipo}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Inviata da: ${segnalazione.segnalatoreUsername ?: "N/D"}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 12.sp)
                 }
 
                 val (statoColore, statoTesto) = when (segnalazione.stato.toString()) {
-                    "APERTA" -> Color(0xFFF59E0B) to "APERTA"
-                    "IN_LAVORAZIONE" -> AccentBlue to "IN LAVORAZIONE"
-                    "CHIUSA" -> SuccessGreen to "RISOLTA"
-                    "RIFIUTATA" -> DangerRed to "RIFIUTATA"
-                    else -> Color.Gray to segnalazione.stato.toString()
+                    "APERTA" -> MaterialTheme.colorScheme.tertiary to "APERTA"
+                    "IN_LAVORAZIONE" -> MaterialTheme.colorScheme.primary to "IN LAVORAZIONE"
+                    "CHIUSA" -> MaterialTheme.colorScheme.primary to "RISOLTA"
+                    "RIFIUTATA" -> MaterialTheme.colorScheme.error to "RIFIUTATA"
+                    else -> MaterialTheme.colorScheme.outline to segnalazione.stato.toString()
                 }
 
                 Box(
-                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(statoColore.copy(alpha = 0.2f)).padding(horizontal = 8.dp, vertical = 4.dp)
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(statoColore.copy(alpha = 0.15f)).padding(horizontal = 8.dp, vertical = 4.dp)
                 ) { Text(statoTesto, color = statoColore, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
 
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     null,
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.rotate(if (isExpanded) 180f else 0f)
                 )
             }
@@ -475,16 +474,16 @@ fun CartaSegnalazione(
             // Dettagli espansi
             if (isExpanded) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(text = "Motivo: ${segnalazione.motivo}", color = Color(0xFFF59E0B), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text(text = segnalazione.descrizione ?: "Nessuna descrizione", color = Color.Gray, fontSize = 12.sp)
+                Text(text = "Motivo: ${segnalazione.motivo}", color = MaterialTheme.colorScheme.tertiary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(text = segnalazione.descrizione ?: "Nessuna descrizione", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f), fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // "Leggi Contenuto" SOLO per MESSAGGIO e RECENSIONE
                 if (segnalazione.tipo == "MESSAGGIO" || segnalazione.tipo == "RECENSIONE") {
                     OutlinedButton(
                         onClick = onVediContenuto,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentBlue)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(Icons.Default.Description, "Leggi contenuto", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -497,24 +496,28 @@ fun CartaSegnalazione(
             // Azioni
             if (mostraAzioni) {
                 if (segnalazione.stato.toString() == "APERTA") {
-                    Button(onClick = onPrendiInCarico, colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), modifier = Modifier.fillMaxWidth()) {
-                        Text("Prendi in carico", color = DarkNavy, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onPrendiInCarico,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Prendi in carico", fontWeight = FontWeight.Bold)
                     }
                 } else if (segnalazione.stato.toString() == "IN_LAVORAZIONE") {
                     when (segnalazione.tipo) {
                         "MESSAGGIO" -> {
-                            Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF97316)), modifier = Modifier.fillMaxWidth()) {
-                                Text("🗑️ Elimina Messaggio", color = WhiteText, fontWeight = FontWeight.Bold)
+                            Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), modifier = Modifier.fillMaxWidth()) {
+                                Text("🗑️ Elimina Messaggio", fontWeight = FontWeight.Bold)
                             }
                         }
                         "RECENSIONE" -> {
-                            Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF97316)), modifier = Modifier.fillMaxWidth()) {
-                                Text("🗑️ Elimina Recensione", color = WhiteText, fontWeight = FontWeight.Bold)
+                            Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), modifier = Modifier.fillMaxWidth()) {
+                                Text("🗑️ Elimina Recensione", fontWeight = FontWeight.Bold)
                             }
                         }
                         "UTENTE" -> {
-                            Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEAB308)), modifier = Modifier.fillMaxWidth()) {
-                                Text("⚠️ Segnala Utente", color = DarkNavy, fontWeight = FontWeight.Bold)
+                            Button(onClick = onRisolvi, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary, contentColor = MaterialTheme.colorScheme.onTertiary), modifier = Modifier.fillMaxWidth()) {
+                                Text("⚠️ Segnala Utente", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -522,16 +525,16 @@ fun CartaSegnalazione(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = onBanna, colors = ButtonDefaults.buttonColors(containerColor = DangerRed), modifier = Modifier.weight(1f)) {
+                        Button(onClick = onBanna, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), modifier = Modifier.weight(1f)) {
                             Text("⛔ Banna", fontSize = 12.sp)
                         }
-                        Button(onClick = onRifiuta, colors = ButtonDefaults.buttonColors(containerColor = Color.Gray), modifier = Modifier.weight(1f)) {
+                        Button(onClick = onRifiuta, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface), modifier = Modifier.weight(1f), border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                             Text("Rifiuta", fontSize = 12.sp)
                         }
                     }
                 }
             } else {
-                Text("Segnalazione archiviata", color = Color.Gray, fontSize = 12.sp, fontStyle = FontStyle.Italic)
+                Text("Segnalazione archiviata", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 12.sp, fontStyle = FontStyle.Italic)
             }
         }
     }

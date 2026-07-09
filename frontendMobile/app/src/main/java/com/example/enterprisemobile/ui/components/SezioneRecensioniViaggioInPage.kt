@@ -8,20 +8,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.viewmodels.CommunityViewModel
 import java.time.Instant
 import java.time.ZoneId
@@ -38,6 +36,13 @@ fun SezioneRecensioniViaggioInPage(
     context: Context
 ) {
     val recensioni by viewModel.recensioni.collectAsState()
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+    )
 
     LaunchedEffect(viaggioId) {
         if (viaggioId != -1L) {
@@ -68,7 +73,7 @@ fun SezioneRecensioniViaggioInPage(
         }
 
         viewModel.messaggioAvviso?.let { avviso ->
-            val colore = if (viewModel.tipoAvviso == "successo") SuccessGreen else MaterialTheme.colorScheme.error
+            val colore = if (viewModel.tipoAvviso == "successo") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             Surface(
                 color = colore.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp),
@@ -123,22 +128,23 @@ fun SezioneRecensioniViaggioInPage(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(value = viewModel.filtroParolaChiave, onValueChange = { viewModel.filtroParolaChiave = it }, label = { Text("Parola chiave") }, modifier = Modifier.weight(1f))
+                            OutlinedTextField(value = viewModel.filtroParolaChiave, onValueChange = { viewModel.filtroParolaChiave = it }, label = { Text("Parola chiave") }, modifier = Modifier.weight(1f), colors = textFieldColors)
                             OutlinedTextField(
                                 value = viewModel.filtroVotoEsatto,
                                 onValueChange = { if (it.isEmpty() || it.trim() in listOf("1", "2", "3", "4", "5")) viewModel.filtroVotoEsatto = it.trim() },
                                 label = { Text("Voto (1-5)") },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                colors = textFieldColors
                             )
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(modifier = Modifier.weight(1f)) {
-                                OutlinedTextField(value = viewModel.filtroDataDa, onValueChange = {}, label = { Text("Da data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
+                                OutlinedTextField(value = viewModel.filtroDataDa, onValueChange = {}, label = { Text("Da data") }, readOnly = true, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
                                 Box(modifier = Modifier.matchParentSize().clickable { dDaAperto = true })
                             }
                             Box(modifier = Modifier.weight(1f)) {
-                                OutlinedTextField(value = viewModel.filtroDataA, onValueChange = {}, label = { Text("A data") }, readOnly = true, modifier = Modifier.fillMaxWidth())
+                                OutlinedTextField(value = viewModel.filtroDataA, onValueChange = {}, label = { Text("A data") }, readOnly = true, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
                                 Box(modifier = Modifier.matchParentSize().clickable { dAAperto = true })
                             }
                         }
@@ -148,7 +154,13 @@ fun SezioneRecensioniViaggioInPage(
                                 Text("Resetta", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { viewModel.filtraRecensioni(viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
+                            Button(
+                                onClick = { viewModel.filtraRecensioni(viaggioId) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
                                 Text("Cerca")
                             }
                         }
@@ -180,14 +192,14 @@ fun SezioneRecensioniViaggioInPage(
                                 val selezionata = viewModel.votoInput >= stella
                                 Text(
                                     text = "★",
-                                    color = if (selezionata) Color(0xFFFBBF24) else Color.LightGray,
+                                    color = if (selezionata) Color(0xFFFBBF24) else MaterialTheme.colorScheme.outline,
                                     fontSize = 24.sp,
                                     modifier = Modifier.clickable { viewModel.votoInput = stella }
                                 )
                             }
                         }
 
-                        OutlinedTextField(value = viewModel.commentoInput, onValueChange = { viewModel.commentoInput = it }, label = { Text("Scrivi il tuo commento...") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                        OutlinedTextField(value = viewModel.commentoInput, onValueChange = { viewModel.commentoInput = it }, label = { Text("Scrivi il tuo commento...") }, modifier = Modifier.fillMaxWidth(), minLines = 2, colors = textFieldColors)
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                             if (viewModel.inModifica) {
@@ -196,7 +208,13 @@ fun SezioneRecensioniViaggioInPage(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                             }
-                            Button(onClick = { viewModel.aggiungiRecensione(context, viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
+                            Button(
+                                onClick = { viewModel.aggiungiRecensione(context, viaggioId) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
                                 Text(if (viewModel.inModifica) "Aggiorna" else "Invia recensione")
                             }
                         }
@@ -239,27 +257,25 @@ fun SezioneRecensioniViaggioInPage(
                             }
                             Row {
                                 (1..5).forEach { s ->
-                                    Text(text = "★", color = if (rec.voto >= s) Color(0xFFFBBF24) else Color.LightGray, fontSize = 16.sp)
+                                    Text(text = "★", color = if (rec.voto >= s) Color(0xFFFBBF24) else MaterialTheme.colorScheme.outline, fontSize = 16.sp)
                                 }
                             }
                         }
 
                         if (!rec.commento.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(rec.commento ?: "", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 19.sp)
+                            Text(rec.commento ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, lineHeight = 19.sp)
                         }
 
-                        // ✅ MODIFICATO: Controlli con pulsante Segnala
                         Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
                             if (miaRecensione) {
                                 Text(text = "Modifica", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { viewModel.avviaModifica(rec) }.padding(end = 16.dp))
                             }
 
-                            // ✅ NUOVO: Pulsante Segnala (solo per recensioni di altri utenti)
                             if (!miaRecensione) {
                                 Text(
                                     text = "🚩 Segnala",
-                                    color = Color(0xFFF97316),
+                                    color = MaterialTheme.colorScheme.error,
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier
                                         .clickable { viewModel.apriDialogSegnalazioneRecensione(rec) }
@@ -309,7 +325,6 @@ fun SezioneRecensioniViaggioInPage(
         }
     }
 
-    // ✅ NUOVO: Dialog segnalazione recensione
     if (viewModel.showSegnalazioneRecensioneDialog && viewModel.recensioneDaSegnalare != null) {
         DialogSegnalazioneRecensione(
             username = viewModel.recensioneDaSegnalare!!.utenteUsername ?: "Utente",
@@ -383,13 +398,11 @@ fun DialogSegnalazioneRecensione(
             if (!isLoading) onDismiss()
         }
     ) {
-
         Surface(
-            color = Color(0xFF1E1E2E),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(0.9f)
         ) {
-
             Column(modifier = Modifier.padding(20.dp)) {
 
                 // Header
@@ -400,7 +413,7 @@ fun DialogSegnalazioneRecensione(
                 ) {
                     Text(
                         text = "🚩 Segnala recensione",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -412,8 +425,8 @@ fun DialogSegnalazioneRecensione(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Chiudi",
-                            tint = Color.White
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -422,7 +435,7 @@ fun DialogSegnalazioneRecensione(
 
                 Text(
                     text = "di $username",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     fontSize = 14.sp
                 )
 
@@ -430,7 +443,7 @@ fun DialogSegnalazioneRecensione(
 
                 Text(
                     text = "Aiutaci a mantenere la piattaforma sicura. Seleziona il motivo per cui stai segnalando questa recensione.",
-                    color = Color.LightGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
 
@@ -438,7 +451,7 @@ fun DialogSegnalazioneRecensione(
 
                 Text(
                     text = "Motivo della segnalazione *",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
@@ -449,7 +462,6 @@ fun DialogSegnalazioneRecensione(
                     expanded = expanded,
                     onExpandedChange = { expanded = it }
                 ) {
-
                     OutlinedTextField(
                         value = when (motivo) {
                             "SPAM" -> "Spam o Truffa"
@@ -467,17 +479,17 @@ fun DialogSegnalazioneRecensione(
                             .fillMaxWidth()
                             .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B82F6),
-                            unfocusedBorderColor = Color.Gray,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
 
                     ExposedDropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color(0xFF1E1E2E))
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     ) {
                         listOf(
                             "SPAM" to "Spam o Truffa",
@@ -485,10 +497,9 @@ fun DialogSegnalazioneRecensione(
                             "FALSO" to "Contenuto Falso / Inappropriato",
                             "ALTRO" to "Altro"
                         ).forEach { (value, label) ->
-
                             DropdownMenuItem(
                                 text = {
-                                    Text(label, color = Color.White)
+                                    Text(label, color = MaterialTheme.colorScheme.onSurface)
                                 },
                                 onClick = {
                                     motivo = value
@@ -503,7 +514,7 @@ fun DialogSegnalazioneRecensione(
 
                 Text(
                     text = "Dettagli aggiuntivi (opzionale)",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
@@ -516,17 +527,17 @@ fun DialogSegnalazioneRecensione(
                     placeholder = {
                         Text(
                             "Scrivi qui i dettagli per aiutare gli amministratori...",
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.outline
                         )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF3B82F6),
-                        unfocusedBorderColor = Color.Gray,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     )
                 )
 
@@ -536,12 +547,11 @@ fun DialogSegnalazioneRecensione(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-
                     TextButton(
                         onClick = onDismiss,
                         enabled = !isLoading
                     ) {
-                        Text("Annulla", color = Color.Gray)
+                        Text("Annulla", color = MaterialTheme.colorScheme.outline)
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -552,22 +562,17 @@ fun DialogSegnalazioneRecensione(
                         },
                         enabled = motivo.isNotBlank() && !isLoading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (motivo.isNotBlank())
-                                Color(0xFFE63946)
-                            else
-                                Color.Gray
+                            containerColor = if (motivo.isNotBlank()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (motivo.isNotBlank()) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onError
                             )
                         } else {
-                            Text(
-                                "Invia Segnalazione",
-                                color = Color.White
-                            )
+                            Text("Invia Segnalazione")
                         }
                     }
                 }

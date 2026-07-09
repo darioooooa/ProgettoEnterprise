@@ -1,6 +1,5 @@
 package com.example.enterprisemobile.ui.components
 
-import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,7 +26,6 @@ import com.example.enterprisemobile.MiePrenotazioniActivity
 import com.example.enterprisemobile.ProfiloActivity
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.security.SessionManager
-import com.example.enterprisemobile.ui.theme.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,7 +43,7 @@ fun TopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(DarkNavy)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .statusBarsPadding()
             .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -54,11 +52,21 @@ fun TopBar(
         Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
             if (mostraFrecciaIndietro) {
                 Icon(
-                    Icons.Filled.ArrowBack, "Indietro", tint = WhiteText,
-                    modifier = Modifier.clickable { onBackClick() }.padding(end = 12.dp)
+                    imageVector = Icons.Filled.ArrowBack,
+                    contentDescription = "Indietro",
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .clickable { onBackClick() }
+                        .padding(end = 12.dp)
                 )
             }
-            Text(titolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
+            Text(
+                text = titolo,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -73,8 +81,20 @@ fun TopBar(
                     }
                     .padding(4.dp)
             ) {
-                Text(text = nomeUtente, color = WhiteText, fontSize = 13.sp, modifier = Modifier.padding(end = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = "Profilo", tint = WhiteText, modifier = Modifier.size(28.dp))
+                Text(
+                    text = nomeUtente,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(end = 6.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Icon(
+                    imageVector = Icons.Filled.AccountCircle,
+                    contentDescription = "Profilo",
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(28.dp)
+                )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -83,13 +103,16 @@ fun TopBar(
                 BadgedBox(
                     badge = {
                         if (notificheMenu > 0) {
-                            Badge(containerColor = DangerRed, contentColor = WhiteText) {
+                            Badge(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            ) {
                                 Text(notificheMenu.toString())
                             }
                         }
                     }
                 ) {
-                    Icon(Icons.Filled.Menu, "Menu", tint = WhiteText)
+                    Icon(Icons.Filled.Menu, "Menu", tint = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -114,7 +137,6 @@ fun EnterpriseScaffold(
     val sessionManager = SessionManager(context)
     val ruoloUtente = sessionManager.ottieniRuolo() ?: ""
     val isViaggiatore = ruoloUtente.contains("VIAGGIATORE", ignoreCase = true)
-    val isAdmin = ruoloUtente.contains("ADMIN", ignoreCase = true)
 
     var notificheAmiciFetch by remember { mutableIntStateOf(0) }
     val notificheAmici = badgeAmiciOverride ?: notificheAmiciFetch
@@ -129,6 +151,7 @@ fun EnterpriseScaffold(
                         val api = RetrofitClient.ottieniAmiciziaService(context)
                         notificheAmiciFetch = api.getRichiesteRicevute().size
                     } catch (e: Exception) {
+                        // Gestione silenziosa dell'errore di rete
                     }
                 }
             }
@@ -144,20 +167,36 @@ fun EnterpriseScaffold(
         drawerState = drawerState,
         gesturesEnabled = gesturesEnabled || drawerState.isOpen,
         drawerContent = {
-            ModalDrawerSheet(drawerContainerColor = DarkNavy, modifier = Modifier.width(300.dp)) {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                modifier = Modifier.width(300.dp)
+            ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = WhiteText, modifier = Modifier.size(64.dp))
+                    Icon(
+                        imageVector = Icons.Filled.AccountCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(64.dp)
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("$nomeUtente", color = WhiteText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = nomeUtente,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
-                HorizontalDivider(color = Color.Gray, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
 
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.Filled.Person, null, tint = WhiteText) },
-                    label = { Text("Il mio profilo", color = WhiteText, fontSize = 16.sp) },
+                    icon = { Icon(Icons.Filled.Person, null, tint = MaterialTheme.colorScheme.onSurface) },
+                    label = { Text("Il mio profilo", fontSize = 16.sp) },
                     selected = titolo == "IL MIO PROFILO",
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -165,20 +204,27 @@ fun EnterpriseScaffold(
                             context.startActivity(Intent(context, ProfiloActivity::class.java))
                         }
                     },
-                    colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        unselectedContainerColor = Color.Transparent,
+                        selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
-
 
                 if (isViaggiatore) {
                     NavigationDrawerItem(
-                        icon = { Icon(Icons.Filled.Group, null, tint = WhiteText) },
+                        icon = { Icon(Icons.Filled.Group, null, tint = MaterialTheme.colorScheme.onSurface) },
                         label = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Amici", color = WhiteText, fontSize = 16.sp)
+                                Text("Amici", fontSize = 16.sp)
 
                                 if (notificheAmici > 0) {
                                     Spacer(modifier = Modifier.width(12.dp))
-                                    Badge(containerColor = DangerRed, contentColor = WhiteText) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
+                                    ) {
                                         Text(notificheAmici.toString(), fontWeight = FontWeight.Bold)
                                     }
                                 }
@@ -191,11 +237,17 @@ fun EnterpriseScaffold(
                                 context.startActivity(Intent(context, AmiciziaActivity::class.java))
                             }
                         },
-                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
+                        colors = NavigationDrawerItemDefaults.colors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedContainerColor = Color.Transparent,
+                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
+
                     NavigationDrawerItem(
-                        icon = { Icon(Icons.Filled.List, null, tint = WhiteText) },
-                        label = { Text("Le Mie Prenotazioni", color = WhiteText, fontSize = 16.sp) },
+                        icon = { Icon(Icons.Filled.List, null, tint = MaterialTheme.colorScheme.onSurface) },
+                        label = { Text("Le Mie Prenotazioni", fontSize = 16.sp) },
                         selected = titolo == "I MIEI VIAGGI",
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -203,12 +255,17 @@ fun EnterpriseScaffold(
                                 context.startActivity(Intent(context, MiePrenotazioniActivity::class.java))
                             }
                         },
-                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
+                        colors = NavigationDrawerItemDefaults.colors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedContainerColor = Color.Transparent,
+                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
 
                     NavigationDrawerItem(
-                        icon = { Icon(Icons.Filled.Work, null, tint = WhiteText) },
-                        label = { Text("Diventa Organizzatore", color = WhiteText, fontSize = 16.sp) },
+                        icon = { Icon(Icons.Filled.Work, null, tint = MaterialTheme.colorScheme.onSurface) },
+                        label = { Text("Diventa Organizzatore", fontSize = 16.sp) },
                         selected = titolo == "DIVENTA ORGANIZZATORE",
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -216,15 +273,20 @@ fun EnterpriseScaffold(
                                 context.startActivity(Intent(context, DiventaOrganizzatoreActivity::class.java))
                             }
                         },
-                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = CardOverlay, unselectedContainerColor = Color.Transparent)
+                        colors = NavigationDrawerItemDefaults.colors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedContainerColor = Color.Transparent,
+                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = DangerRed) },
-                    label = { Text("Disconnetti", color = DangerRed, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = MaterialTheme.colorScheme.error) },
+                    label = { Text("Disconnetti", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -237,7 +299,10 @@ fun EnterpriseScaffold(
                         }
                         context.startActivity(intent)
                     },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent),
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedContainerColor = Color.Transparent,
+                        unselectedTextColor = MaterialTheme.colorScheme.error
+                    ),
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
             }

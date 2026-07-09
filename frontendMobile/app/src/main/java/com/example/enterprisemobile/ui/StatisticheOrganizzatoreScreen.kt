@@ -100,7 +100,7 @@ fun StatisticheOrganizzatoreScreen(viewModel: StatisticheOrganizzatoreViewModel)
                     val guadagnoMostrato = viewModel.guadagni[viewModel.filtroGuadagni] ?: 0.0
                     Text(
                         text = if (viewModel.isLoading) "Calcolo in corso..." else "€ ${String.format("%.2f", guadagnoMostrato)}",
-                        color = SuccessGreen,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -201,13 +201,13 @@ fun StatisticheOrganizzatoreScreen(viewModel: StatisticheOrganizzatoreViewModel)
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
                                     "€ ${String.format("%.2f", totaleRicavo)}",
-                                    color = SuccessGreen,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp
                                 )
                                 Text(
                                     "${totalePostiVenduti} pax",
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = MaterialTheme.colorScheme.secondary,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -276,13 +276,13 @@ fun ViaggioRigaCard(viaggio: RigaViaggioStat) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     "€ ${String.format("%.2f", viaggio.ricavo)}",
-                    color = SuccessGreen,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Text(
                     "${viaggio.postiVenduti} pax",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
