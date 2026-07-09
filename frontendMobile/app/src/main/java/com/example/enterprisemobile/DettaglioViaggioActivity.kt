@@ -136,17 +136,33 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                 }
 
                 item {
-                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                        Text(
-                            text = viaggio.titolo ?: "Dettaglio viaggio",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 16.dp, end = 16.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = viaggio.titolo ?: "Dettaglio viaggio",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            if (!viewModel.isMioViaggio() && viewModel.mioRuolo == "ROLE_VIAGGIATORE") {
+                                FilledTonalIconButton(
+                                    onClick = { mostraModaleSceltaItinerario = true },
+                                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    ),
+                                    modifier = Modifier.padding(start = 8.dp)
+                                ) {
+                                    Text("＋", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = viaggio.descrizione
-                                ?: "Nessuna descrizione fornita per questo itinerario.",
+                            text = viaggio.descrizione ?: "Nessuna descrizione fornita per questo itinerario.",
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                             fontSize = 14.sp,
                             lineHeight = 20.sp
@@ -241,27 +257,14 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                     }
                                 }
 
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Button(
-                                        onClick = { mostraModaleSceltaItinerario = true },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                        ),
-                                        contentPadding = PaddingValues(horizontal = 14.dp)
-                                    ) {
-                                        Text("＋ Lista", fontWeight = FontWeight.Bold)
-                                    }
-
-                                    Button(
-                                        onClick = { viewModel.scaricaFileIcs() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.outline),
-                                        contentPadding = PaddingValues(
-                                            horizontal = 12.dp,
-                                            vertical = 6.dp
-                                        )
-                                    ) { Text("📅 Esporta calendario", fontSize = 12.sp) }
-                                }
+                                Button(
+                                    onClick = { viewModel.scaricaFileIcs() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.outline),
+                                    contentPadding = PaddingValues(
+                                        horizontal = 12.dp,
+                                        vertical = 6.dp
+                                    )
+                                ) { Text("📅 Esporta calendario", fontSize = 12.sp) }
                             }
                         }
                     }

@@ -16,7 +16,7 @@ data class MessaggioChatDTO(
     val contenutoDelMessaggio: String,
 
     @SerializedName("dataInvio")
-    val dataDiSpedizione: String? = null,
+    val dataDiSpedizione: Any? = null,
 
     @SerializedName("mittenteId")
     val identificativoDelMittente: Long

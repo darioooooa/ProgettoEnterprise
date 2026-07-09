@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.core.content.ContextCompat
+import androidx.activity.compose.BackHandler
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.repository.PrenotazioneRepository
@@ -194,6 +195,20 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
         }
     }
 
+    BackHandler(enabled = selectedItem != 0 || identificativoStanzaSelezionata != null || vistaDashboard == "PRENOTAZIONI") {
+        if (selectedItem == 2 && identificativoStanzaSelezionata != null) {
+            // Se l'organizzatore ha una chat aperta, torna alla lista delle conversazioni
+            identificativoStanzaSelezionata = null
+        } else if (selectedItem == 0 && vistaDashboard == "PRENOTAZIONI") {
+            // Se l'organizzatore è nella home ma guarda la sottoscheda prenotazioni, torna alla mappa
+            vistaDashboard = "MAPPA"
+        } else {
+            // In tutti gli altri casi (statistiche o lista messaggi), ritorna alla Home/Mappa
+            selectedItem = 0
+            vistaDashboard = "MAPPA"
+        }
+    }
+
     LaunchedEffect(vistaDashboard) {
         if (vistaDashboard == "PRENOTAZIONI" && prenotazioni.isEmpty()) {
             viewModel.caricaPrenotazioniOrganizzatore(0)
@@ -222,7 +237,12 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                         },
                         label = { Text(item, fontSize = 12.sp) },
                         selected = selectedItem == index,
-                        onClick = { selectedItem = index },
+                        onClick = {
+                            if (selectedItem != index) {
+                                identificativoStanzaSelezionata = null
+                                selectedItem = index
+                            }
+                        },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = WhiteText,
                             unselectedIconColor = Color.Gray,
@@ -667,7 +687,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                             ) { Text(text = "⬅ Torna alla lista delle chat", color = AccentBlue) }
 
-                            // ✅ MERGE: SchermataDellaChat con i parametri per l'organizzatore
+                            // SchermataDellaChat con i parametri per l'organizzatore
                             SchermataDellaChat(
                                 modelloDiVistaChat = modelloDiVistaChat,
                                 identificativoDellaStanza = identificativoStanzaSelezionata!!,
