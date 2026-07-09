@@ -40,6 +40,9 @@ export class SchermataHomeComponent implements OnInit {
   modaleItinerarioAperta = false;
 
   isLoading: boolean = false;
+  viaggiConsigliati: any[] = [];
+  isLoadingConsigliati: boolean = false;
+  erroreConsigliati: string | null = null;
 
   constructor(
     private servAuth: AutenticazioneService,
@@ -58,6 +61,7 @@ export class SchermataHomeComponent implements OnInit {
 
     if (this.isLoggato()) {
       this.caricaItinerariUtente();
+      this.caricaViaggiConsigliati();
     }
   }
 
@@ -82,6 +86,35 @@ export class SchermataHomeComponent implements OnInit {
       },
       error: (err) => console.error("Ops, errore nel caricamento degli itinerari", err)
     });
+  }
+  caricaViaggiConsigliati() {
+    if (!this.isLoggato()) return;
+    this.isLoadingConsigliati = true;
+    this.erroreConsigliati = null;
+
+    this.viaggioService.getViaggiConsigliati().subscribe({
+      next: (viaggi) => {
+        this.viaggiConsigliati = viaggi || [];
+        this.isLoadingConsigliati = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Errore nel caricamento dei viaggi consigliati', err);
+        this.erroreConsigliati = 'Impossibile caricare i consigli';
+        this.isLoadingConsigliati = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  aggiornaConsigliati() {
+    this.caricaViaggiConsigliati();
+  }
+  vaiADettaglioViaggio(viaggioId: number, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.navigatore.navigate(['/viaggi', viaggioId]);
   }
 
   avviaRicercaViaggi(evento?: Event) {

@@ -54,6 +54,42 @@
           <div class="input-group" style="visibility: hidden;"></div>
         </div>
 
+        <div class="tag-section">
+          <fieldset class="tag-fieldset">
+            <legend>🏷️ Tag del Viaggio <span class="tag-counter">({{ tagSelezionati.length }}/{{ maxTagSelezionabili }} selezionati)</span></legend>
+
+            <div class="tag-info">
+              <p>Seleziona da {{ minTagRichiesti }} a {{ maxTagSelezionabili }} tag per descrivere il tuo viaggio</p>
+              <span class="tag-obbligatorio">*</span>
+            </div>
+
+            <div class="tag-grid" *ngIf="!isLoadingTag">
+              <div
+                *ngFor="let tag of tagDisponibili"
+                class="tag-chip"
+                [class.tag-selezionato]="isTagSelezionato(tag)"
+                [class.tag-disabilitato]="!puoSelezionareTag() && !isTagSelezionato(tag)"
+                (click)="toggleTag(tag)">
+                <span class="tag-icon">{{ getTagIcon(tag) }}</span>
+                <span class="tag-label">{{ tag }}</span>
+                <span class="tag-check" *ngIf="isTagSelezionato(tag)">✓</span>
+              </div>
+            </div>
+
+            <div class="loading-tag" *ngIf="isLoadingTag">
+              <div class="spinner-tag"></div>
+              <p>Caricamento tag...</p>
+            </div>
+
+            <div class="tag-selezionati-preview" *ngIf="tagSelezionati.length > 0">
+              <strong>Tag selezionati:</strong>
+              <span *ngFor="let tag of tagSelezionati; let last = last" class="tag-preview-item">
+        {{ getTagIcon(tag) }} {{ tag }}<span *ngIf="!last">,</span>
+      </span>
+            </div>
+          </fieldset>
+        </div>
+
         <fieldset class="itinerary-section">
           <legend>Tappe del Viaggio</legend>
 

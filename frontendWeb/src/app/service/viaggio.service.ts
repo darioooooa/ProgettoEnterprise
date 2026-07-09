@@ -132,4 +132,10 @@ export class ViaggioService {
   modificaViaggio(id: number, viaggioDTO: any): Observable<any> {
     return this.http.put<any>(`${this.API_URL}/${id}`, viaggioDTO);
   }
+  getViaggiConsigliati(): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/consigliati`);
+  }
+  getTagDisponibili(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.API_URL}/tag`);
+  }
 }

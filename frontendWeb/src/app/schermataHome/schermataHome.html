@@ -67,6 +67,77 @@
     </div>
   </div>
 </section>
+<section class="sezione-consigliati" *ngIf="!haCercato && isLoggato()">
+  <div class="container-consigliati">
+    <div class="header-consigliati">
+      <h2 class="titolo-consigliati">
+        <span class="emoji-sparkle">✨</span> Consigliati per te
+      </h2>
+      <button
+        class="btn-aggiorna"
+        (click)="caricaViaggiConsigliati()"
+        [disabled]="isLoadingConsigliati">
+        {{ isLoadingConsigliati ? '⏳ Caricamento...' : '🔄 Aggiorna' }}
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-consigliati" *ngIf="isLoadingConsigliati">
+      <div class="spinner-consigliati"></div>
+      <p>Stiamo selezionando i migliori viaggi per te...</p>
+    </div>
+
+    <!-- Errore -->
+    <div class="errore-consigliati" *ngIf="erroreConsigliati && !isLoadingConsigliati">
+      <p>⚠️ {{ erroreConsigliati }}</p>
+      <button class="btn-riprova" (click)="caricaViaggiConsigliati()">Riprova</button>
+    </div>
+
+    <div class="vuoto-consigliati" *ngIf="!isLoadingConsigliati && !erroreConsigliati && viaggiConsigliati.length === 0">
+      <div class="icon-vuoto">💡</div>
+      <h3>Inizia a salvare i tuoi preferiti!</h3>
+      <p>Aggiungi viaggi ai tuoi itinerari per ricevere consigli personalizzati basati sui tuoi gusti.</p>
+    </div>
+
+    <div class="scroll-consigliati" *ngIf="!isLoadingConsigliati && !erroreConsigliati && viaggiConsigliati.length > 0">
+      <div
+        class="card-consigliato"
+        *ngFor="let viaggio of viaggiConsigliati"
+        (click)="vaiADettaglioViaggio(viaggio.id)">
+
+        <div class="card-consigliato-header">
+          <h3 class="titolo-consigliato">{{ viaggio.titolo }}</h3>
+          <span class="destinazione-consigliato">🌍 {{ viaggio.destinazione }}</span>
+        </div>
+
+        <div class="card-consigliato-body">
+          <div class="info-consigliato">
+            <span class="prezzo-consigliato">{{ viaggio.prezzo }}€</span>
+            <span class="data-consigliato" *ngIf="viaggio.dataInizio">
+          {{ viaggio.dataInizio | date:'dd/MM/yyyy' }}
+        </span>
+          </div>
+
+          <div class="tags-consigliato" *ngIf="viaggio.tags && viaggio.tags.length > 0">
+        <span class="tag-chip" *ngFor="let tag of viaggio.tags.slice(0, 3)">
+          {{ tag }}
+        </span>
+          </div>
+
+          <div class="posti-consigliato" *ngIf="calcolaPostiRimanenti(viaggio) > 0 && calcolaPostiRimanenti(viaggio) <= 3">
+            ⚠️ Solo {{ calcolaPostiRimanenti(viaggio) }} {{ calcolaPostiRimanenti(viaggio) === 1 ? 'posto' : 'posti' }} rimanent{{ calcolaPostiRimanenti(viaggio) === 1 ? 'e' : 'i' }}!
+          </div>
+        </div>
+
+        <button
+          class="btn-prenota-consigliato"
+          (click)="vaiAPrenotazione(viaggio.id, $event)">
+          Prenota Ora
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="destinations" *ngIf="haCercato" style="background-color: #f9f9f9; padding-top: 40px;">
   <h2>Risultati della tua ricerca</h2>
