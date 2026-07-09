@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
@@ -21,21 +22,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.activity.compose.BackHandler
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import com.example.enterprisemobile.ui.theme.*
-import com.example.enterprisemobile.viewmodels.ViaggioViewModel
-import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
-import com.example.enterprisemobile.ui.components.EnterpriseScaffold
 import com.example.enterprisemobile.ui.ItinerariScreen
+import com.example.enterprisemobile.ui.components.EnterpriseScaffold
+import com.example.enterprisemobile.ui.components.SchermataDellaChat
+import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.ChatViewModel
 import com.example.enterprisemobile.viewmodels.GeneratoreChatViewModel
-import com.example.enterprisemobile.ui.components.SchermataDellaChat
+import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
+import com.example.enterprisemobile.viewmodels.ViaggioViewModel
 
 class HomeViaggiatoreActivity : ComponentActivity() {
     private val viaggioViewModel: ViaggioViewModel by viewModels()
@@ -83,7 +83,6 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
         itinerarioViewModel.caricaItinerari()
         modelloDiVistaChat.caricaLeMieStanze(viewModel.nomeUtente)
         modelloDiVistaChat.attivaAscoltoNotifiche(viewModel.nomeUtente)
-        // Carica i viaggi consigliati all'avvio della Home
         viewModel.caricaViaggiConsigliati()
     }
 
@@ -146,7 +145,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
                 .padding(innerPadding)
         ) {
             when (selectedItem) {
@@ -161,7 +160,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CircularProgressIndicator()
+                                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                                 }
                             } else if (viewModel.erroreConsigliati != null) {
                                 Card(
@@ -191,7 +190,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                             color = MaterialTheme.colorScheme.onBackground
                                         )
                                         TextButton(onClick = { viewModel.caricaViaggiConsigliati() }) {
-                                            Text("Aggiorna", fontSize = 12.sp)
+                                            Text("Aggiorna", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                                         }
                                     }
                                     LazyRow(
@@ -467,8 +466,9 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                                 prezzoMin, prezzoMax, viewModel.paginaCorrente - 1
                                             )
                                         },
-                                        enabled = viewModel.paginaCorrente > 0
-                                    ) { Text("Prec") }
+                                        enabled = viewModel.paginaCorrente > 0,
+                                        colors = ButtonDefaults.buttonColors(containerColor = if (viewModel.paginaCorrente > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                    ) { Text("Prec", color = if (viewModel.paginaCorrente > 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant) }
                                     Text(
                                         text = "Pagina ${viewModel.paginaCorrente + 1} di ${viewModel.totalePagine.coerceAtLeast(1)}",
                                         color = MaterialTheme.colorScheme.onSurface,
@@ -481,8 +481,9 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                                 prezzoMin, prezzoMax, viewModel.paginaCorrente + 1
                                             )
                                         },
-                                        enabled = viewModel.paginaCorrente < viewModel.totalePagine - 1
-                                    ) { Text("Succ") }
+                                        enabled = viewModel.paginaCorrente < viewModel.totalePagine - 1,
+                                        colors = ButtonDefaults.buttonColors(containerColor = if (viewModel.paginaCorrente < viewModel.totalePagine - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                    ) { Text("Succ", color = if (viewModel.paginaCorrente < viewModel.totalePagine - 1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant) }
                                 }
                             }
                         }
@@ -559,7 +560,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                 },
                                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                             ) {
-                                Text(text = "⬅ Torna alla lista delle chat")
+                                Text(text = "⬅ Torna alla lista delle chat", color = MaterialTheme.colorScheme.primary)
                             }
                             SchermataDellaChat(
                                 modelloDiVistaChat = modelloDiVistaChat,
@@ -579,16 +580,17 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                     title = {
                         Text(
                             "Salva nei tuoi itinerari",
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text("Seleziona una delle tue liste di viaggio:")
+                            Text("Seleziona una delle tue liste di viaggio:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (mieiItinerari.isEmpty()) {
                                 Text(
                                     "Non hai ancora creato nessun itinerario personale.",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                     fontSize = 13.sp
                                 )
                             } else {
@@ -641,7 +643,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                Text(itn.nome, fontWeight = FontWeight.Medium)
+                                                Text(itn.nome, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                                 if (giaPresente) {
                                                     Text(
                                                         "Già incluso",
@@ -659,11 +661,12 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                     },
                     confirmButton = {
                         if (isItinerarioLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
                         } else {
-                            TextButton(onClick = { mostraModaleSceltaItinerario = false }) { Text("Chiudi") }
+                            TextButton(onClick = { mostraModaleSceltaItinerario = false }) { Text("Chiudi", color = MaterialTheme.colorScheme.primary) }
                         }
-                    }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 )
             }
         }
@@ -682,6 +685,12 @@ fun SearchInput(
         onValueChange = onValueChange,
         label = { Text(label) },
         modifier = modifier,
-        singleLine = true
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+        )
     )
 }

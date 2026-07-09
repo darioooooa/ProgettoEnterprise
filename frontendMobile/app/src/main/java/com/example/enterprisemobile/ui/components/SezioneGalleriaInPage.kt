@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.viewmodels.GalleriaViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -55,7 +54,7 @@ fun SezioneGalleriaInPage(
 
         // Banner di avviso temporaneo interno della galleria
         viewModel.messaggioAvviso?.let { avviso ->
-            val coloreBanner = if (viewModel.tipoAvviso == "successo") SuccessGreen else MaterialTheme.colorScheme.error
+            val coloreBanner = if (viewModel.tipoAvviso == "successo") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             Surface(
                 color = coloreBanner.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp),
@@ -95,7 +94,9 @@ fun SezioneGalleriaInPage(
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
 
@@ -118,7 +119,10 @@ fun SezioneGalleriaInPage(
 
                         Button(
                             onClick = { viewModel.aggiungiImmagine(context, viaggioId) },
-                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         ) {
                             Text("Invia foto", fontSize = 13.sp)
                         }
@@ -205,7 +209,7 @@ fun SezioneGalleriaInPage(
 
                             // Badge modifica visibilità per l'organizzatore
                             if (isMioViaggio) {
-                                val coloreBadge = if (fotoAttiva.pubblica) SuccessGreen else MaterialTheme.colorScheme.outline
+                                val coloreBadge = if (fotoAttiva.pubblica) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                                 Surface(
                                     color = coloreBadge,
                                     shape = RoundedCornerShape(12.dp),
@@ -216,7 +220,7 @@ fun SezioneGalleriaInPage(
                                 ) {
                                     Text(
                                         text = if (fotoAttiva.pubblica) "👁️ Pubblica" else "🔒 Privata",
-                                        color = Color.White,
+                                        color = if (fotoAttiva.pubblica) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline,
                                         fontSize = 11.sp,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
@@ -233,13 +237,13 @@ fun SezioneGalleriaInPage(
                         Button(
                             onClick = { viewModel.cancellaImmagine(context, viaggioId, fotoAttiva.id) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (inAttesaConferma) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
+                                containerColor = if (inAttesaConferma) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (inAttesaConferma) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             modifier = Modifier.fillMaxWidth(0.8f)
                         ) {
                             Text(
                                 text = if (inAttesaConferma) "Conferma eliminazione" else "Elimina questa foto",
-                                color = Color.White,
                                 fontWeight = FontWeight.Bold
                             )
                         }

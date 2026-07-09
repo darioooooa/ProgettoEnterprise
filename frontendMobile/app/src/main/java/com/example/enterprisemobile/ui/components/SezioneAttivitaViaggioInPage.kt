@@ -17,12 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.viewmodels.ProgrammaViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SezioneAttivitaViaggioInPage(
     viewModel: ProgrammaViewModel,
@@ -47,6 +47,13 @@ fun SezioneAttivitaViaggioInPage(
 
     var filtriEspansi by remember { mutableStateOf(false) }
 
+    val outlinedTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+    )
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -68,7 +75,7 @@ fun SezioneAttivitaViaggioInPage(
 
         // Banner messaggi d'errore o successo interni
         viewModel.messaggioAvviso?.let { avviso ->
-            val colore = if (viewModel.tipoAvviso == "successo") SuccessGreen else MaterialTheme.colorScheme.error
+            val colore = if (viewModel.tipoAvviso == "successo") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             Surface(
                 color = colore.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp),
@@ -125,13 +132,13 @@ fun SezioneAttivitaViaggioInPage(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(value = viewModel.filtroTitolo, onValueChange = { viewModel.filtroTitolo = it }, label = { Text("Titolo") }, modifier = Modifier.weight(1f))
-                            OutlinedTextField(value = viewModel.filtroPosizione, onValueChange = { viewModel.filtroPosizione = it }, label = { Text("Luogo") }, modifier = Modifier.weight(1f))
+                            OutlinedTextField(value = viewModel.filtroTitolo, onValueChange = { viewModel.filtroTitolo = it }, label = { Text("Titolo") }, modifier = Modifier.weight(1f), colors = outlinedTextFieldColors)
+                            OutlinedTextField(value = viewModel.filtroPosizione, onValueChange = { viewModel.filtroPosizione = it }, label = { Text("Luogo") }, modifier = Modifier.weight(1f), colors = outlinedTextFieldColors)
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(value = viewModel.filtroCostoMin, onValueChange = { viewModel.filtroCostoMin = it }, label = { Text("€ Min") }, modifier = Modifier.weight(1f))
-                            OutlinedTextField(value = viewModel.filtroCostoMax, onValueChange = { viewModel.filtroCostoMax = it }, label = { Text("€ Max") }, modifier = Modifier.weight(1f))
+                            OutlinedTextField(value = viewModel.filtroCostoMin, onValueChange = { viewModel.filtroCostoMin = it }, label = { Text("€ Min") }, modifier = Modifier.weight(1f), colors = outlinedTextFieldColors)
+                            OutlinedTextField(value = viewModel.filtroCostoMax, onValueChange = { viewModel.filtroCostoMax = it }, label = { Text("€ Max") }, modifier = Modifier.weight(1f), colors = outlinedTextFieldColors)
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -142,7 +149,8 @@ fun SezioneAttivitaViaggioInPage(
                                     onValueChange = {},
                                     label = { Text("Dal giorno") },
                                     readOnly = true,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = outlinedTextFieldColors
                                 )
                                 Box(
                                     modifier = Modifier
@@ -157,7 +165,8 @@ fun SezioneAttivitaViaggioInPage(
                                     onValueChange = {},
                                     label = { Text("Al giorno") },
                                     readOnly = true,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = outlinedTextFieldColors
                                 )
                                 Box(
                                     modifier = Modifier
@@ -167,12 +176,17 @@ fun SezioneAttivitaViaggioInPage(
                             }
                         }
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             TextButton(onClick = { viewModel.pulisciFiltriAttivita(viaggioId) }) {
                                 Text("Resetta", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { viewModel.filtraAttivita(viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
+                            Button(
+                                onClick = { viewModel.filtraAttivita(viaggioId) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
                                 Text("Cerca")
                             }
                         }
@@ -195,8 +209,8 @@ fun SezioneAttivitaViaggioInPage(
                         fontWeight = FontWeight.Bold
                     )
 
-                    OutlinedTextField(value = viewModel.titoloInput, onValueChange = { viewModel.titoloInput = it }, label = { Text("Titolo attività *") }, modifier = Modifier.fillMaxWidth())
-                    OutlinedTextField(value = viewModel.posizioneInput, onValueChange = { viewModel.posizioneInput = it }, label = { Text("Posizione / Luogo *") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = viewModel.titoloInput, onValueChange = { viewModel.titoloInput = it }, label = { Text("Titolo attività *") }, modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColors)
+                    OutlinedTextField(value = viewModel.posizioneInput, onValueChange = { viewModel.posizioneInput = it }, label = { Text("Posizione / Luogo *") }, modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColors)
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         // Form data inizio tappa
@@ -206,7 +220,8 @@ fun SezioneAttivitaViaggioInPage(
                                 onValueChange = {},
                                 label = { Text("Inizio *") },
                                 readOnly = true,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = outlinedTextFieldColors
                             )
                             Box(
                                 modifier = Modifier
@@ -221,7 +236,8 @@ fun SezioneAttivitaViaggioInPage(
                                 onValueChange = {},
                                 label = { Text("Fine *") },
                                 readOnly = true,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = outlinedTextFieldColors
                             )
                             Box(
                                 modifier = Modifier
@@ -236,9 +252,10 @@ fun SezioneAttivitaViaggioInPage(
                         onValueChange = { viewModel.costoInput = it },
                         label = { Text("Costo (€)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = outlinedTextFieldColors
                     )
-                    OutlinedTextField(value = viewModel.descrizioneInput, onValueChange = { viewModel.descrizioneInput = it }, label = { Text("Descrizione") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = viewModel.descrizioneInput, onValueChange = { viewModel.descrizioneInput = it }, label = { Text("Descrizione") }, modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColors)
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                         if (viewModel.attivitaInModifica) {
@@ -247,7 +264,13 @@ fun SezioneAttivitaViaggioInPage(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Button(onClick = { viewModel.aggiungiTappaProgramma(context, viaggioId) }, colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)) {
+                        Button(
+                            onClick = { viewModel.aggiungiTappaProgramma(context, viaggioId) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
                             Text(if (viewModel.attivitaInModifica) "Aggiorna" else "Salva tappa")
                         }
                     }
@@ -265,20 +288,20 @@ fun SezioneAttivitaViaggioInPage(
         } else {
             tappe.forEach { att ->
                 Surface(
-                    color = MaterialTheme.colorScheme.surface,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(att.titolo, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(att.titolo, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         if (!att.descrizione.isNullOrBlank()) {
-                            Text(att.descrizione, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                            Text(att.descrizione, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("🕒 ${att.orarioInizio.replace("T", " ")}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                            Text("📍 ${att.posizione}", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
-                            Text("💰 ${if (att.costo > 0) "€ ${att.costo}" else "Gratuito"}", color = SuccessGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("📍 ${att.posizione}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 12.sp)
+                            Text("💰 ${if (att.costo > 0) "€ ${att.costo}" else "Gratuito"}", color = MaterialTheme.colorScheme.tertiary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
 
                         if (isMioViaggio) {

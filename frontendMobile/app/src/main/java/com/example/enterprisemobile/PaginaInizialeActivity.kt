@@ -14,7 +14,10 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SchermataLanding(onNavigaALogin: () -> Unit, onNavigaARegistrazione: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -41,7 +44,7 @@ fun SchermataLanding(onNavigaALogin: () -> Unit, onNavigaARegistrazione: () -> U
             onClick = onNavigaARegistrazione,
             modifier = Modifier.fillMaxWidth().height(50.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.outline
+                contentColor = MaterialTheme.colorScheme.primary
             ),
             border = androidx.compose.foundation.BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline )
         ) {

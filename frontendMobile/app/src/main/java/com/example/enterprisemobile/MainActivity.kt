@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
             EnterpriseMobileTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background.copy(alpha = 1f)
                 ) {
                     var schermataAttuale by remember { mutableStateOf(SchermataIniziale.LANDING) }
 

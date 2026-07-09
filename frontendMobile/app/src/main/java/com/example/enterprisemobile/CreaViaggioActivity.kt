@@ -10,6 +10,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,7 +39,7 @@ import com.example.enterprisemobile.viewmodels.TappaState
 import java.util.Calendar
 import java.util.Locale
 
-// ===== MAPPA EMOJI PER I TAG =====
+// Mappa emoji per i tag
 val emojiMap = mapOf(
     "Mare" to "🏖️",
     "Montagna" to "🏔️",
@@ -53,19 +54,19 @@ val emojiMap = mapOf(
     "Estate" to "☀️"
 )
 
-// ===== MAPPA COLORI PER I TAG (adattati al tema scuro) =====
+// Mappa colori per i tag
 val colorMap = mapOf(
-    "Mare" to Color(0xFF60A5FA),         // Blu chiaro
-    "Montagna" to Color(0xFF34D399),     // Verde chiaro
-    "Città d'arte" to Color(0xFFA78BFA), // Viola chiaro
-    "Relax" to Color(0xFFF472B6),        // Rosa chiaro
-    "Avventura" to Color(0xFFFB923C),    // Arancione chiaro
-    "Cultura" to Color(0xFF818CF8),      // Indaco chiaro
-    "Enogastronomia" to Color(0xFFF87171), // Rosso chiaro
-    "Economico" to Color(0xFF34D399),    // Verde
-    "Lusso" to Color(0xFFFBBF24),        // Oro
-    "Inverno" to Color(0xFF22D3EE),      // Azzurro chiaro
-    "Estate" to Color(0xFFFCD34D)        // Giallo chiaro
+    "Mare" to Color(0xFF60A5FA),
+    "Montagna" to Color(0xFF34D399),
+    "Città d'arte" to Color(0xFFA78BFA),
+    "Relax" to Color(0xFFF472B6),
+    "Avventura" to Color(0xFFFB923C),
+    "Cultura" to Color(0xFF818CF8),
+    "Enogastronomia" to Color(0xFFF87171),
+    "Economico" to Color(0xFF34D399),
+    "Lusso" to Color(0xFFFBBF24),
+    "Inverno" to Color(0xFF22D3EE),
+    "Estate" to Color(0xFFFCD34D)
 )
 
 class CreaViaggioActivity : ComponentActivity() {
@@ -100,8 +101,6 @@ class CreaViaggioActivity : ComponentActivity() {
         }
     }
 }
-
-// --- FUNZIONI DI SUPPORTO ---
 
 fun apriDatePicker(context: Context, onDateSelected: (String) -> Unit) {
     val calendar = Calendar.getInstance()
@@ -164,8 +163,6 @@ fun formattaPerDisplay(dataBackend: String): String {
     }
 }
 
-// --- COMPONENTI UI STILIZZATI (TEMA SCURO) ---
-
 @Composable
 fun EnterpriseTextField(
     value: String,
@@ -177,19 +174,19 @@ fun EnterpriseTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(text = label, fontWeight = FontWeight.SemiBold, color = Color.LightGray) },
+        label = { Text(text = label, fontWeight = FontWeight.SemiBold) },
         modifier = modifier.fillMaxWidth(),
         readOnly = readOnly,
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = DarkNavy.copy(alpha = 0.5f),
-            unfocusedContainerColor = DarkNavy.copy(alpha = 0.5f),
-            focusedBorderColor = AccentBlue,
-            unfocusedBorderColor = Color.Gray,
-            focusedLabelColor = AccentBlue,
-            unfocusedLabelColor = Color.LightGray,
-            focusedTextColor = WhiteText,
-            unfocusedTextColor = WhiteText
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         )
     )
 }
@@ -218,7 +215,7 @@ fun CampoDataClickabile(
     }
 }
 
-// ===== COMPONENTE TAG CON EMOJI E COLORI (TEMA SCURO) =====
+// Componente tag con emoji e colori
 @Composable
 fun TagChip(
     tag: String,
@@ -230,15 +227,15 @@ fun TagChip(
     val colore = colorMap[tag] ?: Color.Gray
 
     val backgroundColor = if (isSelected) {
-        colore.copy(alpha = 0.85f) // Colore pieno ma leggermente trasparente per tema scuro
+        colore.copy(alpha = 0.85f)
     } else {
-        colore.copy(alpha = 0.15f) // Pastello scuro
+        colore.copy(alpha = 0.15f)
     }
 
     val textColor = if (isSelected) {
         Color.White
     } else {
-        WhiteText.copy(alpha = 0.85f)
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
     }
 
     val borderColor = if (isSelected) {
@@ -254,7 +251,7 @@ fun TagChip(
         shape = RoundedCornerShape(14.dp),
         color = backgroundColor,
         border = borderColor,
-        shadowElevation = if (isSelected) 6.dp else 0.dp
+        shadowElevation = if (isSelected) 4.dp else 0.dp
     ) {
         Column(
             modifier = Modifier
@@ -279,7 +276,7 @@ fun TagChip(
     }
 }
 
-// --- SCHERMATA PRINCIPALE ---
+// Schermata principale
 
 @Composable
 fun CreaViaggioScreen(
@@ -305,7 +302,6 @@ fun CreaViaggioScreen(
     val tagSelezionati by viewModel.tagSelezionati.collectAsState()
     val isLoadingTag by viewModel.isLoadingTag.collectAsState()
 
-    // EnterpriseScaffold con titolo vuoto e nome utente dinamico
     EnterpriseScaffold(
         titolo = "",
         nomeUtente = nomeUtente,
@@ -315,7 +311,7 @@ fun CreaViaggioScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(DarkNavy)
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
                 .padding(innerPadding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
@@ -325,7 +321,7 @@ fun CreaViaggioScreen(
                 text = "Nuovo Progetto di Viaggio",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = WhiteText
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             EnterpriseTextField(value = titolo, onValueChange = { viewModel.titolo.value = it }, label = "Titolo Esperienza")
@@ -355,18 +351,18 @@ fun CreaViaggioScreen(
 
             EnterpriseTextField(value = postiDisponibili, onValueChange = { viewModel.postiDisponibili.value = it }, label = "Posti Disponibili")
 
-            // ===== SEZIONE SELEZIONE TAG CON EMOJI E COLORI =====
+            // Sezione selezione tag
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "🏷️ TAG DEL VIAGGIO",
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 18.sp,
-                color = AccentBlue
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 "Scegli da 1 a 3 tag per descrivere il tuo viaggio",
                 fontSize = 13.sp,
-                color = WhiteText.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -375,10 +371,10 @@ fun CreaViaggioScreen(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = AccentBlue)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else if (tagDisponibili.isEmpty()) {
-                Text("Nessun tag disponibile.", color = Color.Gray)
+                Text("Nessun tag disponibile.", color = MaterialTheme.colorScheme.outline)
             } else {
                 // Layout a griglia per i tag (3 per riga)
                 val chunks = tagDisponibili.chunked(3)
@@ -398,7 +394,6 @@ fun CreaViaggioScreen(
                                 enabled = canSelect
                             )
                         }
-                        // Riempi gli spazi vuoti
                         repeat(3 - riga.size) {
                             Spacer(modifier = Modifier.width(100.dp))
                         }
@@ -411,15 +406,15 @@ fun CreaViaggioScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = when {
-                            tagSelezionati.isEmpty() -> DangerRed.copy(alpha = 0.15f)
-                            tagSelezionati.size == 3 -> SuccessGreen.copy(alpha = 0.15f)
-                            else -> CardOverlay
+                            tagSelezionati.isEmpty() -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                            tagSelezionati.size == 3 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant
                         }
                     ),
                     border = if (tagSelezionati.isEmpty()) {
-                        BorderStroke(1.dp, DangerRed)
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                     } else if (tagSelezionati.size == 3) {
-                        BorderStroke(1.dp, SuccessGreen)
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     } else {
                         null
                     }
@@ -445,22 +440,23 @@ fun CreaViaggioScreen(
                             },
                             fontSize = 13.sp,
                             color = when {
-                                tagSelezionati.isEmpty() -> DangerRed
-                                tagSelezionati.size == 3 -> SuccessGreen
-                                else -> WhiteText.copy(alpha = 0.8f)
+                                tagSelezionati.isEmpty() -> MaterialTheme.colorScheme.error
+                                tagSelezionati.size == 3 -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
                             },
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
-                // Mostra i tag selezionati con emoji
+                val isScuro = isSystemInDarkTheme()
+
                 if (tagSelezionati.isNotEmpty()) {
                     Text(
                         text = "I tuoi tag:",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = WhiteText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -471,29 +467,29 @@ fun CreaViaggioScreen(
                             val colore = colorMap[tag] ?: Color.Gray
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
-                                color = colore.copy(alpha = 0.2f),
-                                border = BorderStroke(1.dp, colore)
+                                color = colore.copy(alpha = 0.15f),
+                                border = BorderStroke(1.dp, colore.copy(alpha = 0.6f))
                             ) {
                                 Text(
                                     text = "$emoji $tag",
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = colore
+                                    // Se il tema è scuro usa 'colore', altrimenti in tema chiaro usa un colore scuro e leggibile dal tema
+                                    color = if (isScuro) colore else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
                     }
                 }
             }
-            // ===== FINE SEZIONE TAG =====
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("TAPPE DEL VIAGGIO", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = AccentBlue)
+            Text("TAPPE DEL VIAGGIO", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = MaterialTheme.colorScheme.primary)
 
             if (tappe.isEmpty()) {
-                Text("Nessuna tappa aggiunta. Clicca il bottone qui sotto per iniziare!", color = Color.Gray)
+                Text("Nessuna tappa aggiunta. Clicca il bottone qui sotto per iniziare!", color = MaterialTheme.colorScheme.outline)
             } else {
                 tappe.forEachIndexed { index, tappa ->
                     TappaFormItem(
@@ -510,7 +506,8 @@ fun CreaViaggioScreen(
                 onClick = { viewModel.aggiungiTappa() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentBlue)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
             ) {
                 Text("+ Aggiungi Nuova Tappa", fontWeight = FontWeight.Bold)
             }
@@ -521,20 +518,23 @@ fun CreaViaggioScreen(
                 onClick = { viewModel.salvaViaggio(context) },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 enabled = uiState !is CreaViaggioState.Loading
             ) {
                 if (uiState is CreaViaggioState.Loading) {
-                    CircularProgressIndicator(color = WhiteText, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Salva Viaggio e Tappe", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = WhiteText)
+                    Text("Salva Viaggio e Tappe", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
             if (uiState is CreaViaggioState.Error) {
-                Text(text = (uiState as CreaViaggioState.Error).message, color = DangerRed)
+                Text(text = (uiState as CreaViaggioState.Error).message, color = MaterialTheme.colorScheme.error)
             } else if (uiState is CreaViaggioState.Success) {
-                Text(text = "Viaggio salvato con successo!", color = SuccessGreen, fontWeight = FontWeight.Bold)
+                Text(text = "Viaggio salvato con successo!", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -552,15 +552,15 @@ fun TappaFormItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(1.dp, AccentBlue.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = CardOverlay),
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("📍 Tappa $numeroTappa", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = WhiteText)
+                Text("📍 Tappa $numeroTappa", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 TextButton(onClick = onRemove) {
-                    Text("❌ Rimuovi", color = DangerRed, fontWeight = FontWeight.Bold)
+                    Text("❌ Rimuovi", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
             }
 

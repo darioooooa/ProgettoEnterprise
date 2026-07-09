@@ -31,7 +31,6 @@ class PagamentoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         PaymentConfiguration.init(this, "pk_test_51TfqDSR7OooPKO1apYDbncshdjPXl78dVRdSImSkL1V54h5RZ9EyOjs8Pa2PFimRyd0GT7qheedIfNayWRcWV86Q00XZLe0gsB")
 
         val idPrenotazione = intent.getLongExtra("ID_PRENOTAZIONE", -1L)
@@ -76,29 +75,38 @@ fun PagamentoContent(viewModel: PagamentoViewModel, idPrenotazione: Long, import
         onBackClick = { (context as? Activity)?.finish() }
     ) { innerPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().background(DarkNavy).padding(innerPadding).padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
+                .padding(innerPadding)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Conferma Prenotazione", color = WhiteText, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text("Totale da pagare: €$importo", color = SuccessGreen, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Conferma Prenotazione", color = MaterialTheme.colorScheme.onBackground, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("Totale da pagare: €$importo", color = MaterialTheme.colorScheme.primary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-            Surface(color = CardOverlay, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+            Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     OutlinedTextField(
                         value = viewModel.nomeTitolare,
                         onValueChange = { viewModel.nomeTitolare = it },
-                        label = { Text("Titolare della carta", color = Color.Gray) },
+                        label = { Text("Titolare della carta") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = WhiteText, unfocusedTextColor = WhiteText)
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     if (viewModel.messaggioErrore != null) {
-                        Text("⚠️ ${viewModel.messaggioErrore}", color = DangerRed, modifier = Modifier.padding(bottom = 16.dp))
+                        Text("⚠️ ${viewModel.messaggioErrore}", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 16.dp))
                     }
 
                     Button(
@@ -110,15 +118,19 @@ fun PagamentoContent(viewModel: PagamentoViewModel, idPrenotazione: Long, import
                                 )
                             }
                         },
-                        // Il bottone si abilita solo quando il server ha risposto (clientSecret != null) e hai inserito il nome
+                        // Il bottone si abilita solo quando il server ha risposto (clientSecret != null) e si ha inserito il nome
                         enabled = !viewModel.isCaricamento && viewModel.clientSecret != null && viewModel.nomeTitolare.isNotBlank(),
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        )
                     ) {
                         if (viewModel.isCaricamento) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                         } else {
-                            Text("PAGA ORA 💳", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("PAGA ORA 💳", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

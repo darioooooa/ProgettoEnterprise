@@ -18,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -85,17 +84,16 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
     ) { paddingValues ->
         if (viewModel.isLoading || viaggio == null) {
             Box(
-                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 1f)),
                 contentAlignment = Alignment.Center
             ) {
-                // Il colore dell'indicatore userà il colore primario del tema corrente
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
                     .padding(paddingValues)
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -174,7 +172,7 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                 viewModel.messaggioAvviso?.let { avviso ->
                     item {
                         val col =
-                            if (viewModel.tipoAvviso == "successo") SuccessGreen else MaterialTheme.colorScheme.error
+                            if (viewModel.tipoAvviso == "successo") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                         Surface(
                             color = col.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(8.dp),
@@ -219,9 +217,9 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                 Column(modifier = Modifier.weight(1f)) {
                                     if (viewModel.isGiaAcquistato) {
                                         val (badgeTesto, badgeColore) = when (viewModel.statoSvolgimentoIscrizione) {
-                                            "PRENOTATO" -> "✅ Sei già prenotato" to SuccessGreen
-                                            "IN_CORSO" -> "✈️ Viaggio in corso" to MaterialTheme.colorScheme.primary
-                                            else -> "🏁 Viaggio completato" to Color.Gray
+                                            "PRENOTATO" -> "✅ Sei già prenotato" to MaterialTheme.colorScheme.primary
+                                            "IN_CORSO" -> "✈️ Viaggio in corso" to MaterialTheme.colorScheme.secondary
+                                            else -> "🏁 Viaggio completato" to MaterialTheme.colorScheme.outline
                                         }
                                         Text(
                                             badgeTesto,
@@ -238,12 +236,15 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                                 ).apply { putExtra("VIAGGIO_ID", viaggio.id) }
                                                 context.startActivity(intent)
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary,
+                                                contentColor = MaterialTheme.colorScheme.onPrimary
+                                            )
                                         ) { Text("Prenota ora") }
                                     } else if (viewModel.isTuttoEsaurito()) {
                                         Text(
                                             "⚠️ Tutto esaurito",
-                                            color = Color(0xFFFBBF24),
+                                            color = MaterialTheme.colorScheme.tertiary,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 15.sp
                                         )
@@ -259,7 +260,10 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
 
                                 Button(
                                     onClick = { viewModel.scaricaFileIcs() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.outline),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
                                     contentPadding = PaddingValues(
                                         horizontal = 12.dp,
                                         vertical = 6.dp
@@ -345,7 +349,7 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                     ) {
                                         Text(
                                             "€ ${viaggio.prezzo}",
-                                            color = if (viewModel.isMioViaggio()) Color(0xFFF59E0B) else SuccessGreen,
+                                            color = if (viewModel.isMioViaggio()) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -372,17 +376,17 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                             Button(
                                                 onClick = { viewModel.salvaNuovoPrezzo() },
-                                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                                 modifier = Modifier.weight(1f).height(32.dp),
                                                 contentPadding = PaddingValues(0.dp)
-                                            ) { Text("✓", fontSize = 12.sp) }
+                                            ) { Text("✓", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary) }
 
                                             Button(
                                                 onClick = { viewModel.inModificaPrezzo = false },
                                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                                                 modifier = Modifier.weight(1f).height(32.dp),
                                                 contentPadding = PaddingValues(0.dp)
-                                            ) { Text("✗", fontSize = 12.sp) }
+                                            ) { Text("✗", fontSize = 12.sp, color = MaterialTheme.colorScheme.onError) }
                                         }
                                     }
                                 }
@@ -473,7 +477,6 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth()
                                 .clickable {
-                                    // Si prende l'id dell'organizzatore dalle statistiche
                                     val idOrganizzatore = stats.organizzatoreId
 
                                     if (idOrganizzatore != null && idOrganizzatore > 0L) {
@@ -631,7 +634,10 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                             ).apply { putExtra("VIAGGIO_ID", viaggio.id) }
                                             context.startActivity(intent)
                                         },
-                                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary
+                                        ),
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
@@ -701,7 +707,7 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                         ) {
-                            Text("Sì, elimina", color = Color.White)
+                            Text("Sì, elimina")
                         }
                     },
                     dismissButton = {
@@ -722,14 +728,14 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
             if (mostraModaleSceltaItinerario) {
                 AlertDialog(
                     onDismissRequest = { mostraModaleSceltaItinerario = false },
-                    title = { Text("Aggiungi all'itinerario", fontWeight = FontWeight.Bold) },
+                    title = { Text("Aggiungi all'itinerario", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text("In quale delle tue liste vuoi salvare questo viaggio?")
+                            Text("In quale delle tue liste vuoi salvare questo viaggio?", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (mieiItinerari.isEmpty()) {
                                 Text(
                                     "Nessun itinerario trovato.",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.outline
                                 )
                             } else {
                                 LazyColumn(
@@ -773,7 +779,7 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                Text(text = itn.nome, fontWeight = FontWeight.Medium)
+                                                Text(text = itn.nome, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                                 if (giaPresente) {
                                                     Text("Già incluso", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                                 }
@@ -786,11 +792,11 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                     },
                     confirmButton = {
                         if (isItinerarioLoading)
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp)
-                        )
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         else
-                            TextButton(onClick = { mostraModaleSceltaItinerario = false }) { Text("Chiudi") }
-                    }
+                            TextButton(onClick = { mostraModaleSceltaItinerario = false }) { Text("Chiudi", color = MaterialTheme.colorScheme.primary) }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             }
         }

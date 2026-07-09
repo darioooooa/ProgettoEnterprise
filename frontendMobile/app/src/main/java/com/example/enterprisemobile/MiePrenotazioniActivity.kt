@@ -3,7 +3,6 @@ package com.example.enterprisemobile
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -21,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,22 +55,22 @@ fun MiePrenotazioniContent(viewModel: MiePrenotazioniViewModel) {
         mostraFrecciaIndietro = true,
         onBackClick = { (context as? Activity)?.finish() }
     ) { innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().background(DarkNavy).padding(innerPadding)) {
+        Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 1f)).padding(innerPadding)) {
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("I MIEI VIAGGI", color = WhiteText, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp, letterSpacing = 2.sp)
+                Text("I MIEI VIAGGI", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp, letterSpacing = 2.sp)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Gestisci le tue avventure e i dettagli delle prenotazioni", color = Color.Gray, fontSize = 14.sp)
+                Text("Gestisci le tue avventure e i dettagli delle prenotazioni", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontSize = 14.sp)
             }
 
             val tabs = listOf("In programma (${inProgramma.size})", "Timeline impegni", "Completati (${completate.size})")
             TabRow(
                 selectedTabIndex = viewModel.tabSelezionata,
-                containerColor = CardOverlay,
-                contentColor = WhiteText,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
                         modifier = Modifier.tabIndicatorOffset(tabPositions[viewModel.tabSelezionata]),
-                        color = Color(0xFF10b981),
+                        color = MaterialTheme.colorScheme.primary,
                         height = 3.dp
                     )
                 }
@@ -81,14 +79,14 @@ fun MiePrenotazioniContent(viewModel: MiePrenotazioniViewModel) {
                     Tab(
                         selected = viewModel.tabSelezionata == index,
                         onClick = { viewModel.tabSelezionata = index },
-                        text = { Text(titolo, fontWeight = if (viewModel.tabSelezionata == index) FontWeight.Bold else FontWeight.Normal) }
+                        text = { Text(titolo, fontWeight = if (viewModel.tabSelezionata == index) FontWeight.Bold else FontWeight.Normal, fontSize = 13.sp) }
                     )
                 }
             }
 
             Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                 if (viewModel.isCaricamento) {
-                    CircularProgressIndicator(color = SuccessGreen, modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.Center))
                 } else {
                     when (viewModel.tabSelezionata) {
                         0 -> if (inProgramma.isEmpty()) ViaggiCompletatiVuoti("Nessun viaggio in programma.") else ListaInProgramma(inProgramma)
@@ -108,12 +106,13 @@ fun ListaInProgramma(prenotazioni: List<PrenotazioneEntity>) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         items(prenotazioni) { pren ->
             val coloreStato = when (pren.stato) {
-                "CONFERMATA" -> StatusConfirmed
-                "ANNULLATA" -> StatusCancelled
-                else -> StatusPending
+                "CONFERMATA" -> MaterialTheme.colorScheme.primary
+                "ANNULLATA" -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.tertiary
             }
 
-            Surface(color = CardOverlay,
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
                     .clickable {
@@ -131,13 +130,13 @@ fun ListaInProgramma(prenotazioni: List<PrenotazioneEntity>) {
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("#PREN-${pren.id}", color = Color.Gray, fontSize = 12.sp)
+                        Text("#PREN-${pren.id}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 12.sp)
                         Text(pren.stato.replace("_", " "), color = coloreStato, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(pren.viaggioTitolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(pren.viaggioTitolo, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("📅 Date: ${pren.viaggioDataInizio} - ${pren.viaggioDataFine}", color = Color.LightGray, fontSize = 14.sp)
+                    Text("📅 Date: ${pren.viaggioDataInizio} - ${pren.viaggioDataFine}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f), fontSize = 14.sp)
                 }
             }
         }
@@ -146,32 +145,34 @@ fun ListaInProgramma(prenotazioni: List<PrenotazioneEntity>) {
 
 @Composable
 fun TimelineImpegni(prenotazioni: List<PrenotazioneEntity>) {
+    val asseColore = MaterialTheme.colorScheme.outlineVariant
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
-            Text("Visualizza la cronologia dei tuoi impegni e scopri i periodi in cui sei libero.", color = Color.LightGray, fontSize = 14.sp, modifier = Modifier.padding(bottom = 16.dp))
+            Text("Visualizza la cronologia dei tuoi impegni e scopri i periodi in cui sei libero.", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), fontSize = 14.sp, modifier = Modifier.padding(bottom = 16.dp))
         }
         items(prenotazioni) { pren ->
             val coloreStato = when (pren.stato) {
-                "CONFERMATA" -> Color(0xFF10b981)
-                "ANNULLATA" -> Color(0xFFEF5350)
-                else -> Color(0xFFFFA726)
+                "CONFERMATA" -> MaterialTheme.colorScheme.primary
+                "ANNULLATA" -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.tertiary
             }
 
             Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                 Box(modifier = Modifier.width(40.dp).fillMaxHeight(), contentAlignment = Alignment.TopCenter) {
                     Canvas(modifier = Modifier.fillMaxHeight().padding(top = 24.dp)) {
-                        drawLine(color = Color.Gray, start = Offset(size.width / 2, 0f), end = Offset(size.width / 2, size.height), strokeWidth = 2f)
+                        drawLine(color = asseColore, start = Offset(size.width / 2, 0f), end = Offset(size.width / 2, size.height), strokeWidth = 2f)
                     }
                     Box(modifier = Modifier.size(16.dp).background(coloreStato, CircleShape).align(Alignment.TopCenter))
                 }
 
-                Surface(color = CardOverlay, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).padding(bottom = 8.dp)) {
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).padding(bottom = 8.dp)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(pren.viaggioTitolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(pren.viaggioTitolo, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Occupato dal ${pren.viaggioDataInizio} al ${pren.viaggioDataFine}", color = Color.LightGray, fontSize = 14.sp)
+                        Text("Occupato dal ${pren.viaggioDataInizio} al ${pren.viaggioDataFine}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f), fontSize = 14.sp)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Surface(color = coloreStato.copy(alpha = 0.1f), shape = RoundedCornerShape(16.dp), border = androidx.compose.foundation.BorderStroke(1.dp, coloreStato)) {
+                        Surface(color = coloreStato.copy(alpha = 0.15f), shape = RoundedCornerShape(16.dp), border = androidx.compose.foundation.BorderStroke(1.dp, coloreStato.copy(alpha = 0.5f))) {
                             Text(pren.stato.replace("_", " "), color = coloreStato, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                         }
                     }
@@ -184,6 +185,6 @@ fun TimelineImpegni(prenotazioni: List<PrenotazioneEntity>) {
 @Composable
 fun ViaggiCompletatiVuoti(messaggio: String) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(messaggio, color = Color.LightGray, fontSize = 16.sp, textAlign = TextAlign.Center)
+        Text(messaggio, color = MaterialTheme.colorScheme.outline, fontSize = 16.sp, textAlign = TextAlign.Center)
     }
 }

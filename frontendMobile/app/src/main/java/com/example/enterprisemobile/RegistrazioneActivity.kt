@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.enterprisemobile.viewmodels.AuthViewModel
 import com.example.enterprisemobile.viewmodels.StatoRegistrazione
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onTornaAlLogin: () -> Unit) {
     val context = LocalContext.current
@@ -45,10 +46,17 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
     var passwordVisibile by remember { mutableStateOf(false) }
     var erroreLocale by remember { mutableStateOf<String?>(null) }
 
+    val outlinedTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
             .padding(24.dp)
     ) {
         if (statoReg !is StatoRegistrazione.Successo) {
@@ -149,8 +157,9 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isCaricamento,
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), // Mostra il tasto "Avanti"
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }) // Va giù
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                    colors = outlinedTextFieldColors
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -163,7 +172,8 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     enabled = !isCaricamento,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                    colors = outlinedTextFieldColors
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -176,7 +186,8 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     enabled = !isCaricamento,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                    colors = outlinedTextFieldColors
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -189,7 +200,8 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     enabled = !isCaricamento,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                    colors = outlinedTextFieldColors
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -198,7 +210,7 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     value = password,
                     onValueChange = {
                         password = it
-                        erroreLocale = null // Resetta l'errore appena l'utente modifica il testo
+                        erroreLocale = null
                     },
                     label = { Text("Scegli una password") },
                     visualTransformation = if (passwordVisibile) VisualTransformation.None else PasswordVisualTransformation(),
@@ -207,6 +219,7 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                    colors = outlinedTextFieldColors,
                     trailingIcon = {
                         val icona = if (passwordVisibile) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                         IconButton(onClick = { passwordVisibile = !passwordVisibile }) {
@@ -241,6 +254,7 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                             }
                         }
                     }),
+                    colors = outlinedTextFieldColors,
                     trailingIcon = {
                         val icona = if (passwordVisibile) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                         IconButton(onClick = { passwordVisibile = !passwordVisibile }, enabled = !isCaricamento) {
@@ -253,12 +267,6 @@ fun RegistrazioneActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit,
                 if (erroreLocale != null) {
                     Text(text = erroreLocale!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))
                 } else if (statoReg is StatoRegistrazione.Errore) {
-                    Text(text = (statoReg as StatoRegistrazione.Errore).messaggio, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                if (statoReg is StatoRegistrazione.Errore) {
                     Text(text = (statoReg as StatoRegistrazione.Errore).messaggio, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))
                 }
 

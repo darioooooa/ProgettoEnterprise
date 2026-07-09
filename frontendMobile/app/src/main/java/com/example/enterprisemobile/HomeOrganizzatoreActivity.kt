@@ -77,7 +77,6 @@ class HomeOrganizzatoreActivity : ComponentActivity() {
     }
 }
 
-// Clustering e stabilità marker Mapbox
 @OptIn(ExperimentalMaterial3Api::class, MapboxExperimental::class)
 @Composable
 fun MappaItinerari(
@@ -218,18 +217,17 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
     val items = listOf("Home", "Statistiche", "Messaggi")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.BarChart, Icons.Filled.Email)
 
-    // utilizzato admin scaffold per mantenere la stessa base grafica
     AdminScaffold(
         titolo = "MOVEON",
         nomeUtente = nomeUtente,
         bottomBar = {
-            NavigationBar(containerColor = DarkNavy) {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
                         icon = {
                             if (index == 2 && totaleNotifiche > 0) {
                                 BadgedBox(
-                                    badge = { Badge(containerColor = DangerRed) { Text(totaleNotifiche.toString(), color = WhiteText) } }
+                                    badge = { Badge(containerColor = MaterialTheme.colorScheme.error) { Text(totaleNotifiche.toString(), color = MaterialTheme.colorScheme.onError) } }
                                 ) { Icon(icons[index], contentDescription = item) }
                             } else {
                                 Icon(icons[index], contentDescription = item)
@@ -246,9 +244,9 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = WhiteText,
-                            unselectedIconColor = Color.Gray,
-                            indicatorColor = CardOverlay
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.outline,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     )
                 }
@@ -258,29 +256,35 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
 
         Box(modifier = Modifier
             .fillMaxSize()
-            .background(DarkNavy)
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
             .padding(paddingValues)
         ) {
             when (selectedItem) {
+                // Tab dashboard
                 0 -> {
-                    // TAB DASHBOARD
                     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(
                                 onClick = { vistaDashboard = "MAPPA" },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "MAPPA") AccentBlue else CardOverlay),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (vistaDashboard == "MAPPA") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (vistaDashboard == "MAPPA") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
                                 modifier = Modifier.weight(1f).height(56.dp),
                                 shape = RoundedCornerShape(50)
-                            ) { Text("Mappa Itinerari", fontSize = 14.sp, color = if (vistaDashboard == "MAPPA") DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
+                            ) { Text("Mappa Itinerari", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
 
                             Button(
                                 onClick = { vistaDashboard = "PRENOTAZIONI" },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (vistaDashboard == "PRENOTAZIONI") AccentBlue else CardOverlay),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (vistaDashboard == "PRENOTAZIONI") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (vistaDashboard == "PRENOTAZIONI") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
                                 modifier = Modifier.weight(1f).height(56.dp),
                                 shape = RoundedCornerShape(50)
-                            ) { Text("Prenotazioni", fontSize = 14.sp, color = if (vistaDashboard == "PRENOTAZIONI") DarkNavy else WhiteText, fontWeight = FontWeight.Bold) }
+                            ) { Text("Prenotazioni", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -288,10 +292,9 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                             val isMappaVisibile = vistaDashboard == "MAPPA"
 
-                            // STRATO MAPPA / RICERCA
+                            // Strato mappa / ricerca
                             Column(modifier = Modifier.fillMaxSize().alpha(if (isMappaVisibile) 1f else 0f)) {
 
-                                // SOTTO-SWITCH: BARRA UNITA E PICCOLA
                                 BarraSottoMappaUnita(
                                     vistaAttuale = sottoVistaMappa,
                                     onVistaCambio = { nuovaVista -> sottoVistaMappa = nuovaVista }
@@ -299,7 +302,6 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
 
                                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
 
-                                    // LIVELLO INFERIORE: LA MAPPA
                                     val isSottoMappaAttiva = sottoVistaMappa == "MAPPA"
 
                                     Column(modifier = Modifier.fillMaxSize().alpha(if (isSottoMappaAttiva) 1f else 0f)) {
@@ -321,13 +323,12 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                 onMarkerClick = { listaViaggi -> if (isSottoMappaAttiva && isMappaVisibile) viaggiSelezionatiInMarker = listaViaggi }
                                             )
 
-                                            if (isLoading) CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AccentBlue)
+                                            if (isLoading) CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
 
-                                            // Popup Cluster in Stile Scuro
                                             if (viaggiSelezionatiInMarker.isNotEmpty()) {
                                                 Card(
                                                     modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp).fillMaxWidth().wrapContentHeight(),
-                                                    colors = CardDefaults.cardColors(containerColor = CardOverlay),
+                                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                                     elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                                                 ) {
                                                     Column(modifier = Modifier.padding(12.dp)) {
@@ -338,10 +339,10 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                         ) {
                                                             Text(
                                                                 text = if (viaggiSelezionatiInMarker.size > 1) "🗺️ ${viaggiSelezionatiInMarker.size} viaggi qui" else "📍 Viaggio in questa posizione",
-                                                                fontWeight = FontWeight.Bold, fontSize = 15.sp, color = AccentBlue
+                                                                fontWeight = FontWeight.Bold, fontSize = 15.sp, color = MaterialTheme.colorScheme.primary
                                                             )
                                                             IconButton(onClick = { viaggiSelezionatiInMarker = emptyList() }, modifier = Modifier.size(24.dp)) {
-                                                                Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Color.Gray)
+                                                                Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = MaterialTheme.colorScheme.outline)
                                                             }
                                                         }
                                                         Spacer(modifier = Modifier.height(8.dp))
@@ -350,11 +351,11 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                                 items(viaggiSelezionatiInMarker.size) { index ->
                                                                     val viaggio = viaggiSelezionatiInMarker[index]
                                                                     Row(
-                                                                        modifier = Modifier.fillMaxWidth().background(DarkNavy, shape = RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                                                                        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
                                                                         horizontalArrangement = Arrangement.SpaceBetween,
                                                                         verticalAlignment = Alignment.CenterVertically
                                                                     ) {
-                                                                        Text(viaggio.titolo, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = WhiteText, modifier = Modifier.weight(1f))
+                                                                        Text(viaggio.titolo, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
                                                                         Button(
                                                                             onClick = {
                                                                                 val intent = Intent(context, DettaglioViaggioActivity::class.java)
@@ -362,10 +363,10 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                                                 context.startActivity(intent)
                                                                                 viaggiSelezionatiInMarker = emptyList()
                                                                             },
-                                                                            colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                                                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                                                             modifier = Modifier.height(32.dp)
-                                                                        ) { Text("Vedi", fontSize = 12.sp, color = DarkNavy, fontWeight = FontWeight.Bold) }
+                                                                        ) { Text("Vedi", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold) }
                                                                     }
                                                                 }
                                                             }
@@ -379,18 +380,16 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                         Button(
                                             onClick = { if (isSottoMappaAttiva && isMappaVisibile) context.startActivity(Intent(context, CreaViaggioActivity::class.java)) },
                                             modifier = Modifier.fillMaxWidth().height(50.dp),
-                                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                                        ) { Text("+ Crea Nuovo Viaggio", color = WhiteText, fontWeight = FontWeight.Bold) }
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                        ) { Text("+ Crea Nuovo Viaggio", fontWeight = FontWeight.Bold) }
                                         Spacer(modifier = Modifier.height(16.dp))
                                     }
 
-                                    // BLOCCO TOUCH DELLA MAPPA SE STO USANDO LA RICERCA
                                     if (!isSottoMappaAttiva) Spacer(modifier = Modifier.fillMaxSize().clickable(enabled = false) {})
 
-                                    // LIVELLO SUPERIORE: IL BOX DI RICERCA
                                     if (sottoVistaMappa == "CERCA") {
                                         LazyColumn(
-                                            modifier = Modifier.fillMaxSize().background(DarkNavy).padding(horizontal = 16.dp),
+                                            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 16.dp),
                                             verticalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
 
@@ -406,13 +405,13 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                 if (listaViaggiCercati.isEmpty()) {
                                                     item {
                                                         Box(modifier = Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
-                                                            Text("Nessun viaggio trovato.", color = Color.Gray, fontSize = 16.sp)
+                                                            Text("Nessun viaggio trovato.", color = MaterialTheme.colorScheme.outline, fontSize = 16.sp)
                                                         }
                                                     }
                                                 } else {
                                                     items(listaViaggiCercati, key = { it.id }) { viaggio ->
                                                         Surface(
-                                                            color = CardOverlay,
+                                                            color = MaterialTheme.colorScheme.surfaceVariant,
                                                             shape = RoundedCornerShape(12.dp),
                                                             modifier = Modifier.fillMaxWidth().clickable {
                                                                 val intent = Intent(context, DettaglioViaggioActivity::class.java).apply {
@@ -427,11 +426,11 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                                 verticalAlignment = Alignment.CenterVertically
                                                             ) {
                                                                 Column(modifier = Modifier.weight(1f)) {
-                                                                    Text(viaggio.titolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                                                    Text(viaggio.titolo, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                                                     Spacer(modifier = Modifier.height(4.dp))
-                                                                    Text("🌍 ${viaggio.destinazione}", color = Color.LightGray, fontSize = 14.sp)
+                                                                    Text("🌍 ${viaggio.destinazione}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 14.sp)
                                                                     Spacer(modifier = Modifier.height(4.dp))
-                                                                    Text("💰 ${viaggio.prezzo} €", color = AccentBlue, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                                                    Text("💰 ${viaggio.prezzo} €", color = MaterialTheme.colorScheme.primary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                                                 }
 
                                                                 Button(
@@ -440,10 +439,10 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                                         intent.putExtra("VIAGGIO_ID", viaggio.id)
                                                                         context.startActivity(intent)
                                                                     },
-                                                                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                                                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                                                     modifier = Modifier.height(36.dp)
                                                                 ) {
-                                                                    Text("Vedi", fontWeight = FontWeight.Bold, color = DarkNavy, fontSize = 12.sp)
+                                                                    Text("Vedi", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary, fontSize = 12.sp)
                                                                 }
                                                             }
                                                         }
@@ -460,18 +459,18 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                                     viaggioViewModel.cercaViaggi("", "", "", "", "0", "5000", viaggioViewModel.paginaCorrente - 1)
                                                                 },
                                                                 enabled = viaggioViewModel.paginaCorrente > 0,
-                                                                colors = ButtonDefaults.buttonColors(containerColor = if (viaggioViewModel.paginaCorrente > 0) AccentBlue else Color.Gray)
-                                                            ) { Text("Prec", fontSize = 14.sp, color = DarkNavy) }
+                                                                colors = ButtonDefaults.buttonColors(containerColor = if (viaggioViewModel.paginaCorrente > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                                            ) { Text("Prec", fontSize = 14.sp) }
 
-                                                            Text(text = "Pagina ${viaggioViewModel.paginaCorrente + 1} di ${viaggioViewModel.totalePagine.coerceAtLeast(1)}", color = WhiteText, fontWeight = FontWeight.Medium)
+                                                            Text(text = "Pagina ${viaggioViewModel.paginaCorrente + 1} di ${viaggioViewModel.totalePagine.coerceAtLeast(1)}", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium)
 
                                                             Button(
                                                                 onClick = {
                                                                     viaggioViewModel.cercaViaggi("", "", "", "", "0", "5000", viaggioViewModel.paginaCorrente + 1)
                                                                 },
                                                                 enabled = viaggioViewModel.paginaCorrente < viaggioViewModel.totalePagine - 1,
-                                                                colors = ButtonDefaults.buttonColors(containerColor = if (viaggioViewModel.paginaCorrente < viaggioViewModel.totalePagine - 1) AccentBlue else Color.Gray)
-                                                            ) { Text("Succ", fontSize = 14.sp, color = DarkNavy) }
+                                                                colors = ButtonDefaults.buttonColors(containerColor = if (viaggioViewModel.paginaCorrente < viaggioViewModel.totalePagine - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                                            ) { Text("Succ", fontSize = 14.sp) }
                                                         }
                                                         Spacer(modifier = Modifier.height(80.dp))
                                                     }
@@ -482,12 +481,11 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                 }
                             }
 
-                            // BLOCCO TOUCH GLOBALE SE STO GUARDANDO LE PRENOTAZIONI
                             if (!isMappaVisibile) Spacer(modifier = Modifier.fillMaxSize().clickable(enabled = false) {})
 
-                            // PRENOTAZIONI
+                            // Prenotazioni
                             if (vistaDashboard == "PRENOTAZIONI") {
-                                Column(modifier = Modifier.fillMaxSize().background(DarkNavy)) {
+                                Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
 
                                     BarraFiltriUnita(
                                         filtroAttuale = filtroStato,
@@ -504,7 +502,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                             .fillMaxWidth()
                                             .padding(horizontal = 16.dp, vertical = 8.dp)
                                             .height(56.dp),
-                                        placeholder = { Text("Cerca per username...", color = Color.Gray, fontSize = 12.sp) },
+                                        placeholder = { Text("Cerca per username...", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp) },
                                         singleLine = true,
                                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                         keyboardActions = KeyboardActions(
@@ -516,7 +514,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                             IconButton(onClick = {
                                                 viewModel.impostaFiltroUsername(queryRicerca)
                                             }) {
-                                                Icon(Icons.Default.Search, "Cerca", tint = AccentBlue)
+                                                Icon(Icons.Default.Search, "Cerca", tint = MaterialTheme.colorScheme.primary)
                                             }
                                         },
                                         trailingIcon = {
@@ -525,27 +523,19 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                     queryRicerca = ""
                                                     viewModel.impostaFiltroUsername("")
                                                 }) {
-                                                    Icon(Icons.Default.Clear, "Cancella", tint = Color.Gray)
+                                                    Icon(Icons.Default.Clear, "Cancella", tint = MaterialTheme.colorScheme.outline)
                                                 }
                                             }
-                                        },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = AccentBlue,
-                                            unfocusedBorderColor = Color.Gray,
-                                            focusedTextColor = WhiteText,
-                                            unfocusedTextColor = WhiteText,
-                                            focusedContainerColor = CardOverlay,
-                                            unfocusedContainerColor = CardOverlay
-                                        )
+                                        }
                                     )
 
                                     if (isLoadingPrenotazioni) {
                                         Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                            CircularProgressIndicator(color = AccentBlue)
+                                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                                         }
                                     } else if (prenotazioni.isEmpty()) {
                                         Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                            Text("Nessuna prenotazione trovata.", color = Color.Gray)
+                                            Text("Nessuna prenotazione trovato.", color = MaterialTheme.colorScheme.outline)
                                         }
                                     } else {
                                         LazyColumn(
@@ -554,7 +544,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                         ) {
                                             items(prenotazioni, key = { it.id }) { prenotazione ->
                                                 Surface(
-                                                    color = CardOverlay,
+                                                    color = MaterialTheme.colorScheme.surfaceVariant,
                                                     shape = RoundedCornerShape(12.dp),
                                                     modifier = Modifier.fillMaxWidth()
                                                 ) {
@@ -564,18 +554,18 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
                                                         Column(modifier = Modifier.weight(1f)) {
-                                                            Text("Utente: ${prenotazione.viaggiatoreUsername ?: "Sconosciuto"}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                                            Text("Viaggio: ${prenotazione.viaggioTitolo}", color = Color.LightGray, fontSize = 12.sp)
+                                                            Text("Utente: ${prenotazione.viaggiatoreUsername ?: "Sconosciuto"}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                                            Text("Viaggio: ${prenotazione.viaggioTitolo}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 12.sp)
 
                                                             Spacer(modifier = Modifier.height(8.dp))
 
                                                             val (coloreBadge, testoBadge) = when (prenotazione.stato) {
-                                                                "CONFERMATA" -> SuccessGreen to "CONFERMATA"
-                                                                "ANNULLATA" -> DangerRed to "ANNULLATA"
-                                                                else -> Color.Gray to prenotazione.stato
+                                                                "CONFERMATA" -> MaterialTheme.colorScheme.primary to "CONFERMATA"
+                                                                "ANNULLATA" -> MaterialTheme.colorScheme.error to "ANNULLATA"
+                                                                else -> MaterialTheme.colorScheme.outline to prenotazione.stato
                                                             }
 
-                                                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(coloreBadge.copy(alpha = 0.2f)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                                                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(coloreBadge.copy(alpha = 0.15f)).padding(horizontal = 8.dp, vertical = 4.dp)) {
                                                                 Text(testoBadge, color = coloreBadge, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                                             }
                                                         }
@@ -593,7 +583,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                                             Icon(
                                                                 imageVector = Icons.Default.Flag,
                                                                 contentDescription = "Segnala",
-                                                                tint = Color(0xFFF97316)
+                                                                tint = MaterialTheme.colorScheme.error
                                                             )
                                                         }
                                                     }
@@ -611,15 +601,15 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                         Button(
                                             onClick = { viewModel.caricaPrenotazioniOrganizzatore(paginaCorrente - 1) },
                                             enabled = paginaCorrente > 0,
-                                            colors = ButtonDefaults.buttonColors(containerColor = if (paginaCorrente > 0) AccentBlue else Color.Gray)
+                                            colors = ButtonDefaults.buttonColors(containerColor = if (paginaCorrente > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                         ) { Text("Prec", fontSize = 14.sp) }
 
-                                        Text(text = "Pagina ${paginaCorrente + 1} di ${totalePagine.coerceAtLeast(1)}", color = WhiteText, fontWeight = FontWeight.Medium)
+                                        Text(text = "Pagina ${paginaCorrente + 1} di ${totalePagine.coerceAtLeast(1)}", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium)
 
                                         Button(
                                             onClick = { viewModel.caricaPrenotazioniOrganizzatore(paginaCorrente + 1) },
                                             enabled = paginaCorrente < totalePagine - 1,
-                                            colors = ButtonDefaults.buttonColors(containerColor = if (paginaCorrente < totalePagine - 1) AccentBlue else Color.Gray)
+                                            colors = ButtonDefaults.buttonColors(containerColor = if (paginaCorrente < totalePagine - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                         ) { Text("Succ", fontSize = 14.sp) }
                                     }
                                 }
@@ -628,16 +618,17 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                     }
                 }
 
+                // Sezione statistiche
                 1 -> {
                     StatisticheOrganizzatoreScreen(viewModel = viewModelStatistiche)
                 }
 
+                // Sezione messaggi
                 2 -> {
-                    // SEZIONE MESSAGGI
                     if (identificativoStanzaSelezionata == null) {
                         if (listaDelleStanzeReali.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Nessuna conversazione attiva al momento.", color = Color.Gray)
+                                Text("Nessuna conversazione attiva al momento.", color = MaterialTheme.colorScheme.outline)
                             }
                         } else {
                             LazyColumn(
@@ -646,7 +637,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                             ) {
                                 items(listaDelleStanzeReali) { stanzaCorrente ->
                                     Surface(
-                                        color = CardOverlay,
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
                                         shape = RoundedCornerShape(12.dp),
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -661,19 +652,19 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Column(modifier = Modifier.weight(1f)) {
-                                                Text(stanzaCorrente.titoloDelViaggio, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = WhiteText)
+                                                Text(stanzaCorrente.titoloDelViaggio, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                                 Spacer(modifier = Modifier.height(4.dp))
-                                                Text("Viaggiatore: ${stanzaCorrente.nomeUtenteViaggiatore}", fontSize = 14.sp, color = Color.LightGray)
+                                                Text("Viaggiatore: ${stanzaCorrente.nomeUtenteViaggiatore}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
                                             }
 
                                             if (stanzaCorrente.numeroMessaggiNonLetti > 0) {
                                                 Surface(
                                                     shape = RoundedCornerShape(50),
-                                                    color = DangerRed,
+                                                    color = MaterialTheme.colorScheme.error,
                                                     modifier = Modifier.padding(start = 8.dp).size(24.dp)
                                                 ) {
                                                     Box(contentAlignment = Alignment.Center) {
-                                                        Text(stanzaCorrente.numeroMessaggiNonLetti.toString(), color = WhiteText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                                        Text(stanzaCorrente.numeroMessaggiNonLetti.toString(), color = MaterialTheme.colorScheme.onError, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                                     }
                                                 }
                                             }
@@ -690,9 +681,8 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                     identificativoStanzaSelezionata = null
                                 },
                                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-                            ) { Text(text = "⬅ Torna alla lista delle chat", color = AccentBlue) }
+                            ) { Text(text = "⬅ Torna alla lista delle chat", color = MaterialTheme.colorScheme.primary) }
 
-                            // SchermataDellaChat con i parametri per l'organizzatore
                             SchermataDellaChat(
                                 modelloDiVistaChat = modelloDiVistaChat,
                                 identificativoDellaStanza = identificativoStanzaSelezionata!!,
@@ -746,17 +736,15 @@ fun DialogSegnalazioneViaggiatore(
     var descrizione by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
-    // Overlay scuro che copre tutto lo schermo
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.7f))
+            .background(Color.Black.copy(alpha = 0.5f))
             .clickable { if (!isLoading) onDismiss() },
         contentAlignment = Alignment.Center
     ) {
-        // Card modale al centro con colore #1E1E2E
         Surface(
-            color = Color(0xFF1E1E2E),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -772,7 +760,7 @@ fun DialogSegnalazioneViaggiatore(
                 ) {
                     Text(
                         "🚩 Segnala viaggiatore",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -780,7 +768,7 @@ fun DialogSegnalazioneViaggiatore(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Chiudi",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -789,7 +777,7 @@ fun DialogSegnalazioneViaggiatore(
 
                 Text(
                     "di $username",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     fontSize = 14.sp
                 )
 
@@ -797,16 +785,16 @@ fun DialogSegnalazioneViaggiatore(
 
                 Text(
                     "Aiutaci a mantenere la piattaforma sicura. Seleziona il motivo per cui stai segnalando questo utente.",
-                    color = Color.LightGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
 
                 Spacer(Modifier.height(16.dp))
 
-                // Label Motivo
+                // Label motivo
                 Text(
                     "Motivo della segnalazione *",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
@@ -828,16 +816,16 @@ fun DialogSegnalazioneViaggiatore(
                             .fillMaxWidth()
                             .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentBlue,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         )
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color(0xFF1E1E2E))
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     ) {
                         listOf(
                             "SPAM" to "Spam o Truffa",
@@ -846,7 +834,7 @@ fun DialogSegnalazioneViaggiatore(
                             "ALTRO" to "Altro"
                         ).forEach { (value, label) ->
                             DropdownMenuItem(
-                                text = { Text(label, color = Color.White) },
+                                text = { Text(label, color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = { motivo = value; expanded = false }
                             )
                         }
@@ -855,10 +843,10 @@ fun DialogSegnalazioneViaggiatore(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Label Dettagli
+                // Label dettagli
                 Text(
                     "Dettagli aggiuntivi (opzionale)",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
@@ -867,13 +855,13 @@ fun DialogSegnalazioneViaggiatore(
                 OutlinedTextField(
                     value = descrizione,
                     onValueChange = { descrizione = it },
-                    placeholder = { Text("Scrivi qui i dettagli per aiutare gli amministratori...", color = Color.Gray) },
+                    placeholder = { Text("Scrivi qui i dettagli per aiutare gli amministratori...", color = MaterialTheme.colorScheme.outline) },
                     modifier = Modifier.fillMaxWidth().height(100.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentBlue,
-                        unfocusedBorderColor = Color.Gray,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
 
@@ -888,20 +876,21 @@ fun DialogSegnalazioneViaggiatore(
                         onClick = onDismiss,
                         enabled = !isLoading
                     ) {
-                        Text("Annulla", color = Color.Gray)
+                        Text("Annulla", color = MaterialTheme.colorScheme.outline)
                     }
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = { onInvia(motivo, descrizione) },
                         enabled = motivo.isNotBlank() && !isLoading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (motivo.isNotBlank()) Color(0xFFE63946) else Color.Gray
+                            containerColor = if (motivo.isNotBlank()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (motivo.isNotBlank()) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(Modifier.size(16.dp), color = Color.White)
+                            CircularProgressIndicator(Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary)
                         } else {
-                            Text("Invia Segnalazione", color = Color.White)
+                            Text("Invia Segnalazione")
                         }
                     }
                 }
@@ -923,7 +912,7 @@ fun BarraSottoMappaUnita(
             .padding(vertical = 8.dp)
             .height(40.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(CardOverlay)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
         opzioni.forEach { (valore, etichetta) ->
             val isSelected = vistaAttuale == valore
@@ -932,13 +921,13 @@ fun BarraSottoMappaUnita(
                     .weight(1f)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) AccentBlue else Color.Transparent)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
                     .clickable { onVistaCambio(valore) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = etichetta,
-                    color = if (isSelected) DarkNavy else Color.LightGray,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 )
@@ -964,7 +953,7 @@ fun BarraFiltriUnita(
             .padding(vertical = 12.dp)
             .height(40.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(CardOverlay)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
         opzioni.forEach { (valore, etichetta) ->
             val isSelected = filtroAttuale == valore
@@ -973,13 +962,13 @@ fun BarraFiltriUnita(
                     .weight(1f)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) AccentBlue else Color.Transparent)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
                     .clickable { onFiltroCambiato(valore) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = etichetta,
-                    color = if (isSelected) DarkNavy else Color.LightGray,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 11.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     textAlign = TextAlign.Center
@@ -1002,7 +991,7 @@ fun BoxRicerca(
     var mostraAvanzati by rememberSaveable { mutableStateOf(false) }
 
     Surface(
-        color = CardOverlay,
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -1026,7 +1015,7 @@ fun BoxRicerca(
             TextButton(onClick = { mostraAvanzati = !mostraAvanzati }) {
                 Text(
                     text = if (mostraAvanzati) "🔼 Nascondi filtri prezzo" else "🔽 Mostra filtri prezzo",
-                    color = AccentBlue
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -1042,9 +1031,12 @@ fun BoxRicerca(
             Button(
                 onClick = { onCercaClick(destinazione, dataMin, dataMax, posti, prezzoMin, prezzoMax) },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                Text("Cerca Viaggi", fontWeight = FontWeight.Bold, color = DarkNavy)
+                Text("Cerca Viaggi", fontWeight = FontWeight.Bold)
             }
         }
     }

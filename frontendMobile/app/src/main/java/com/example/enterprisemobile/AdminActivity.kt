@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -62,6 +63,7 @@ fun AdminContent(viewModel: AdminViewModel) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val nomeAdmin = sessionManager.ottieniUsername() ?: "Amministratore"
+    val focusManager = LocalFocusManager.current
 
     val richieste by viewModel.richiestePromozione.observeAsState(emptyList())
     val isLoading by viewModel.isLoading.observeAsState(false)
@@ -143,14 +145,14 @@ fun AdminContent(viewModel: AdminViewModel) {
 
     if (isDownloading) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)).statusBarsPadding(),
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).statusBarsPadding(),
             contentAlignment = Alignment.Center
         ) {
-            Card(modifier = Modifier.padding(32.dp), colors = CardDefaults.cardColors(containerColor = CardOverlay)) {
+            Card(modifier = Modifier.padding(32.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = AccentBlue)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Download documento...", color = WhiteText, fontWeight = FontWeight.Bold)
+                    Text("Download documento...", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -160,43 +162,39 @@ fun AdminContent(viewModel: AdminViewModel) {
     if (mostraModaleMotivazione) {
         AlertDialog(
             onDismissRequest = { mostraModaleMotivazione = false },
-            title = { Text("Motivazione della Candidatura", fontWeight = FontWeight.Bold, color = WhiteText) },
-            text = { Text(testoDaVisualizzare, color = Color.LightGray) },
+            title = { Text("Motivazione della Candidatura", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text(testoDaVisualizzare, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
-                TextButton(onClick = { mostraModaleMotivazione = false }) { Text("Chiudi", color = AccentBlue) }
+                TextButton(onClick = { mostraModaleMotivazione = false }) { Text("Chiudi", color = MaterialTheme.colorScheme.primary) }
             },
-            containerColor = DarkNavy
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
     if (mostraModaleBiografia) {
         AlertDialog(
             onDismissRequest = { mostraModaleBiografia = false },
-            title = { Text("Biografia Professionale", fontWeight = FontWeight.Bold, color = WhiteText) },
-            text = { Text(testoDaVisualizzare, color = Color.LightGray) },
+            title = { Text("Biografia Professionale", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text(testoDaVisualizzare, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
-                TextButton(onClick = { mostraModaleBiografia = false }) { Text("Chiudi", color = AccentBlue) }
+                TextButton(onClick = { mostraModaleBiografia = false }) { Text("Chiudi", color = MaterialTheme.colorScheme.primary) }
             },
-            containerColor = DarkNavy
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
     if (mostraModaleRifiuto) {
         AlertDialog(
             onDismissRequest = { mostraModaleRifiuto = false },
-            title = { Text("Rifiuta Candidatura", fontWeight = FontWeight.Bold, color = WhiteText) },
+            title = { Text("Rifiuta Candidatura", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 Column {
-                    Text("Inserisci il motivo del rifiuto:", color = Color.LightGray)
+                    Text("Inserisci il motivo del rifiuto:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = motivazioneRifiuto,
                         onValueChange = { motivazioneRifiuto = it },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = WhiteText, unfocusedTextColor = WhiteText,
-                            focusedBorderColor = AccentBlue, unfocusedBorderColor = Color.Gray
-                        ),
                         minLines = 3
                     )
                 }
@@ -216,25 +214,24 @@ fun AdminContent(viewModel: AdminViewModel) {
                             )
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
-                ) { Text("Conferma Rifiuto", color = WhiteText) }
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Conferma Rifiuto") }
             },
             dismissButton = {
-                TextButton(onClick = { mostraModaleRifiuto = false }) { Text("Annulla", color = Color.Gray) }
+                TextButton(onClick = { mostraModaleRifiuto = false }) { Text("Annulla", color = MaterialTheme.colorScheme.outline) }
             },
-            containerColor = DarkNavy
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
     if (mostraModaleConfermaApprova) {
         AlertDialog(
             onDismissRequest = { mostraModaleConfermaApprova = false },
-            title = { Text("Conferma Approvazione", fontWeight = FontWeight.Bold, color = WhiteText) },
+            title = { Text("Conferma Approvazione", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 Text(
-                    "Sei sicuro di voler approvare questa candidatura? " +
-                            "L'utente verrà promosso a Organizzatore e riceverà le credenziali di accesso via email.",
-                    color = Color.LightGray
+                    "Sei sicuro di voler approvare questa candidatura? L'utente verrà promosso a Organizzatore e riceverà le credenziali di accesso via email.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             confirmButton = {
@@ -255,15 +252,15 @@ fun AdminContent(viewModel: AdminViewModel) {
                             )
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                ) { Text("✅ Conferma", color = WhiteText) }
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) { Text("✅ Conferma") }
             },
             dismissButton = {
                 TextButton(onClick = { mostraModaleConfermaApprova = false }) {
-                    Text("Annulla", color = Color.Gray)
+                    Text("Annulla", color = MaterialTheme.colorScheme.outline)
                 }
             },
-            containerColor = DarkNavy
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
@@ -271,14 +268,16 @@ fun AdminContent(viewModel: AdminViewModel) {
         titolo = "MOVEON",
         nomeUtente = nomeAdmin,
         bottomBar = {
-            NavigationBar(containerColor = DarkNavy) {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.List, contentDescription = "Richieste") },
                     label = { Text("Richieste", fontSize = 12.sp) },
                     selected = selectedBottomTab == 0,
                     onClick = { selectedBottomTab = 0 },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.outline,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 )
                 NavigationBarItem(
@@ -287,7 +286,9 @@ fun AdminContent(viewModel: AdminViewModel) {
                     selected = selectedBottomTab == 1,
                     onClick = { selectedBottomTab = 1 },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.outline,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 )
                 NavigationBarItem(
@@ -296,36 +297,39 @@ fun AdminContent(viewModel: AdminViewModel) {
                     selected = selectedBottomTab == 2,
                     onClick = { selectedBottomTab = 2 },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = WhiteText, unselectedIconColor = Color.Gray, indicatorColor = CardOverlay
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.outline,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 )
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().background(DarkNavy).padding(innerPadding)) {
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 1f)).padding(innerPadding)) {
             if (isLoading && richieste.isEmpty() && selectedBottomTab == 0) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AccentBlue)
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
             } else {
                 when (selectedBottomTab) {
                     0 -> {
-                        // TAB RICHIESTE - Mantenuto inline perché ha dialog specifici
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Richieste di Promozione", color = WhiteText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                            Text("Richieste di Promozione", color = MaterialTheme.colorScheme.onBackground, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(
                                     onClick = { vistaAttuale = "PENDENTI"; viewModel.filtraPerStato("IN_ATTESA") },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (vistaAttuale == "PENDENTI") AccentBlue else Color.Gray
+                                        containerColor = if (vistaAttuale == "PENDENTI") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = if (vistaAttuale == "PENDENTI") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                     ),
                                     modifier = Modifier.weight(1f)
                                 ) { Text("Richieste Pendenti", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                                 Button(
                                     onClick = { vistaAttuale = "STORICO"; viewModel.filtraPerStato(null) },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (vistaAttuale == "STORICO") AccentBlue else Color.Gray
+                                        containerColor = if (vistaAttuale == "STORICO") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = if (vistaAttuale == "STORICO") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                     ),
                                     modifier = Modifier.weight(1f)
                                 ) { Text("Storico Valutazioni", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
@@ -336,33 +340,33 @@ fun AdminContent(viewModel: AdminViewModel) {
                             OutlinedTextField(
                                 value = queryRicerca,
                                 onValueChange = { queryRicerca = it },
-                                label = { Text("Cerca per username...", color = Color.Gray) },
+                                label = { Text("Cerca per username...") },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = WhiteText, unfocusedTextColor = WhiteText,
-                                    focusedBorderColor = AccentBlue, unfocusedBorderColor = Color.Gray
-                                ),
                                 trailingIcon = {
-                                    Row {
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 4.dp)) {
                                         if (queryRicerca.isNotEmpty()) {
                                             IconButton(onClick = {
                                                 queryRicerca = ""
                                                 viewModel.cercaPerUsername("")
                                             }) {
-                                                Icon(Icons.Filled.Clear, "Cancella", tint = Color.Gray)
+                                                Icon(Icons.Filled.Clear, "Cancella")
                                             }
                                         }
                                         IconButton(onClick = {
+                                            focusManager.clearFocus()
                                             viewModel.cercaPerUsername(queryRicerca)
                                         }) {
-                                            Icon(Icons.Filled.Search, "Cerca", tint = AccentBlue)
+                                            Icon(Icons.Filled.Search, "Cerca", tint = MaterialTheme.colorScheme.primary)
                                         }
                                     }
                                 },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                 keyboardActions = KeyboardActions(
-                                    onSearch = { viewModel.cercaPerUsername(queryRicerca) }
+                                    onSearch = {
+                                        focusManager.clearFocus()
+                                        viewModel.cercaPerUsername(queryRicerca)
+                                    }
                                 )
                             )
 
@@ -376,11 +380,11 @@ fun AdminContent(viewModel: AdminViewModel) {
 
                             if (richiesteFiltrate.isEmpty() && totaleElementi > 0) {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Nessuna richiesta trovata in questa pagina.", color = Color.Gray)
+                                    Text("Nessuna richiesta trovata in questa pagina.", color = MaterialTheme.colorScheme.outline)
                                 }
                             } else if (richiesteFiltrate.isEmpty()) {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Nessuna richiesta trovata.", color = Color.Gray)
+                                    Text("Nessuna richiesta trovata.", color = MaterialTheme.colorScheme.outline)
                                 }
                             } else {
                                 LazyColumn(
@@ -425,20 +429,22 @@ fun AdminContent(viewModel: AdminViewModel) {
                                                 onClick = { viewModel.paginaPrecedente() },
                                                 enabled = paginaCorrente > 0,
                                                 colors = ButtonDefaults.buttonColors(
-                                                    containerColor = if (paginaCorrente > 0) AccentBlue else Color.Gray
+                                                    containerColor = if (paginaCorrente > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                                    contentColor = if (paginaCorrente > 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             ) { Text("Prec", fontSize = 14.sp) }
 
                                             Text(
                                                 text = "Pagina ${paginaCorrente + 1} di ${totalePagine.coerceAtLeast(1)}",
-                                                color = WhiteText, fontWeight = FontWeight.Medium
+                                                color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium
                                             )
 
                                             Button(
                                                 onClick = { viewModel.paginaSuccessiva() },
                                                 enabled = paginaCorrente < totalePagine - 1,
                                                 colors = ButtonDefaults.buttonColors(
-                                                    containerColor = if (paginaCorrente < totalePagine - 1) AccentBlue else Color.Gray
+                                                    containerColor = if (paginaCorrente < totalePagine - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                                    contentColor = if (paginaCorrente < totalePagine - 1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             ) { Text("Succ", fontSize = 14.sp) }
                                         }
@@ -467,7 +473,7 @@ fun CartaRichiestaEspandibile(
     var isExpanded by remember { mutableStateOf(false) }
 
     Surface(
-        color = CardOverlay,
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -480,14 +486,14 @@ fun CartaRichiestaEspandibile(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Candidato: ${richiesta.usernameViaggiatore}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("Email: ${richiesta.emailProfessionale}", color = Color.LightGray, fontSize = 12.sp)
+                    Text("Candidato: ${richiesta.usernameViaggiatore}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Email: ${richiesta.emailProfessionale}", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 12.sp)
                 }
 
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = if (isExpanded) "Chiudi" else "Apri",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.rotate(if (isExpanded) 180f else 0f)
                 )
             }
@@ -495,15 +501,15 @@ fun CartaRichiestaEspandibile(
             Spacer(modifier = Modifier.height(8.dp))
 
             val (statoColore, statoTesto) = when (richiesta.stato) {
-                "IN_ATTESA" -> Color(0xFFF59E0B) to "IN ATTESA"
-                "APPROVATA" -> SuccessGreen to "APPROVATA"
-                else -> DangerRed to "RIFIUTATA"
+                "IN_ATTESA" -> MaterialTheme.colorScheme.tertiary to "IN ATTESA"
+                "APPROVATA" -> MaterialTheme.colorScheme.primary to "APPROVATA"
+                else -> MaterialTheme.colorScheme.error to "RIFIUTATA"
             }
 
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(statoColore.copy(alpha = 0.2f))
+                    .background(statoColore.copy(alpha = 0.15f))
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(statoTesto, color = statoColore, fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -512,18 +518,18 @@ fun CartaRichiestaEspandibile(
             if (isExpanded) {
                 Column(modifier = Modifier.animateContentSize()) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Data: ${richiesta.dataRichiesta.take(10)}", color = Color.Gray, fontSize = 12.sp)
+                    Text("Data: ${richiesta.dataRichiesta.take(10)}", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = onVediMotivazione,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3498db)),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                             modifier = Modifier.weight(1f)
                         ) { Text("Motivazione", fontSize = 12.sp) }
                         Button(
                             onClick = onVediBiografia,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3498db)),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                             modifier = Modifier.weight(1f)
                         ) { Text("Biografia", fontSize = 12.sp) }
                     }
@@ -532,9 +538,12 @@ fun CartaRichiestaEspandibile(
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = onScarica,
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
                             modifier = Modifier.fillMaxWidth()
-                        ) { Text("📄 Scarica Documento", color = DarkNavy, fontWeight = FontWeight.Bold) }
+                        ) { Text("📄 Scarica Documento", fontWeight = FontWeight.Bold) }
                     }
 
                     if (richiesta.stato == "IN_ATTESA") {
@@ -542,12 +551,12 @@ fun CartaRichiestaEspandibile(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(
                                 onClick = onApprova,
-                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.weight(1f)
                             ) { Text("✅ Approva", fontWeight = FontWeight.Bold) }
                             Button(
                                 onClick = onRifiuta,
-                                colors = ButtonDefaults.buttonColors(containerColor = DangerRed),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                                 modifier = Modifier.weight(1f)
                             ) { Text("❌ Rifiuta", fontWeight = FontWeight.Bold) }
                         }
@@ -555,7 +564,7 @@ fun CartaRichiestaEspandibile(
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = if (richiesta.stato == "APPROVATA") "✅ Accettata" else "❌ Rifiutata",
-                            color = if (richiesta.stato == "APPROVATA") SuccessGreen else DangerRed,
+                            color = if (richiesta.stato == "APPROVATA") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -600,17 +609,17 @@ fun AdminScaffold(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(drawerContainerColor = DarkNavy, modifier = Modifier.width(300.dp)) {
+            ModalDrawerSheet(drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.width(300.dp)) {
                 Spacer(modifier = Modifier.height(32.dp))
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Icon(Icons.Filled.AccountCircle, null, tint = WhiteText, modifier = Modifier.size(64.dp))
+                    Icon(Icons.Filled.AccountCircle, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(64.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Ciao, $nomeUtente", color = WhiteText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Ciao, $nomeUtente", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                HorizontalDivider(color = Color.Gray, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.Filled.Person, null, tint = WhiteText) },
-                    label = { Text("Il Mio Profilo", color = WhiteText) },
+                    icon = { Icon(Icons.Filled.Person, null, tint = MaterialTheme.colorScheme.onSurface) },
+                    label = { Text("Il Mio Profilo", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -620,8 +629,8 @@ fun AdminScaffold(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = DangerRed) },
-                    label = { Text("Disconnetti", color = DangerRed, fontWeight = FontWeight.Bold) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = MaterialTheme.colorScheme.error) },
+                    label = { Text("Disconnetti", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }

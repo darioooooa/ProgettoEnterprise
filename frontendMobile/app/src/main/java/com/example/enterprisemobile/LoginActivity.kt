@@ -65,7 +65,7 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 1f)).padding(24.dp)) {
         Text(
             text = "← Torna alla pagina iniziale",
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
@@ -94,8 +94,12 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
                 label = { Text("Identificativo utente") }, modifier = Modifier.fillMaxWidth(),
                 enabled = !isCaricamento,
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), // Tasto "Avanti"
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }) // Sposta il cursore giù
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -108,13 +112,17 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isCaricamento,
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done), // Tasto "Fine"
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
-                    focusManager.clearFocus() // Chiude la tastiera
+                    focusManager.clearFocus()
                     if (!isCaricamento) {
-                        viewModel.eseguiLogin(context, username, password) // Esegue l'accesso diretto
+                        viewModel.eseguiLogin(context, username, password)
                     }
                 }),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                ),
                 trailingIcon = {
                     val icona = if (passwordVisibile) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     IconButton(onClick = { passwordVisibile = !passwordVisibile }, enabled = !isCaricamento) {
@@ -123,7 +131,7 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
                 }
             )
 
-            // Link Recupero Password
+            // Link recupero password
             Box(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.CenterEnd) {
                 Text(
                     text = "Hai dimenticato la password?",
@@ -199,11 +207,15 @@ fun LoginActivity(viewModel: AuthViewModel, onTornaIndietro: () -> Unit, onNavig
                     OutlinedTextField(
                         value = emailRecupero, onValueChange = { emailRecupero = it },
                         label = { Text("La tua email...") }, modifier = Modifier.fillMaxWidth(),
-                        enabled = statoRecupero !is StatoRecupero.Caricamento
+                        enabled = statoRecupero !is StatoRecupero.Caricamento,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
 
                     if (statoRecupero is StatoRecupero.Successo) {
-                        Text("Link inviato! Controlla la posta.", color = Color(0xFF10b981), fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 12.dp))
+                        Text("Link inviato! Controlla la posta.", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 12.dp))
                     }
                     if (statoRecupero is StatoRecupero.Errore) {
                         Text((statoRecupero as StatoRecupero.Errore).messaggio, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp))

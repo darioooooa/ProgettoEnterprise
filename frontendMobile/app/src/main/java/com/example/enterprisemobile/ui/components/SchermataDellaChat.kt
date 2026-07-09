@@ -14,13 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.data.model.MessaggioChatDTO
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.DisposableEffect
@@ -48,7 +46,6 @@ fun SchermataDellaChat(
     var identificativoMessaggioDaSegnalare by remember { mutableStateOf(0L) }
 
     val listState = rememberLazyListState()
-
     val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(identificativoDellaStanza) {
@@ -75,7 +72,6 @@ fun SchermataDellaChat(
     // Posizionamento sul fondo al primo caricamento della stanza
     LaunchedEffect(listaDeiMessaggiAttuali) {
         if (listaDeiMessaggiAttuali.isNotEmpty()) {
-            // Conta quanti elementi totali ci sono (messaggi + intestazioni dei giorni)
             val totaleElementi = messaggiRaggruppatiPerGiorno.keys.size + listaDeiMessaggiAttuali.size
 
             // Se la chat è appena stata aperta (si è all'indice 0) teletrasporta
@@ -89,25 +85,22 @@ fun SchermataDellaChat(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
+            .padding(16.dp)
     ) {
         //Frase informativa per segnalazione messaggi
         if (seiOrganizzatore) {
             Text(
                 text = "ℹ️ Tieni premuto su un messaggio per segnalarlo",
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 fontSize = 12.sp,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
         modelloDiVistaChat.messaggioAvviso?.let { avviso ->
-
-            val colore =
-                if (modelloDiVistaChat.tipoAvviso == "successo")
-                    SuccessGreen
-                else
-                    MaterialTheme.colorScheme.error
-
+            val colore = if (modelloDiVistaChat.tipoAvviso == "successo") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             Surface(
                 color = colore.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp),
@@ -115,19 +108,16 @@ fun SchermataDellaChat(
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
             ) {
-
                 Row(
                     modifier = Modifier.padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Text(
                         text = avviso,
                         color = colore,
                         modifier = Modifier.weight(1f)
                     )
-
                     Text(
                         text = "×",
                         color = colore,
@@ -152,12 +142,12 @@ fun SchermataDellaChat(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background) // Copre i messaggi sotto mentre scorrono
+                            .background(MaterialTheme.colorScheme.background)
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Surface(
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(
@@ -173,9 +163,7 @@ fun SchermataDellaChat(
 
                 // Messaggi appartenenti a questo specifico giorno
                 items(messaggiDelGiorno, key = { it.identificativoUnivoco ?: it.hashCode() }) { singoloMessaggio ->
-
                     val eMioMessaggio = singoloMessaggio.nomeDelMittente == nomeDelMittenteLocale
-
                     val modificatoreTocco = if (seiOrganizzatore && !eMioMessaggio) {
                         Modifier.pointerInput(Unit) {
                             detectTapGestures(
@@ -216,7 +204,6 @@ fun SchermataDellaChat(
                                     text = singoloMessaggio.contenutoDelMessaggio,
                                     color = if (eMioMessaggio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = estraiOraFormattata(singoloMessaggio.dataDiSpedizione),
@@ -240,7 +227,11 @@ fun SchermataDellaChat(
                 onValueChange = { nuovoTesto -> testoDelNuovoMessaggio = nuovoTesto },
                 modifier = Modifier.weight(1f),
                 label = { Text("Scrivi il tuo messaggio qui...") },
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -258,7 +249,8 @@ fun SchermataDellaChat(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Text("Invia")
@@ -277,11 +269,9 @@ fun SchermataDellaChat(
                 motivo = motivoSelezionato,
                 descrizione = descrizioneAggiuntiva,
                 onSuccess = {
-                    // Segnalazione inviata con successo
                     mostraFinestraSegnalazione = false
                 },
                 onError = { messaggio ->
-                    // Errore nell'invio - potresti mostrare un Toast qui
                     mostraFinestraSegnalazione = false
                 }
             )
@@ -305,12 +295,11 @@ fun FinestraDiSegnalazione(
             onDismissRequest = { suChiudi() }
         ) {
             Surface(
-                color = Color(0xFF1E1E2E),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth(0.9f)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-
                     // Header
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -319,18 +308,15 @@ fun FinestraDiSegnalazione(
                     ) {
                         Text(
                             text = "🚩 Segnala messaggio",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
                         )
-
-                        IconButton(
-                            onClick = { suChiudi() }
-                        ) {
+                        IconButton(onClick = { suChiudi() }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Chiudi",
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -339,7 +325,7 @@ fun FinestraDiSegnalazione(
 
                     Text(
                         text = "Aiutaci a mantenere la piattaforma sicura. Seleziona il motivo per cui stai segnalando questo messaggio.",
-                        color = Color.LightGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp
                     )
 
@@ -347,7 +333,7 @@ fun FinestraDiSegnalazione(
 
                     Text(
                         text = "Motivo della segnalazione *",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
                     )
@@ -375,17 +361,17 @@ fun FinestraDiSegnalazione(
                                 .fillMaxWidth()
                                 .menuAnchor(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF3B82F6),
-                                unfocusedBorderColor = Color.Gray,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
                             )
                         )
 
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
-                            modifier = Modifier.background(Color(0xFF1E1E2E))
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         ) {
                             listOf(
                                 "SPAM" to "Spam o Truffa",
@@ -394,7 +380,7 @@ fun FinestraDiSegnalazione(
                                 "ALTRO" to "Altro"
                             ).forEach { (value, label) ->
                                 DropdownMenuItem(
-                                    text = { Text(label, color = Color.White) },
+                                    text = { Text(label, color = MaterialTheme.colorScheme.onSurface) },
                                     onClick = {
                                         motivazione = value
                                         expanded = false
@@ -408,7 +394,7 @@ fun FinestraDiSegnalazione(
 
                     Text(
                         text = "Dettagli aggiuntivi (opzionale)",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
                     )
@@ -421,17 +407,17 @@ fun FinestraDiSegnalazione(
                         placeholder = {
                             Text(
                                 "Scrivi qui i dettagli per aiutare gli amministratori...",
-                                color = Color.Gray
+                                color = MaterialTheme.colorScheme.outline
                             )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B82F6),
-                            unfocusedBorderColor = Color.Gray,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
 
@@ -441,30 +427,21 @@ fun FinestraDiSegnalazione(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        TextButton(
-                            onClick = { suChiudi() }
-                        ) {
-                            Text("Annulla", color = Color.Gray)
+                        TextButton(onClick = { suChiudi() }) {
+                            Text("Annulla", color = MaterialTheme.colorScheme.outline)
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Button(
-                            onClick = {
-                                suConferma(motivazione, dettagli)
-                            },
+                            onClick = { suConferma(motivazione, dettagli) },
                             enabled = motivazione.isNotBlank(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (motivazione.isNotBlank())
-                                    Color(0xFFE63946)
-                                else
-                                    Color.Gray
+                                containerColor = if (motivazione.isNotBlank()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (motivazione.isNotBlank()) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         ) {
-                            Text(
-                                "Invia Segnalazione",
-                                color = Color.White
-                            )
+                            Text("Invia Segnalazione")
                         }
                     }
                 }
@@ -504,7 +481,6 @@ fun ottieniOggettoData(dataObj: Any?): Date? {
         }
     }
 
-    // Se dal backend arriva come array
     if (dataObj is List<*>) {
         try {
             val anno = (dataObj.getOrNull(0) as? Number)?.toInt() ?: 2026

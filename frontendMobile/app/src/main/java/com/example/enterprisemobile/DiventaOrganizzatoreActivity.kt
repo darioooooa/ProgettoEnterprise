@@ -22,7 +22,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,7 +56,6 @@ fun DiventaOrganizzatoreContent(viewModel: DiventaOrganizzatoreViewModel) {
     ) { uri: Uri? ->
         uri?.let {
             val nomeFile = ottieniNomeFileDaUri(context, it)
-            // Salviamo sia il nome (per mostrarlo a schermo) sia l'Uri (per inviarlo)
             viewModel.nomeFileSelezionato = nomeFile ?: "Documento_Allegato"
             viewModel.uriFileSelezionato = it
         }
@@ -74,47 +72,48 @@ fun DiventaOrganizzatoreContent(viewModel: DiventaOrganizzatoreViewModel) {
     if (viewModel.mostraModaleInSospeso) {
         AlertDialog(
             onDismissRequest = { viewModel.chiudiModale() },
-            title = { Text("Richiesta in sospeso", fontWeight = FontWeight.Bold) },
-            text = { Text("Hai già inviato una richiesta in precedenza. Attendi che l'amministrazione valuti la tua candidatura.") },
+            title = { Text("Richiesta in sospeso", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Hai già inviato una richiesta in precedenza. Attendi che l'amministrazione valuti la tua candidatura.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = { viewModel.chiudiModale(); (context as? Activity)?.finish() },
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
-                    Text("Ho capito", color = WhiteText, fontWeight = FontWeight.Bold)
+                    Text("Ho capito", fontWeight = FontWeight.Bold)
                 }
             },
-            containerColor = Color.White,
-            titleContentColor = Color.Black,
-            textContentColor = Color.DarkGray
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
-
 
     if (viewModel.mostraModaleConferma) {
         AlertDialog(
             onDismissRequest = { viewModel.mostraModaleConferma = false },
-            title = { Text("Conferma invio", fontWeight = FontWeight.Bold) },
-            text = { Text("Sei sicuro di voler inviare la candidatura? Sarà inviata all'amministrazione per la valutazione.") },
+            title = { Text("Conferma invio", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Sei sicuro di voler inviare la candidatura? Sarà inviata all'amministrazione per la valutazione.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
                         viewModel.mostraModaleConferma = false
                         viewModel.inviaRichiesta(context)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
-                    Text("Conferma Invio", color = DarkNavy, fontWeight = FontWeight.Bold)
+                    Text("Conferma Invio", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.mostraModaleConferma = false }) {
-                    Text("Annulla", color = Color.Gray)
+                    Text("Annulla", color = MaterialTheme.colorScheme.outline)
                 }
             },
-            containerColor = Color.White,
-            titleContentColor = Color.Black,
-            textContentColor = Color.DarkGray
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
@@ -127,20 +126,24 @@ fun DiventaOrganizzatoreContent(viewModel: DiventaOrganizzatoreViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(DarkNavy)
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
                 .padding(innerPadding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Nuova Candidatura", color = WhiteText, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("Nuova Candidatura", color = MaterialTheme.colorScheme.onBackground, fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Inserisci i dettagli per diventare Organizzatore", color = Color.Gray, fontSize = 14.sp)
+            Text("Inserisci i dettagli per diventare Organizzatore", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontSize = 14.sp)
             Spacer(modifier = Modifier.height(24.dp))
 
             if (viewModel.messaggioErrore != null) {
-                Surface(color = DangerRed.copy(alpha = 0.2f), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    Text(viewModel.messaggioErrore!!, color = DangerRed, modifier = Modifier.padding(12.dp))
+                Surface(
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(viewModel.messaggioErrore!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -152,20 +155,23 @@ fun DiventaOrganizzatoreContent(viewModel: DiventaOrganizzatoreViewModel) {
 
             // Sezione per allegare il documento
             Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                Text("DOCUMENTO (CV, PORTFOLIO)", color = Color.LightGray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("DOCUMENTO (CV, PORTFOLIO)", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = { filePickerLauncher.launch("*/*") },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        )
                     ) {
-                        Icon(Icons.Filled.AttachFile, contentDescription = "Allega", tint = DarkNavy)
+                        Icon(Icons.Filled.AttachFile, contentDescription = "Allega")
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Scegli File", color = DarkNavy, fontWeight = FontWeight.Bold)
+                        Text("Scegli File", fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    val coloreFile = if (viewModel.uriFileSelezionato != null) WhiteText else Color.Gray
+                    val coloreFile = if (viewModel.uriFileSelezionato != null) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
                     Text(
                         text = viewModel.nomeFileSelezionato,
                         color = coloreFile,
@@ -179,17 +185,19 @@ fun DiventaOrganizzatoreContent(viewModel: DiventaOrganizzatoreViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Pulsante principale che ora apre la finestra di conferma
             Button(
                 onClick = { viewModel.mostraModaleConferma = true },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 enabled = !viewModel.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 if (viewModel.isLoading) {
-                    CircularProgressIndicator(color = DarkNavy, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("INVIA CANDIDATURA", color = DarkNavy, fontWeight = FontWeight.Bold)
+                    Text("INVIA CANDIDATURA", fontWeight = FontWeight.Bold)
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -200,7 +208,7 @@ fun DiventaOrganizzatoreContent(viewModel: DiventaOrganizzatoreViewModel) {
 @Composable
 fun CampoTestoScuro(etichetta: String, valore: String, righe: Int = 1, onValoreCambiato: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-        Text(etichetta, color = Color.LightGray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(etichetta, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = valore,
@@ -208,11 +216,11 @@ fun CampoTestoScuro(etichetta: String, valore: String, righe: Int = 1, onValoreC
             minLines = righe,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = WhiteText,
-                unfocusedTextColor = WhiteText,
-                focusedBorderColor = AccentBlue,
-                unfocusedBorderColor = Color.Gray,
-                cursorColor = AccentBlue
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
     }

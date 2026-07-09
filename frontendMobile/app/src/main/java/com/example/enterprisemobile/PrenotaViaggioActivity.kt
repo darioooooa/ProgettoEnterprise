@@ -33,23 +33,21 @@ class PrenotaViaggioActivity : ComponentActivity() {
         val viaggioId = intent.getLongExtra("VIAGGIO_ID", -1L)
 
         setContent {
-            val context = LocalContext.current // Ci serve per l'Intent
+            val context = LocalContext.current
 
             EnterpriseMobileTheme {
                 LaunchedEffect(viaggioId) {
                     if (viaggioId != -1L) viewModel.caricaDettagliViaggio(viaggioId)
                 }
 
-                // LA MODIFICA È QUI: Invece di chiudere e basta, andiamo al Pagamento
                 if (viewModel.prenotazioneCompletata) {
                     LaunchedEffect(Unit) {
                         val intent = Intent(context, PagamentoActivity::class.java).apply {
-                            // Assicurati che nel tuo ViewModel esista una variabile con l'ID della prenotazione appena creata!
                             putExtra("ID_PRENOTAZIONE", viewModel.idPrenotazioneCreata ?: -1L)
                             putExtra("IMPORTO", viewModel.prezzoTotale)
                         }
                         context.startActivity(intent)
-                        finish() // Chiude questa pagina così non si torna indietro qui durante il pagamento
+                        finish()
                     }
                 }
 
@@ -71,14 +69,19 @@ fun PrenotaViaggioContent(viewModel: PrenotaViaggioViewModel, viaggioId: Long) {
         onBackClick = { (context as? Activity)?.finish() }
     ) { innerPadding ->
         if (viaggio == null) {
-            Box(modifier = Modifier.fillMaxSize().background(DarkNavy), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = AccentBlue)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(DarkNavy)
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 1f))
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState()),
@@ -86,35 +89,35 @@ fun PrenotaViaggioContent(viewModel: PrenotaViaggioViewModel, viaggioId: Long) {
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Surface(color = CardOverlay, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(24.dp)) {
-                        Text(viaggio.titolo, color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 24.sp)
-                        Text("📍 ${viaggio.destinazione}", color = AccentBlue, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(top = 8.dp))
+                        Text(viaggio.titolo, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                        Text("📍 ${viaggio.destinazione}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(top = 8.dp))
                         if (viaggio.dataInizio != null && viaggio.dataFine != null) {
-                            Text("📅 Dal ${viaggio.dataInizio} al ${viaggio.dataFine}", color = WhiteText, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, modifier = Modifier.padding(top = 8.dp))
+                            Text("📅 Dal ${viaggio.dataInizio} al ${viaggio.dataFine}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, modifier = Modifier.padding(top = 8.dp))
                         }
-                        Text(viaggio.descrizione ?: "", color = TextSecondary, fontSize = 15.sp, modifier = Modifier.padding(top = 16.dp))
+                        Text(viaggio.descrizione ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 15.sp, modifier = Modifier.padding(top = 16.dp))
                     }
                 }
 
-                Surface(color = CardOverlay, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(24.dp)) {
-                        Text("Riepilogo", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text("Riepilogo", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 22.sp)
 
                         Row(modifier = Modifier.fillMaxWidth().padding(top = 30.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Partecipanti:", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text("Partecipanti:", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                TextButton(onClick = { viewModel.diminuisciPersone() }) { Text("-", color = WhiteText, fontSize = 20.sp) }
-                                Text("${viewModel.numeroPersone}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                                TextButton(onClick = { viewModel.aumentaPersone() }) { Text("+", color = WhiteText, fontSize = 20.sp) }
+                                TextButton(onClick = { viewModel.diminuisciPersone() }) { Text("-", color = MaterialTheme.colorScheme.primary, fontSize = 20.sp) }
+                                Text("${viewModel.numeroPersone}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                TextButton(onClick = { viewModel.aumentaPersone() }) { Text("+", color = MaterialTheme.colorScheme.primary, fontSize = 20.sp) }
                             }
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Totale:", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                            Text("€${viewModel.prezzoTotale}", color = WhiteText, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                            Text("Totale:", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                            Text("€${viewModel.prezzoTotale}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
@@ -123,8 +126,11 @@ fun PrenotaViaggioContent(viewModel: PrenotaViaggioViewModel, viaggioId: Long) {
                             onClick = { viewModel.apriModale() },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                        ) { Text("PRENOTA ORA", color = Color.White, fontWeight = FontWeight.Bold) }
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) { Text("PRENOTA ORA", fontWeight = FontWeight.Bold) }
                     }
                 }
                 Spacer(modifier = Modifier.height(30.dp))
@@ -133,31 +139,33 @@ fun PrenotaViaggioContent(viewModel: PrenotaViaggioViewModel, viaggioId: Long) {
 
         if (viewModel.mostraModaleConferma) {
             Dialog(onDismissRequest = { if (!viewModel.isLoading) viewModel.chiudiModale() }) {
-                Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.padding(16.dp)) {
+                Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(16.dp)) {
                     Column(modifier = Modifier.padding(24.dp)) {
-                        Text("Conferma Prenotazione", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text("Conferma Prenotazione", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Vuoi confermare la prenotazione per ${viewModel.numeroPersone} persone?", color = Color.DarkGray)
+                        Text("Vuoi confermare la prenotazione per ${viewModel.numeroPersone} persone?", color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                        // MOSTRA L'ERRORE SE IL BACKEND FALLISCE
                         if (viewModel.messaggioErrore.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text(viewModel.messaggioErrore, color = DangerRed, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                            Text(viewModel.messaggioErrore, color = MaterialTheme.colorScheme.error, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             TextButton(onClick = { viewModel.chiudiModale() }, enabled = !viewModel.isLoading) {
-                                Text("Annulla", color = Color.Gray)
+                                Text("Annulla", color = MaterialTheme.colorScheme.outline)
                             }
                             Button(
                                 onClick = { viewModel.confermaPrenotazione(viaggioId) },
-                                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
-                                enabled = !viewModel.isLoading // Disabilita i doppi click
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                enabled = !viewModel.isLoading
                             ) {
                                 if (viewModel.isLoading) {
-                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                                 } else {
                                     Text("Sì, prenota")
                                 }
