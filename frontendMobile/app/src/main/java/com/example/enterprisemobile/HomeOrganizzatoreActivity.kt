@@ -12,14 +12,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -167,6 +164,8 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
     val viaggiatoreDaSegnalare by viewModel.viaggiatoreDaSegnalare.collectAsState()
     val isLoadingSegnalazione by viewModel.isLoadingSegnalazione.collectAsState()
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     val listaViaggiCercati by viaggioViewModel.viaggiSalvati.collectAsState()
 
     var sottoVistaMappa by remember { mutableStateOf("MAPPA") }
@@ -198,6 +197,7 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
     BackHandler(enabled = selectedItem != 0 || identificativoStanzaSelezionata != null || vistaDashboard == "PRENOTAZIONI") {
         if (selectedItem == 2 && identificativoStanzaSelezionata != null) {
             // Se l'organizzatore ha una chat aperta, torna alla lista delle conversazioni
+            modelloDiVistaChat.esciDallaStanza()
             identificativoStanzaSelezionata = null
         } else if (selectedItem == 0 && vistaDashboard == "PRENOTAZIONI") {
             // Se l'organizzatore è nella home ma guarda la sottoscheda prenotazioni, torna alla mappa
@@ -239,6 +239,8 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                         selected = selectedItem == index,
                         onClick = {
                             if (selectedItem != index) {
+                                keyboardController?.hide()
+                                modelloDiVistaChat.esciDallaStanza()
                                 identificativoStanzaSelezionata = null
                                 selectedItem = index
                             }
@@ -683,7 +685,10 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                     } else {
                         Column(modifier = Modifier.fillMaxSize()) {
                             TextButton(
-                                onClick = { identificativoStanzaSelezionata = null },
+                                onClick = {
+                                    modelloDiVistaChat.esciDallaStanza()
+                                    identificativoStanzaSelezionata = null
+                                },
                                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                             ) { Text(text = "⬅ Torna alla lista delle chat", color = AccentBlue) }
 
@@ -693,7 +698,10 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                                 identificativoDellaStanza = identificativoStanzaSelezionata!!,
                                 nomeDelMittenteLocale = nomeUtente,
                                 seiOrganizzatore = true,
-                                identificativoUtenteLocale = sessionManager.ottieniIdUtente()?.toLongOrNull() ?: 0L
+                                identificativoUtenteLocale = sessionManager.ottieniIdUtente()?.toLongOrNull() ?: 0L,
+                                onIndietroPremuto = {
+                                    identificativoStanzaSelezionata = null
+                                }
                             )
                         }
                     }

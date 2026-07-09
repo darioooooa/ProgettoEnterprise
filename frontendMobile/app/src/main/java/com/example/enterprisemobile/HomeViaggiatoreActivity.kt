@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.ViaggioViewModel
 import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
@@ -56,6 +57,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     val mieiItinerari by itinerarioViewModel.itinerari.collectAsState()
     val isItinerarioLoading by itinerarioViewModel.isLoading.collectAsState()
     val contestoAttuale = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val modelloDiVistaChat: ChatViewModel = viewModel(
         factory = GeneratoreChatViewModel(contestoAttuale)
@@ -88,6 +90,7 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
     BackHandler(enabled = selectedItem != 0 || identificativoStanzaSelezionata != null) {
         if (selectedItem == 2 && identificativoStanzaSelezionata != null) {
             // Se si è dentro una chat aperta, il tasto indietro rimanda alla lista delle chat
+            modelloDiVistaChat.esciDallaStanza()
             identificativoStanzaSelezionata = null
         } else {
             // Se si è nella lista chat o negli itinerari, rimanda alla Home principale
@@ -124,6 +127,8 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                         selected = selectedItem == indiceIcona,
                         onClick = {
                             if (selectedItem != indiceIcona) {
+                                keyboardController?.hide()
+                                modelloDiVistaChat.esciDallaStanza()
                                 identificativoStanzaSelezionata = null
                                 selectedItem = indiceIcona
                             }
@@ -548,7 +553,10 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                     } else {
                         Column(modifier = Modifier.fillMaxSize()) {
                             TextButton(
-                                onClick = { identificativoStanzaSelezionata = null },
+                                onClick = {
+                                    modelloDiVistaChat.esciDallaStanza()
+                                    identificativoStanzaSelezionata = null
+                                },
                                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                             ) {
                                 Text(text = "⬅ Torna alla lista delle chat")
@@ -556,7 +564,10 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                             SchermataDellaChat(
                                 modelloDiVistaChat = modelloDiVistaChat,
                                 identificativoDellaStanza = identificativoStanzaSelezionata!!,
-                                nomeDelMittenteLocale = viewModel.nomeUtente
+                                nomeDelMittenteLocale = viewModel.nomeUtente,
+                                onIndietroPremuto = {
+                                    identificativoStanzaSelezionata = null
+                                }
                             )
                         }
                     }

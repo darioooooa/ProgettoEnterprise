@@ -14,6 +14,12 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 class ChatViewModel(
     private val servizioDiChat: ServizioChat,
     private val chiamateApiChat: InterfacciaApiChat
@@ -23,7 +29,19 @@ class ChatViewModel(
     val messaggiVisibili: StateFlow<List<MessaggioChatDTO>> = statoMessaggiInterno
 
     private val statoStanzeInterno = MutableStateFlow<List<StanzaChatDTO>>(emptyList())
+
+    // Ordina automaticamente le stanze ogni volta che la sorgente cambia
     val stanzeVisibili: StateFlow<List<StanzaChatDTO>> = statoStanzeInterno
+        .map { listaStanze ->
+            listaStanze.sortedByDescending { stanza ->
+                effettuaParsingDataLocale(stanza.dataDiSpedizioneUltimoMessaggio)?.time ?: 0L
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     private val convertitoreJson = Gson()
 
@@ -71,6 +89,7 @@ class ChatViewModel(
 
     fun entraNellaStanza(identificativoStanza: Long) {
         viewModelScope.launch {
+            statoMessaggiInterno.value = emptyList()
             try {
                 val cronologiaPassata = chiamateApiChat.ottieniCronologiaStorica(identificativoStanza)
                 statoMessaggiInterno.value = cronologiaPassata
@@ -83,7 +102,35 @@ class ChatViewModel(
     }
 
     fun inviaIlTuoMessaggio(identificativoStanza: Long, nomeMittente: String, testoMessaggio: String) {
-        servizioDiChat.inviaMessaggio(identificativoStanza, nomeMittente, testoMessaggio)
+        // Se il testo è vuoto o l'id è invalido, si esce subito
+        if (testoMessaggio.isBlank() || identificativoStanza <= 0) return
+
+        try {
+            // Invia il messaggio live sul canale STOMP
+            servizioDiChat.inviaMessaggio(identificativoStanza, nomeMittente, testoMessaggio)
+
+            // Estrazione di una copia immutabile istantanea per evitare corruzioni concorrenti
+            val stanzeInMemoria = statoStanzeInterno.value.toList()
+
+            // Controlla se la stanza è presente nella lista locale
+            val stanzaEsiste = stanzeInMemoria.any { it.identificativoStanza == identificativoStanza }
+
+            if (stanzeInMemoria.isNotEmpty() && stanzaEsiste) {
+                val stanzeAttuali = stanzeInMemoria.map { stanza ->
+                    if (stanza.identificativoStanza == identificativoStanza) {
+                        val formatoIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                        val dataCorrenteStr = formatoIso.format(Date())
+                        stanza.copy(dataDiSpedizioneUltimoMessaggio = dataCorrenteStr)
+                    } else {
+                        stanza
+                    }
+                }
+                // Aggiorna lo stato
+                statoStanzeInterno.value = stanzeAttuali
+            }
+        } catch (e: Exception) {
+            println("Errore controllato durante l'invio del messaggio: ${e.message}")
+        }
     }
 
     override fun onCleared() {
@@ -199,5 +246,19 @@ class ChatViewModel(
                 onError(messaggioErrore)
             }
         }
+    }
+
+    private fun effettuaParsingDataLocale(dataStr: String?): Date? {
+        if (dataStr.isNullOrBlank()) return null
+        return try {
+            val formatoIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            formatoIso.parse(dataStr)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun esciDallaStanza() {
+        statoMessaggiInterno.value = emptyList()
     }
 }

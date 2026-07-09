@@ -22,7 +22,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.enterprisemobile.ui.theme.SuccessGreen
 import com.example.enterprisemobile.data.model.MessaggioChatDTO
-import androidx.compose.foundation.background
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.runtime.DisposableEffect
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import com.example.enterprisemobile.viewmodels.ChatViewModel
 import java.text.SimpleDateFormat
@@ -37,18 +39,32 @@ fun SchermataDellaChat(
     identificativoDellaStanza: Long,
     nomeDelMittenteLocale: String,
     seiOrganizzatore: Boolean = false,
-    identificativoUtenteLocale: Long = 0L
+    identificativoUtenteLocale: Long = 0L,
+    onIndietroPremuto: () -> Unit
 ) {
     val listaDeiMessaggiAttuali by modelloDiVistaChat.messaggiVisibili.collectAsState()
-    var testoDelNuovoMessaggio by remember { mutableStateOf("") }
-
+    var testoDelNuovoMessaggio by remember(identificativoDellaStanza) { mutableStateOf("") }
     var mostraFinestraSegnalazione by remember { mutableStateOf(false) }
     var identificativoMessaggioDaSegnalare by remember { mutableStateOf(0L) }
 
     val listState = rememberLazyListState()
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     LaunchedEffect(identificativoDellaStanza) {
         modelloDiVistaChat.entraNellaStanza(identificativoDellaStanza)
+    }
+
+    DisposableEffect(identificativoDellaStanza) {
+        onDispose {
+            keyboardController?.hide()
+        }
+    }
+
+    BackHandler {
+        keyboardController?.hide()
+        modelloDiVistaChat.esciDallaStanza()
+        onIndietroPremuto()
     }
 
     // Raggruppamento dei messaggi per giorno
@@ -238,6 +254,7 @@ fun SchermataDellaChat(
                             testoMessaggio = testoDelNuovoMessaggio
                         )
                         testoDelNuovoMessaggio = ""
+                        keyboardController?.hide()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
