@@ -28,14 +28,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.compose.BackHandler
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.enterprisemobile.ui.ItinerariScreen
+import com.example.enterprisemobile.ui.theme.*
+import com.example.enterprisemobile.viewmodels.ViaggioViewModel
+import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
 import com.example.enterprisemobile.ui.components.EnterpriseScaffold
 import com.example.enterprisemobile.ui.components.SchermataDellaChat
 import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.ChatViewModel
 import com.example.enterprisemobile.viewmodels.GeneratoreChatViewModel
-import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
-import com.example.enterprisemobile.viewmodels.ViaggioViewModel
+
 
 class HomeViaggiatoreActivity : ComponentActivity() {
     private val viaggioViewModel: ViaggioViewModel by viewModels()
@@ -83,7 +89,21 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
         itinerarioViewModel.caricaItinerari()
         modelloDiVistaChat.caricaLeMieStanze(viewModel.nomeUtente)
         modelloDiVistaChat.attivaAscoltoNotifiche(viewModel.nomeUtente)
+        // Carica i viaggi consigliati all'avvio della Home
         viewModel.caricaViaggiConsigliati()
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                modelloDiVistaChat.caricaLeMieStanze(viewModel.nomeUtente)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     BackHandler(enabled = selectedItem != 0 || identificativoStanzaSelezionata != null) {

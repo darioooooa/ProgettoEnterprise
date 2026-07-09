@@ -3,6 +3,7 @@ package com.example.progettoenterprise.serviceImpl;
 import com.example.progettoenterprise.config.CacheConfig;
 import com.example.progettoenterprise.config.i18n.MessageLang;
 import com.example.progettoenterprise.data.entities.*;
+import com.example.progettoenterprise.data.repositories.ChatRoomRepository;
 import com.example.progettoenterprise.data.repositories.PrenotazioneRepository;
 import com.example.progettoenterprise.data.repositories.TagRepository;
 import com.example.progettoenterprise.data.repositories.UtenteRepository;
@@ -22,6 +23,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,8 +49,10 @@ public class ViaggioServiceImpl implements ViaggioService {
     private final PrenotazioneRepository prenotazioneRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final EmailServiceImpl emailService;
+    private final ChatRoomRepository chatRoomRepository;
 
     public ViaggioServiceImpl(
+
             ViaggioRepository viaggioRepository,
             UtenteRepository utenteRepository,
             TagRepository tagRepository,
@@ -55,7 +61,7 @@ public class ViaggioServiceImpl implements ViaggioService {
             PagamentoService pagamentoService,
             PrenotazioneRepository prenotazioneRepository,
             EmailServiceImpl emailService,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher, ChatRoomRepository chatRoomRepository) {
         this.viaggioRepository = viaggioRepository;
         this.utenteRepository = utenteRepository;
         this.tagRepository = tagRepository;
@@ -65,8 +71,9 @@ public class ViaggioServiceImpl implements ViaggioService {
         this.prenotazioneRepository = prenotazioneRepository;
         this.emailService = emailService;
         this.eventPublisher = eventPublisher;
-    }
+        this.chatRoomRepository = chatRoomRepository;
 
+    }
     @Override
     @Transactional
     public ViaggioDTO creaViaggio(ViaggioDTO viaggioDTO, Long organizzatoreId) {
@@ -117,17 +124,23 @@ public class ViaggioServiceImpl implements ViaggioService {
         viaggio.setStato(Viaggio.StatoViaggio.APERTO);
 
         Viaggio salvato = viaggioRepository.save(viaggio);
-
-        // Notifiche (codice esistente invariato)
+        //messo nel try catch perche in caso ci sono errori con le notifiche non bloccano la
+        //creazione del viaggio
         try {
+
             List<Utente> viaggiGiaFatti = prenotazioneRepository.findViaggiatoriViaggiGiaFatti(salvato.getDestinazione());
+
             for (Utente utente : viaggiGiaFatti) {
+                // Escludiamo il creatore del viaggio (perché magari anche lui in passato c'era andato come passeggero)
                 if (!utente.getId().equals(salvato.getOrganizzatore().getId())) {
+
                     String token = utente.getFirebaseToken();
                     if (token != null && !token.trim().isEmpty()) {
                         String cittaMaiuscola = salvato.getDestinazione().toUpperCase();
                         ViaggioConsigliatoEvent evento = new ViaggioConsigliatoEvent(
-                                token, cittaMaiuscola, salvato.getTitolo()
+                                token,
+                                cittaMaiuscola,
+                                salvato.getTitolo()
                         );
                         eventPublisher.publishEvent(evento);
                     }
@@ -166,14 +179,14 @@ public class ViaggioServiceImpl implements ViaggioService {
                 pagamentoService.rimborsaPrenotazione(prenotazione.getId());
                 log.info("Rimborso Stripe automatico effettuato per la prenotazione ID: {}", prenotazione.getId());
 
-                // ✅ Notifica push
+                // Notifica push
                 String token = prenotazione.getViaggiatore().getFirebaseToken();
                 if (token != null && !token.trim().isEmpty()) {
                     RimborsoErogatoEvent evento = new RimborsoErogatoEvent(token, viaggio.getTitolo());
                     eventPublisher.publishEvent(evento);
                 }
 
-                // ✅ NUOVO: Invio email di rimborso al viaggiatore
+                //  Invio email di rimborso al viaggiatore
                 try {
                     String emailViaggiatore = prenotazione.getViaggiatore().getEmail();
                     String usernameViaggiatore = prenotazione.getViaggiatore().getUsername();
@@ -212,6 +225,14 @@ public class ViaggioServiceImpl implements ViaggioService {
 
         viaggio.setStato(Viaggio.StatoViaggio.ANNULLATO);
         viaggioRepository.save(viaggio);
+        //per eliminare le chat relative a quel viaggio
+        try {
+            chatRoomRepository.deleteByViaggioId(viaggioId);
+            log.info("Eliminate tutte le chat associate al viaggio ID {}", viaggioId);
+        } catch (Exception e) {
+            log.error("Errore durante l'eliminazione delle chat per il viaggio ID {}: {}", viaggioId, e.getMessage());
+        }
+
         log.info("Il viaggio ID {} è stato contrassegnato come ANNULLATO", viaggioId);
     }
 
@@ -264,6 +285,7 @@ public class ViaggioServiceImpl implements ViaggioService {
     @Override
     @Transactional(readOnly = true)
     public List<ViaggioMappaDTO> getViaggiMappa(Long utenteId) {
+
         Utente utente = utenteRepository.findById(utenteId)
                 .orElseThrow(() -> {
                     log.error("Impossibile caricare mappa: utente ID {} non trovato", utenteId);
@@ -271,9 +293,11 @@ public class ViaggioServiceImpl implements ViaggioService {
                 });
 
         List<Viaggio> viaggi;
+
         if (utente.getRuolo().equals(Utente.Ruolo.ROLE_ORGANIZZATORE)) {
             viaggi = viaggioRepository.findByOrganizzatoreId(utenteId);
         } else {
+
             viaggi = viaggioRepository.findAll();
         }
 
@@ -297,8 +321,12 @@ public class ViaggioServiceImpl implements ViaggioService {
         Viaggio viaggio = viaggioRepository.findByIdConTappe(viaggioId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageLang.getMessage("viaggio.notexist", id)));
+
+
         return modelMapper.map(viaggio, ViaggioDTO.class);
+
     }
+
 
     @Override
     @Transactional
@@ -315,6 +343,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         if (viaggioEsistente.getDataInizio() != null && viaggioEsistente.getDataInizio().isBefore(LocalDate.now())) {
             log.warn("Tentativo di modifica fallito: Il viaggio ID {} è già iniziato il {}", id, viaggioEsistente.getDataInizio());
             throw new IllegalStateException(messageLang.getMessage("viaggio.already_started"));
+
         }
 
         if (viaggioEsistente.getStato() == Viaggio.StatoViaggio.IN_CORSO ||
@@ -322,6 +351,7 @@ public class ViaggioServiceImpl implements ViaggioService {
             log.warn("Tentativo di modifica fallito: Lo stato del viaggio ID {} è {}", id, viaggioEsistente.getStato());
             throw new IllegalStateException(messageLang.getMessage("viaggio.already_started"));
         }
+
 
         viaggioEsistente.setTitolo(viaggioDTO.getTitolo());
         viaggioEsistente.setDescrizione(viaggioDTO.getDescrizione());
@@ -333,12 +363,15 @@ public class ViaggioServiceImpl implements ViaggioService {
 
         if (viaggioDTO.getTappe() != null) {
             viaggioEsistente.getTappe().clear();
+
             List<AttivitaViaggio> nuoveTappe = viaggioDTO.getTappe().stream()
                     .map(tappaDto -> {
                         AttivitaViaggio tappa = modelMapper.map(tappaDto, AttivitaViaggio.class);
                         tappa.setViaggio(viaggioEsistente);
                         return tappa;
                     }).collect(Collectors.toList());
+
+
             viaggioEsistente.getTappe().addAll(nuoveTappe);
         }
 
@@ -359,6 +392,7 @@ public class ViaggioServiceImpl implements ViaggioService {
         if (viaggio.getDataFine() != null) {
             dto.setDataFine(viaggio.getDataFine());
         }
+
         return dto;
     }
 
@@ -367,6 +401,7 @@ public class ViaggioServiceImpl implements ViaggioService {
     public List<ViaggioDTO> getViaggiByOrganizzatore(Long organizzatoreId) {
         List<Viaggio> viaggi = viaggioRepository.findByOrganizzatoreId(organizzatoreId);
         log.info("Trovati {} viaggi per l'organizzatore id: {}", viaggi.size(), organizzatoreId);
+
         return viaggi.stream()
                 .filter(viaggio -> viaggio.getStato() != null && viaggio.getStato() != Viaggio.StatoViaggio.ANNULLATO)
                 .map(viaggio -> {

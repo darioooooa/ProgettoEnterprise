@@ -36,6 +36,9 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.core.content.ContextCompat
 import androidx.activity.compose.BackHandler
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.repository.PrenotazioneRepository
@@ -63,6 +66,7 @@ import kotlinx.coroutines.launch
 
 class HomeOrganizzatoreActivity : ComponentActivity() {
     private val viaggioViewModel: ViaggioViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val usernameRicevuto = intent.getStringExtra("CHIAVE_USERNAME") ?: "Organizzatore"
@@ -190,6 +194,21 @@ fun SchermataOrganizzatore(nomeUtente: String, viaggioViewModel: ViaggioViewMode
                     }
                 }
             }
+        }
+    }
+    //serve per refreshare la pagina e mostrare la sezione messaggi aggiornata
+    //senza dover rricaricare il progetto
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                modelloDiVistaChat.caricaLeMieStanzeOrganizzatore(nomeUtente)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

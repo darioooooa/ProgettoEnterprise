@@ -21,4 +21,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     List<ChatRoom> findByViaggioOrganizzatoreUsernameIgnoreCase(String username);
    List<ChatRoom> findByViaggiatoreUsernameIgnoreCase(String viaggiatoreUsername);
+    void deleteByViaggioId(Long viaggioId);
 }

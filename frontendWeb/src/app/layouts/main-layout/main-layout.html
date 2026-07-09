@@ -5,9 +5,11 @@
 
     <nav>
       <ng-container *ngIf="isViaggiatore()">
-        <a routerLink="/home">Home</a>
-        <a routerLink="/miei-itinerari">I miei itinerari preferiti</a>
-        <a routerLink="/inbox-viaggiatore" style="color: #10b981; display: inline-flex; align-items: center; gap: 6px;">
+        <a routerLink="/home" routerLinkActive="active-link-verde">Home</a>
+
+        <a routerLink="/miei-itinerari" routerLinkActive="active-link-verde">I miei itinerari preferiti</a>
+
+        <a routerLink="/inbox-viaggiatore" routerLinkActive="active-link-verde" style="display: inline-flex; align-items: center; gap: 6px;">
           💬 I miei Messaggi
           <span class="badge-navbar" *ngIf="notificheTotali > 0" style="background-color: #10b981;">
             {{ notificheTotali }}
@@ -16,9 +18,11 @@
       </ng-container>
 
       <ng-container *ngIf="isOrganizzatore()">
-        <a routerLink="/organizzatore">Home</a>
-        <a routerLink="/home">Cerca viaggi</a>
-        <a routerLink="/inbox-organizzatore" style="color: #ffd166; display: inline-flex; align-items: center; gap: 6px;">
+        <a routerLink="/organizzatore" routerLinkActive="active-link">Home</a>
+
+        <a routerLink="/home" routerLinkActive="active-link">Cerca viaggi</a>
+
+        <a routerLink="/inbox-organizzatore" routerLinkActive="active-link" style="display: inline-flex; align-items: center; gap: 6px;">
           Chat Organizzatore
           <span class="badge-navbar" *ngIf="notificheTotali > 0">
             {{ notificheTotali }}

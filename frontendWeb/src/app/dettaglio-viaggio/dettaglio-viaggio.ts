@@ -11,6 +11,7 @@ import { PrenotazioneService } from '../service/prenotazione.service';
 import { ModaleSegnalazione } from '../modale-segnalazione/modale-segnalazione';
 import { forkJoin } from 'rxjs';
 import { ChatComponent } from './components/chat/chat';
+import {ChatService} from '../service/chat.service';
 
 @Component({
   selector: 'app-dettaglio-viaggio',
@@ -73,7 +74,8 @@ export class DettaglioViaggio implements OnInit {
     private servAuth: AutenticazioneService,
     private cdr: ChangeDetectorRef,
     private prenotazioneService: PrenotazioneService,
-    private router: Router
+    private router: Router,
+    private chatService: ChatService
   ) {}
 
   ngOnInit() {
@@ -217,6 +219,14 @@ export class DettaglioViaggio implements OnInit {
         next: (response) => {
           this.isEliminazioneInCorso = false;
           alert('Viaggio cancellato e rimborsi inviati con successo!');
+          const usernameLocale = this.servAuth.ottieniUsername() || '';
+          if (usernameLocale) {
+            this.chatService.ottieniNotificheTotali(usernameLocale).subscribe({
+              next: (totaleNotifiche) => {
+                this.chatService.aggiornaContatoreNotifiche(totaleNotifiche);
+              }
+            });
+          }
           this.router.navigate(['/organizzatore']);
         },
         error: (errore) => {
