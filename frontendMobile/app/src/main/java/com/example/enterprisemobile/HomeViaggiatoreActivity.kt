@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.compose.BackHandler
 import com.example.enterprisemobile.ui.theme.*
 import com.example.enterprisemobile.viewmodels.ViaggioViewModel
 import com.example.enterprisemobile.viewmodels.ItinerarioViewModel
@@ -84,10 +85,20 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
         viewModel.caricaViaggiConsigliati()
     }
 
+    BackHandler(enabled = selectedItem != 0 || identificativoStanzaSelezionata != null) {
+        if (selectedItem == 2 && identificativoStanzaSelezionata != null) {
+            // Se si è dentro una chat aperta, il tasto indietro rimanda alla lista delle chat
+            identificativoStanzaSelezionata = null
+        } else {
+            // Se si è nella lista chat o negli itinerari, rimanda alla Home principale
+            selectedItem = 0
+        }
+    }
+
     val totaleNotifiche = listaDelleStanzeReali.sumOf { it.numeroMessaggiNonLetti }
 
     EnterpriseScaffold(
-        titolo = "ENTERPRISE",
+        titolo = "MOVEON",
         nomeUtente = viewModel.nomeUtente,
         mostraFrecciaIndietro = false,
         bottomBar = {
@@ -111,7 +122,12 @@ fun HomeViaggiatoreContent(viewModel: ViaggioViewModel, itinerarioViewModel: Iti
                         },
                         label = { Text(nomeIcona) },
                         selected = selectedItem == indiceIcona,
-                        onClick = { selectedItem = indiceIcona },
+                        onClick = {
+                            if (selectedItem != indiceIcona) {
+                                identificativoStanzaSelezionata = null
+                                selectedItem = indiceIcona
+                            }
+                        },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -242,7 +242,13 @@ class CommunityViewModel(application: Application) : AndroidViewModel(applicatio
                     onSuccess()
                     chiudiDialogSegnalazioneRecensione()
                 } else {
-                    onError("Errore nell'invio della segnalazione")
+                    val errorJson = response.errorBody()?.string()
+                    val messaggioAvviso = try {
+                        org.json.JSONObject(errorJson ?: "").getString("messaggio")
+                    } catch (e: Exception) {
+                        "Errore nell'invio della segnalazione"
+                    }
+                    onError(messaggioAvviso)
                 }
             } catch (e: Exception) {
                 onError("Errore: ${e.message}")

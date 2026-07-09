@@ -18,7 +18,7 @@ fun SchermataLanding(onNavigaALogin: () -> Unit, onNavigaARegistrazione: () -> U
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("ENTERPRISE", color = MaterialTheme.colorScheme.onBackground, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 4.sp)
+        Text("MOVEON", color = MaterialTheme.colorScheme.onBackground, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 4.sp)
         Spacer(modifier = Modifier.height(12.dp))
         Text("Scopri le meraviglie del mondo. Inizia la tua avventura oggi.", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontSize = 16.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
 

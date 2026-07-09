@@ -23,7 +23,24 @@ export class PaginaInizialeComponent implements OnInit {
   ngOnInit() {
     if (this.auth.isLoggato()) {
       this.isLoading = true;
-      this.navigatore.navigate(['/home']).then(() => {
+
+      const ruolo = this.auth.ottieniRuolo();
+      let destinazione = '/home'; // Default per viaggiatore
+
+      switch (ruolo) {
+        case 'ROLE_ORGANIZZATORE':
+          destinazione = '/organizzatore';
+          break;
+        case 'ROLE_ADMIN':
+          destinazione = '/admin-dashboard';
+          break;
+        case 'ROLE_VIAGGIATORE':
+        default:
+          destinazione = '/home';
+          break;
+      }
+
+      this.navigatore.navigate([destinazione]).then(() => {
         this.isLoading = false;
         this.cdr.detectChanges();
       });

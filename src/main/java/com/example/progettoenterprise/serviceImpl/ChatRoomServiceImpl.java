@@ -77,9 +77,12 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             Utente viaggiatore = stanza.getViaggiatore();
 
             // Se chi scrive è l'organizzatore, il destinatario è il viaggiatore. E viceversa.
-            Utente destinatario = (organizzatore != null && organizzatore.getUsername().equals(mittenteUsername))
-                    ? viaggiatore
-                    : organizzatore;
+            Utente destinatario = null;
+            if (organizzatore != null && organizzatore.getUsername().equalsIgnoreCase(mittenteUsername)) {
+                destinatario = viaggiatore;
+            } else {
+                destinatario = organizzatore;
+            }
 
             if (destinatario != null) {
                 String tokenDestinatario = destinatario.getFirebaseToken();
