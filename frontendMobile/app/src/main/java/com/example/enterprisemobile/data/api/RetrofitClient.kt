@@ -17,7 +17,7 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
-    private const val CURRENT_IP = "192.168.1.103"
+    private const val CURRENT_IP = "192.168.1.115"
     private const val BASE_URL = "https://$CURRENT_IP:8443/api/v1/"
     private const val KEYCLOAK_BASE_URL = "http://$CURRENT_IP:8081/"
 

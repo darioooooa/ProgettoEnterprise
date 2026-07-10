@@ -608,6 +608,7 @@ fun AdminScaffold(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             ModalDrawerSheet(drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.width(300.dp)) {
                 Spacer(modifier = Modifier.height(32.dp))
