@@ -3,21 +3,21 @@ version: '3.8'
 services:
   db:
     image: postgres:15
-    container_name: postgres_enterprise
+    container_name: postgres-enterprise
     environment:
-      POSTGRES_DB: ProgettoEnterprise
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      - POSTGRES_DB=ProgettoEnterprise
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - enterprise-network
 
-  keycloak_db:
+  keycloak-db:
     image: postgres:15
-    container_name: postgres_keycloak
+    container_name: postgres-keycloak
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: ${KC_DB_USER}
@@ -31,12 +31,12 @@ services:
     image: quay.io/keycloak/keycloak:26.6.1
     env_file:
       - .env
-    container_name: keycloak_server
+    container_name: keycloak-server
     restart: on-failure
     command: start-dev --import-realm --http-port 8080 --http-host 0.0.0.0
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: ${KC_DB_USER}
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
       KC_HOSTNAME: http://${BACKEND_IP}:8081
@@ -49,13 +49,13 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - keycloak_db
+      - keycloak-db
     networks:
       - enterprise-network
 
   minio:
     image: minio/minio
-    container_name: minio_server
+    container_name: minio-server
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -70,23 +70,27 @@ services:
 
   backend:
     build: .
-    container_name: spring_backend
-    restart: on-failure # CRUCIALE: Se il DB non è pronto, riprova invece di morire
+    container_name: spring-backend
+    restart: on-failure
     ports:
       - "8443:8443"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ProgettoEnterprise
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://${BACKEND_IP}:8081/realms/enterprise-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://${BACKEND_IP}:8081/realms/enterprise-realm/protocol/openid-connect/certs
-      KEYCLOAK_SERVER_URL: http://${BACKEND_IP}:8081
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-server:8080/realms/enterprise-realm/protocol/openid-connect/certs
+
+      KEYCLOAK_SERVER_URL: http://keycloak-server:8080
       KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      MINIO_URL: http://${BACKEND_IP}:9000
+
+      MINIO_URL: http://minio-server:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+
       STRIPE_API_KEY: ${STRIPE_SECRET_KEY}
       EMAIL_USERNAME: ${EMAIL_USERNAME}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD}
