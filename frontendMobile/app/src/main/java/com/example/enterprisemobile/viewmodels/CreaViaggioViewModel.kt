@@ -74,17 +74,28 @@ class CreaViaggioViewModel(
             try {
                 val apiService = RetrofitClient.ottieniViaggioService(getApplication())
                 val response = apiService.getAllTag()
-                if (response.isSuccessful && response.body() != null) {
+                if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
                     _tagDisponibili.value = response.body()!!
+                } else {
+                    _tagDisponibili.value = listOf(
+                        "Mare", "Montagna", "Città d'arte", "Relax",
+                        "Avventura", "Cultura", "Enogastronomia",
+                        "Economico", "Lusso", "Inverno", "Estate"
+                    )
+                    android.util.Log.w("TAG", "Lista tag vuota dal server, uso fallback hardcoded")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("TAG", "Errore caricamento tag: ${e.message}")
+                _tagDisponibili.value = listOf(
+                    "Mare", "Montagna", "Città d'arte", "Relax",
+                    "Avventura", "Cultura", "Enogastronomia",
+                    "Economico", "Lusso", "Inverno", "Estate"
+                )
+                android.util.Log.e("TAG", "Errore caricamento tag: ${e.message}, uso fallback hardcoded")
             } finally {
                 _isLoadingTag.value = false
             }
         }
     }
-
     fun toggleTag(tag: String) {
         val attuali = _tagSelezionati.value.toMutableSet()
         if (attuali.contains(tag)) {

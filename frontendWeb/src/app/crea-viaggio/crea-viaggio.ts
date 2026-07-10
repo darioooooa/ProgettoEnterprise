@@ -69,23 +69,31 @@ export class CreaViaggio implements OnInit {
     this.isLoadingTag = true;
     this.viaggioService.getTagDisponibili().subscribe({
       next: (tags) => {
-        this.tagDisponibili = tags;
+        if (tags && tags.length > 0) {
+          this.tagDisponibili = tags;
+        } else {
+          this.tagDisponibili = [
+            'Mare', 'Montagna', 'Città d\'arte', 'Relax',
+            'Avventura', 'Cultura', 'Enogastronomia',
+            'Economico', 'Lusso', 'Inverno', 'Estate'
+          ];
+          console.warn('Lista tag vuota dal server, uso fallback hardcoded');
+        }
         this.isLoadingTag = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Errore nel caricamento dei tag', err);
-        this.isLoadingTag = false;
         this.tagDisponibili = [
           'Mare', 'Montagna', 'Città d\'arte', 'Relax',
           'Avventura', 'Cultura', 'Enogastronomia',
           'Economico', 'Lusso', 'Inverno', 'Estate'
         ];
+        this.isLoadingTag = false;
         this.cdr.detectChanges();
       }
     });
   }
-
   toggleTag(tag: string) {
     const index = this.tagSelezionati.indexOf(tag);
 
