@@ -2,13 +2,16 @@ package com.example.enterprisemobile.viewmodels
 
 import android.app.Application
 import android.content.ContentValues
+import android.content.Intent
 import android.os.Build
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.enterprisemobile.ChatActivity // Assicurati che questo import corrisponda alla posizione reale della tua ChatActivity
 import com.example.enterprisemobile.data.api.RetrofitClient
 import com.example.enterprisemobile.data.db.AppDatabase
 import com.example.enterprisemobile.data.repository.DettaglioViaggioRepository
@@ -330,5 +333,27 @@ class DettaglioViaggioViewModel(application: Application) : AndroidViewModel(app
         if (locale != null) return locale
         val listaIntera = database.viaggioDao().getAllViaggi().firstOrNull()
         return listaIntera?.firstOrNull()
+    }
+
+    fun avviaConversazioneConOrganizzatore(contestoDiEsecuzione: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                val interfacciaChat = RetrofitClient.ottieniChatService(getApplication())
+
+                val identificativoStanza = interfacciaChat.creaOApriStanzaPrivata(
+                    identificativoViaggio = viaggioId,
+                    nomeUtenteViaggiatore = mioUsername
+                )
+
+                val intentoPerLaChat = Intent(contestoDiEsecuzione, ChatActivity::class.java).apply {
+                    putExtra("ID_STANZA", identificativoStanza)
+                }
+                contestoDiEsecuzione.startActivity(intentoPerLaChat)
+
+            } catch (eccezioneDiRete: Exception) {
+                eccezioneDiRete.printStackTrace()
+                Toast.makeText(contestoDiEsecuzione, "Impossibile aprire la conversazione in questo momento", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

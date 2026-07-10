@@ -476,37 +476,39 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                             color = MaterialTheme.colorScheme.surface,
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth()
-                                .clickable {
-                                    val idOrganizzatore = stats.organizzatoreId
-
-                                    if (idOrganizzatore != null && idOrganizzatore > 0L) {
-                                        val intent = Intent(
-                                            context,
-                                            ProfiloActivity::class.java
-                                        ).apply {
-                                            putExtra(
-                                                "CHIAVE_DETTAGLIO_UTENTE_ID",
-                                                idOrganizzatore
-                                            )
-                                        }
-                                        context.startActivity(intent)
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Errore: id organizzatore non disponibile",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
+                                // Sezione cliccabile per andare al profilo
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            val idOrganizzatore = stats.organizzatoreId
+                                            if (idOrganizzatore != null && idOrganizzatore > 0L) {
+                                                val intent = Intent(
+                                                    context,
+                                                    ProfiloActivity::class.java
+                                                ).apply {
+                                                    putExtra(
+                                                        "CHIAVE_DETTAGLIO_UTENTE_ID",
+                                                        idOrganizzatore
+                                                    )
+                                                }
+                                                context.startActivity(intent)
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Errore: id organizzatore non disponibile",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
                                 ) {
                                     Text(
                                         "👤",
@@ -532,11 +534,28 @@ fun DettaglioViaggioContent( viewModel: DettaglioViaggioViewModel, galleriaViewM
                                         )
                                     }
                                 }
-                                Text(
-                                    "➔",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 18.sp
-                                )
+
+                                // Sezione azioni: Bottone Chat
+                                if (!viewModel.isMioViaggio()) {
+                                    FilledTonalIconButton(
+                                        onClick = {
+                                            viewModel.avviaConversazioneConOrganizzatore(context)
+                                            Toast.makeText(context, "Apertura chat in corso...", Toast.LENGTH_SHORT).show()
+                                        },
+                                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    ) {
+                                        Text("💬", fontSize = 18.sp)
+                                    }
+                                } else {
+                                    Text(
+                                        "➔",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 18.sp
+                                    )
+                                }
                             }
                         }
                     }

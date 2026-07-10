@@ -14,8 +14,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,7 +41,7 @@ class ChatViewModel(
         }
         .stateIn(
             scope = viewModelScope,
-            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
@@ -109,7 +111,7 @@ class ChatViewModel(
             // Invia il messaggio live sul canale STOMP
             servizioDiChat.inviaMessaggio(identificativoStanza, nomeMittente, testoMessaggio)
 
-            // Estrazione di una copia immutabile istantanea per evitare corruzioni concorrenti
+
             val stanzeInMemoria = statoStanzeInterno.value.toList()
 
             // Controlla se la stanza è presente nella lista locale
@@ -125,7 +127,7 @@ class ChatViewModel(
                         stanza
                     }
                 }
-                // Aggiorna lo stato
+
                 statoStanzeInterno.value = stanzeAttuali
             }
         } catch (e: Exception) {
@@ -224,15 +226,15 @@ class ChatViewModel(
                     tipoAvviso = "successo"
                     onSuccess()
                 } else {
-                    // ERRORE: Estrae il messaggio dal JSON (es. "Hai già segnalato...")
+                    // ERRORE: Estrae il messaggio dal JSON
                     val errorJson = risposta.errorBody()?.string()
                     val messaggioAvvisoEstratto = try {
-                        org.json.JSONObject(errorJson ?: "").getString("messaggio")
+                        JSONObject(errorJson ?: "").getString("messaggio")
                     } catch (e: Exception) {
                         "Errore nell'invio della segnalazione"
                     }
 
-                    // Aggiorna gli stati per mostrare il banner
+
                     messaggioAvviso = messaggioAvvisoEstratto
                     tipoAvviso = "errore"
 
@@ -257,6 +259,7 @@ class ChatViewModel(
             null
         }
     }
+
 
     fun esciDallaStanza() {
         statoMessaggiInterno.value = emptyList()

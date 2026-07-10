@@ -35,6 +35,12 @@ interface InterfacciaApiChat {
         @retrofit2.http.Body richiesta: com.example.enterprisemobile.data.model.RichiestaSegnalazioneDTO
     ): retrofit2.Response<Unit>
 
+    @retrofit2.http.GET("/api/chat/stanza")
+    suspend fun creaOApriStanzaPrivata(
+        @retrofit2.http.Query("viaggioId") identificativoViaggio: Long,
+        @retrofit2.http.Query("viaggiatoreUsername") nomeUtenteViaggiatore: String
+    ): Long
+
 
 
 }
