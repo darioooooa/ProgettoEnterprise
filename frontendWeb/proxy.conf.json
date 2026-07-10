@@ -1,12 +1,12 @@
 {
   "/api": {
-    "target": "https://160.97.172.11:8443",
+    "target": "https://inserisci_il_tuo_ip:8443",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/ws": {
-    "target": "https://160.97.172.11:8443",
+    "target": "https://inserisci_il_tuo_ip:8443",
     "secure": false,
     "ws": true,
     "changeOrigin": true

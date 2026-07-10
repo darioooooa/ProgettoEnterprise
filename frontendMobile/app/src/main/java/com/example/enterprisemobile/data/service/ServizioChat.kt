@@ -59,7 +59,7 @@ class ServizioChat(private val tokenDiAccesso: String) {
             try {
                 val tokenPulito = tokenDiAccesso.trim()
                 //CAMBIATEVI IP!!!!!!!!!!
-                val indirizzoServerWebsocket = "wss://160.97.172.11:8443/ws?access_token=$tokenPulito"
+                val indirizzoServerWebsocket = "wss://inserisci_il_tuo_ip:8443/ws?access_token=$tokenPulito"
 
                 sessioneAttiva = clientStomp.connect(
                     url = indirizzoServerWebsocket,
